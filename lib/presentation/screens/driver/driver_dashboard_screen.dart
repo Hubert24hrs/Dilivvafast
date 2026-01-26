@@ -719,6 +719,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
           initialLat: ride.pickupLocation.latitude,
           initialLng: ride.pickupLocation.longitude,
           initialZoom: 14.5,
+          onMapCreated: (_) {},
         ),
 
         // Floating Panel

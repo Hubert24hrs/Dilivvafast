@@ -18,6 +18,7 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   void initState() {
     super.initState();
     _subscription = Connectivity().onConnectivityChanged.listen((results) {
+      if (!mounted) return;
       final isOffline = results.contains(ConnectivityResult.none);
       if (_isOffline != isOffline) {
         setState(() => _isOffline = isOffline);

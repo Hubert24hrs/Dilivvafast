@@ -58,6 +58,7 @@ class _AddCardScreenState extends ConsumerState<AddCardScreen> {
         paymentSuccess = true;
       } else {
         // Real Paystack payment
+        if (!mounted) return;
         final paystackService = ref.read(paystackServiceProvider);
         paymentSuccess = await paystackService.chargeCard(
           context: context,

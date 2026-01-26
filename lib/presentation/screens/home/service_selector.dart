@@ -69,7 +69,7 @@ class ServiceSelector extends StatelessWidget {
             height: isSelected ? 110 : 90,
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.001) // Perspective
-              ..translate(0.0, isSelected ? -10.0 : 0.0), // Float up
+              ..setTranslationRaw(0.0, isSelected ? -10.0 : 0.0, 0.0), // Float up
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               boxShadow: isSelected
