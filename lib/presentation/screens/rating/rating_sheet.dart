@@ -170,7 +170,9 @@ class _RatingSheetState extends State<RatingSheet> {
                             : null,
                         _selectedTip,
                       );
-                      if (mounted) Navigator.pop(context);
+                      if (!mounted) return;
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,

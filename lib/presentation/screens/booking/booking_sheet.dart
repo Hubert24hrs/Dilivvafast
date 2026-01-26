@@ -61,6 +61,7 @@ class _BookingSheetState extends ConsumerState<BookingSheet> {
         debugPrint('BookingSheet: paymentSuccess=true (wallet)');
       } else {
         // Card payment via Paystack
+        if (!mounted) return;
         final paystackService = ref.read(paystackServiceProvider);
         paymentSuccess = await paystackService.chargeCard(
           context: context,

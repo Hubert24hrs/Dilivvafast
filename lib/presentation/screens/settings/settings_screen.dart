@@ -26,21 +26,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: ['English', 'French', 'Spanish'].map((lang) {
-            return ListTile(
+            return RadioListTile<String>(
               title: Text(lang, style: const TextStyle(color: Colors.white70)),
-              leading: Radio<String>(
-                value: lang,
-                groupValue: currentLang,
-                activeColor: AppTheme.primaryColor,
-                onChanged: (val) {
-                  ref.read(settingsProvider.notifier).setLanguage(val!);
-                  Navigator.pop(context);
-                },
-              ),
-              onTap: () {
-                ref.read(settingsProvider.notifier).setLanguage(lang);
+              value: lang,
+              // ignore: deprecated_member_use
+              groupValue: currentLang,
+              activeColor: AppTheme.primaryColor,
+              // ignore: deprecated_member_use
+              onChanged: (val) {
+                ref.read(settingsProvider.notifier).setLanguage(val!);
                 Navigator.pop(context);
               },
+              controlAffinity: ListTileControlAffinity.leading,
             );
           }).toList(),
         ),
@@ -63,21 +60,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ].map((item) {
             final mode = item['value'] as ThemeMode;
             final label = item['label'] as String;
-            return ListTile(
+            return RadioListTile<ThemeMode>(
               title: Text(label, style: const TextStyle(color: Colors.white70)),
-              leading: Radio<ThemeMode>(
-                value: mode,
-                groupValue: currentMode,
-                activeColor: AppTheme.primaryColor,
-                onChanged: (val) {
-                  ref.read(settingsProvider.notifier).setThemeMode(val!);
-                  Navigator.pop(context);
-                },
-              ),
-              onTap: () {
-                ref.read(settingsProvider.notifier).setThemeMode(mode);
+              value: mode,
+              // ignore: deprecated_member_use
+              groupValue: currentMode,
+              activeColor: AppTheme.primaryColor,
+              // ignore: deprecated_member_use
+              onChanged: (val) {
+                ref.read(settingsProvider.notifier).setThemeMode(val!);
                 Navigator.pop(context);
               },
+              controlAffinity: ListTileControlAffinity.leading,
             );
           }).toList(),
         ),
@@ -91,7 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.surfaceColor,
           title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
@@ -122,14 +116,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
             ),
             TextButton(
               onPressed: canDelete
                   ? () async {
-                      Navigator.pop(context);
+                      Navigator.pop(dialogContext);
                       await ref.read(authServiceProvider).signOut();
+                      // ignore: use_build_context_synchronously
                       if (mounted) context.go('/login');
                     }
                   : null,

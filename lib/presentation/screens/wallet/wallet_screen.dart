@@ -207,7 +207,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           trailing: Switch(
                             value: _isCashEnabled,
                             onChanged: (val) => setState(() => _isCashEnabled = val),
-                            activeColor: AppTheme.primaryColor,
+                            activeThumbColor: AppTheme.primaryColor,
                             inactiveThumbColor: Colors.white54,
                             activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.3),
                           ),

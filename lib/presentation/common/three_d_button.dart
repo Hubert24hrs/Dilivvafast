@@ -31,7 +31,7 @@ class _ThreeDButtonState extends State<ThreeDButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         transform: Matrix4.identity()
-          ..translate(0.0, _isPressed ? 10.0 : 0.0), // Move down when pressed
+          ..setTranslationRaw(0.0, _isPressed ? 10.0 : 0.0, 0.0), // Move down when pressed
         decoration: BoxDecoration(
           color: widget.color,
           borderRadius: BorderRadius.circular(24),
