@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
 
-import 'package:fast_delivery/presentation/common/connectivity_wrapper.dart';
-import 'package:fast_delivery/presentation/common/error_boundary.dart';
+import 'package:fast_delivery/core/presentation/components/connectivity_wrapper.dart';
+import 'package:fast_delivery/core/presentation/components/error_boundary.dart';
 import 'package:flutter/foundation.dart';
-import 'package:fast_delivery/core/router/app_router.dart';
+import 'package:fast_delivery/core/presentation/routing/app_router.dart';
 import 'package:fast_delivery/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

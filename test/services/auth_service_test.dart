@@ -1,4 +1,4 @@
-import 'package:fast_delivery/core/services/auth_service.dart';
+import 'package:fast_delivery/features/auth/infrastructure/auth_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';

@@ -2,13 +2,13 @@
 //
 // Verifies the app can launch without errors.
 
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
+import 'package:fast_delivery/features/courier/domain/entities/courier_model.dart';
+import 'package:fast_delivery/features/_hidden_rides/domain/entities/ride_model.dart';
+import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
 import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/services/auth_service.dart';
-import 'package:fast_delivery/core/services/database_service.dart';
-import 'package:fast_delivery/core/services/notification_service.dart';
+import 'package:fast_delivery/features/auth/infrastructure/auth_service.dart';
+import 'package:fast_delivery/core/infrastructure/network/database_service.dart';
+import 'package:fast_delivery/core/infrastructure/notification/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 
