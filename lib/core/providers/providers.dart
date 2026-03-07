@@ -1,5 +1,8 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final dioProvider = Provider<Dio>((ref) => Dio());
 import 'package:fast_delivery/features/courier/domain/entities/courier_model.dart';
 import 'package:fast_delivery/features/_hidden_rides/domain/entities/ride_model.dart';
 import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
