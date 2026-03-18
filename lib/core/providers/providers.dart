@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final dioProvider = Provider<Dio>((ref) => Dio());
 import 'package:fast_delivery/features/courier/domain/entities/courier_model.dart';
 import 'package:fast_delivery/features/_hidden_rides/domain/entities/ride_model.dart';
 import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
@@ -26,10 +24,11 @@ import 'package:fast_delivery/features/admin/infrastructure/revenue_split_servic
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fast_delivery/features/_hidden_rides/infrastructure/ride_service.dart';
 import 'package:fast_delivery/core/infrastructure/services/storage_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ... other providers
+// Dio
+final dioProvider = Provider<Dio>((ref) => Dio());
 
+// Ride Service
 final rideServiceProvider = Provider<RideService>((ref) {
   return RideService();
 });
@@ -38,19 +37,28 @@ final ridesStreamProvider = StreamProvider<List<RideModel>>((ref) {
   return ref.watch(rideServiceProvider).getAvailableRides();
 });
 
-
 // Services
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-final databaseServiceProvider = Provider<DatabaseService>((ref) => DatabaseService());
-final locationServiceProvider = Provider<LocationService>((ref) => LocationService());
-final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
-final savedDestinationsServiceProvider = Provider<SavedDestinationsService>((ref) => SavedDestinationsService());
-final earningsServiceProvider = Provider<EarningsService>((ref) => EarningsService());
-final ratingServiceProvider = Provider<RatingService>((ref) => RatingService());
-final favoriteDriversServiceProvider = Provider<FavoriteDriversService>((ref) => FavoriteDriversService());
-final emailServiceProvider = Provider<EmailService>((ref) => EmailService());
-final notificationServiceProvider = Provider<NotificationService>((ref) => NotificationService(ref));
+final databaseServiceProvider =
+    Provider<DatabaseService>((ref) => DatabaseService());
+final locationServiceProvider =
+    Provider<LocationService>((ref) => LocationService());
+final paymentServiceProvider =
+    Provider<PaymentService>((ref) => PaymentService());
+final storageServiceProvider =
+    Provider<StorageService>((ref) => StorageService());
+final savedDestinationsServiceProvider =
+    Provider<SavedDestinationsService>((ref) => SavedDestinationsService());
+final earningsServiceProvider =
+    Provider<EarningsService>((ref) => EarningsService());
+final ratingServiceProvider =
+    Provider<RatingService>((ref) => RatingService());
+final favoriteDriversServiceProvider =
+    Provider<FavoriteDriversService>((ref) => FavoriteDriversService());
+final emailServiceProvider =
+    Provider<EmailService>((ref) => EmailService());
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => NotificationService(ref));
 
 // Auth State
 final authStateProvider = StreamProvider<User?>((ref) {
@@ -72,7 +80,6 @@ final activeCouriersProvider = StreamProvider<List<CourierModel>>((ref) {
 });
 
 // Driver Online Status
-// Driver Online Status
 class DriverStatusNotifier extends Notifier<bool> {
   @override
   bool build() => false;
@@ -81,21 +88,27 @@ class DriverStatusNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final driverOnlineProvider = NotifierProvider<DriverStatusNotifier, bool>(DriverStatusNotifier.new);
+final driverOnlineProvider =
+    NotifierProvider<DriverStatusNotifier, bool>(DriverStatusNotifier.new);
 
 // Current User Role (for route protection)
 final currentUserRoleProvider = StreamProvider<String?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
-  
-  return ref.watch(databaseServiceProvider).getUserStream(userId).map((user) => user?.role);
+
+  return ref
+      .watch(databaseServiceProvider)
+      .getUserStream(userId)
+      .map((user) => user?.role);
 });
 
 // ==================== INVESTOR PROVIDERS ====================
 
 // Investor Service
-final investorServiceProvider = Provider<InvestorService>((ref) => InvestorService(ref));
-final revenueSplitServiceProvider = Provider<RevenueSplitService>((ref) => RevenueSplitService(ref));
+final investorServiceProvider =
+    Provider<InvestorService>((ref) => InvestorService(ref));
+final revenueSplitServiceProvider =
+    Provider<RevenueSplitService>((ref) => RevenueSplitService(ref));
 
 // Current Investor Profile
 final currentInvestorProvider = StreamProvider<InvestorModel?>((ref) {
@@ -112,26 +125,30 @@ final investorBikesProvider = StreamProvider<List<BikeModel>>((ref) {
 });
 
 // Investor's HP Agreements
-final investorAgreementsProvider = StreamProvider<List<HPAgreementModel>>((ref) {
+final investorAgreementsProvider =
+    StreamProvider<List<HPAgreementModel>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
   return ref.watch(investorServiceProvider).getInvestorAgreements(userId);
 });
 
 // Investor's Earnings
-final investorEarningsProvider = StreamProvider<List<InvestorEarningsModel>>((ref) {
+final investorEarningsProvider =
+    StreamProvider<List<InvestorEarningsModel>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
   return ref.watch(investorServiceProvider).getInvestorEarnings(userId);
 });
 
 // Available Bike Campaigns (for funding)
-final availableBikeCampaignsProvider = StreamProvider<List<BikeModel>>((ref) {
+final availableBikeCampaignsProvider =
+    StreamProvider<List<BikeModel>>((ref) {
   return ref.watch(investorServiceProvider).getAvailableBikeCampaigns();
 });
 
 // Investor's Withdrawal History
-final investorWithdrawalsProvider = StreamProvider<List<InvestorWithdrawalModel>>((ref) {
+final investorWithdrawalsProvider =
+    StreamProvider<List<InvestorWithdrawalModel>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
   return ref.watch(investorServiceProvider).getWithdrawalHistory(userId);
@@ -153,5 +170,3 @@ final adminServiceProvider = Provider<AdminService>((ref) {
 final paystackServiceProvider = Provider<PaystackService>((ref) {
   return PaystackService();
 });
-
-// --- Constants ---
