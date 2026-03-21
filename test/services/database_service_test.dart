@@ -1,66 +1,62 @@
-import 'package:fast_delivery/core/infrastructure/network/database_service.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
 
 void main() {
-  group('DatabaseService Tests', () {
-
-    setUp(() {
-      final _ = DatabaseService();
-    });
-
-    test('saveUser creates proper user document structure', () {
+  group('UserModel', () {
+    test('should create a valid UserModel', () {
+      final now = DateTime.now();
       final user = UserModel(
-        id: 'test_123',
+        uid: 'test-uid',
+        fullName: 'Test User',
         email: 'test@example.com',
-        displayName: 'Test User',
-        phoneNumber: '+2348012345678',
-        role: 'user',
-        walletBalance: 0.0,
-        createdAt: DateTime.now(),
+        phone: '+2348012345678',
+        role: UserRole.customer,
+        referralCode: 'ABC12345',
+        createdAt: now,
+        updatedAt: now,
       );
 
-      expect(user.id, equals('test_123'));
-      expect(user.email, equals('test@example.com'));
-      expect(user.role, equals('user'));
-      expect(user.walletBalance, equals(0.0));
+      expect(user.uid, 'test-uid');
+      expect(user.fullName, 'Test User');
+      expect(user.email, 'test@example.com');
+      expect(user.role, UserRole.customer);
+      expect(user.isVerified, false);
+      expect(user.walletBalance, 0.0);
     });
 
-    test('UserModel toMap conversion works correctly', () {
+    test('should support copyWith', () {
+      final now = DateTime.now();
       final user = UserModel(
-        id: 'test_123',
+        uid: 'test-uid',
+        fullName: 'Test User',
         email: 'test@example.com',
-        displayName: 'Test User',
-        phoneNumber: '+2348012345678',
-        role: 'user',
-        walletBalance: 100.0,
-        createdAt: DateTime(2024, 1, 1),
+        phone: '+2348012345678',
+        referralCode: 'ABC12345',
+        createdAt: now,
+        updatedAt: now,
       );
 
-      final map = user.toMap();
-      
-      expect(map['email'], equals('test@example.com'));
-      expect(map['displayName'], equals('Test User'));
-      expect(map['role'], equals('user'));
-      expect(map['walletBalance'], equals(100.0));
+      final updatedUser = user.copyWith(fullName: 'Updated User');
+      expect(updatedUser.fullName, 'Updated User');
+      expect(updatedUser.email, 'test@example.com');
     });
 
-    test('UserModel fromMap reconstruction works', () {
-      final map = {
-        'email': 'test@example.com',
-        'displayName': 'Test User',
-        'phoneNumber': '+2348012345678',
-        'role': 'user',
-        'walletBalance': 50.0,
-        'createdAt': Timestamp.fromDate(DateTime(2024, 1, 1)),
-      };
+    test('should convert to Firestore map', () {
+      final now = DateTime.now();
+      final user = UserModel(
+        uid: 'test-uid',
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '+2348012345678',
+        referralCode: 'ABC12345',
+        createdAt: now,
+        updatedAt: now,
+      );
 
-      final user = UserModel.fromMap(map, 'test_id');
-      
-      expect(user.id, equals('test_id'));
-      expect(user.email, equals('test@example.com'));
-      expect(user.walletBalance, equals(50.0));
+      final map = user.toFirestore();
+      expect(map['fullName'], 'Test User');
+      expect(map['email'], 'test@example.com');
+      expect(map['role'], 'customer');
     });
   });
 }

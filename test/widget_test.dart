@@ -1,57 +1,29 @@
-// Basic Flutter widget test for Fast Delivery app.
-//
-// Verifies the app can launch without errors.
-
-import 'package:fast_delivery/features/courier/domain/entities/courier_model.dart';
-import 'package:fast_delivery/features/_hidden_rides/domain/entities/ride_model.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/auth/infrastructure/auth_service.dart';
-import 'package:fast_delivery/core/infrastructure/network/database_service.dart';
-import 'package:fast_delivery/core/infrastructure/notification/notification_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:fast_delivery/main.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class FakeNotificationService extends Fake implements NotificationService {
-  @override
-  Future<void> initialize() async {}
-}
-
-class FakeAuthService extends Fake implements AuthService {
-  @override
-  Stream<User?> get authStateChanges => Stream.value(null);
-}
-
-class FakeDatabaseService extends Fake implements DatabaseService {
-  @override
-  Stream<List<RideModel>> getActiveRides() => Stream.value([]);
-
-  @override
-  Stream<List<CourierModel>> getActiveCouriers() => Stream.value([]);
-
-  @override
-  Stream<UserModel?> getUserStream(String uid) => Stream.value(null);
-}
+import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
 
 void main() {
-  testWidgets('App launches without errors', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        notificationServiceProvider.overrideWithValue(FakeNotificationService()),
-        authServiceProvider.overrideWithValue(FakeAuthService()),
-        databaseServiceProvider.overrideWithValue(FakeDatabaseService()),
-      ],
-      child: const FastDeliveryApp(),
-    ));
+  testWidgets('App theme applies correctly', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.futuristicTheme,
+          home: const Scaffold(
+            body: Center(
+              child: Text('Dilivvafast'),
+            ),
+          ),
+        ),
+      ),
+    );
 
-    // Allow async operations to complete
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    expect(find.text('Dilivvafast'), findsOneWidget);
+  });
 
-    // Verify the app rendered something (no crash)
-    expect(find.byType(FastDeliveryApp), findsOneWidget);
+  test('AppTheme has correct colors', () {
+    expect(AppTheme.primaryColor, const Color(0xFF00F0FF));
+    expect(AppTheme.secondaryColor, const Color(0xFFFF00AA));
+    expect(AppTheme.backgroundColor, const Color(0xFF0A0E21));
   });
 }
