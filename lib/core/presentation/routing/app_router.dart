@@ -37,6 +37,11 @@ import 'package:fast_delivery/features/investor/presentation/screens/investor_bi
 // Phase 5 screens
 import 'package:fast_delivery/features/profile/presentation/screens/settings_screen.dart';
 
+// Phase 6 screens
+import 'package:fast_delivery/features/admin/presentation/screens/admin_analytics_screen.dart';
+import 'package:fast_delivery/features/support/presentation/screens/chatbot_screen.dart';
+import 'package:fast_delivery/features/referral/presentation/screens/referral_screen.dart';
+
 
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
 
@@ -390,6 +395,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      // Admin Analytics
+      GoRoute(
+        path: '/admin/analytics',
+        name: 'adminAnalytics',
+        builder: (context, state) => const AdminAnalyticsScreen(),
+      ),
+      // AI Chatbot
+      GoRoute(
+        path: '/support/chat',
+        name: 'supportChat',
+        builder: (context, state) => const ChatbotScreen(),
+      ),
+      // Referral System
+      GoRoute(
+        path: '/referral',
+        name: 'referral',
+        builder: (context, state) => const ReferralScreen(),
       ),
     ],
   );
