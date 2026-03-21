@@ -15,8 +15,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:fast_delivery/core/config/mapbox_init_stub.dart'
     if (dart.library.io) 'package:fast_delivery/core/config/mapbox_init_mobile.dart'
     if (dart.library.html) 'package:fast_delivery/core/config/mapbox_init_web.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:fast_delivery/core/infrastructure/notification/fcm_service.dart';
 
 void main() async {
+  // Register FCM background message handler (must be before runApp)
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   // Wrap entire app in error zone
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();

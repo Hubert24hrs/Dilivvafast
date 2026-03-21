@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 
 import 'package:fast_delivery/core/providers/providers.dart';
@@ -33,11 +34,11 @@ class WalletScreen extends ConsumerWidget {
             // Action buttons
             Row(
               children: [
-                _actionButton('Fund Wallet', Icons.add_circle_outline,
-                    const Color(0xFF4CAF50), () {}),
+              _actionButton('Fund Wallet', Icons.add_circle_outline,
+                    const Color(0xFF4CAF50), () => context.push('/wallet/top-up')),
                 const SizedBox(width: 12),
                 _actionButton('Withdraw', Icons.arrow_downward,
-                    const Color(0xFFFF9800), () {}),
+                    const Color(0xFFFF9800), () => _showWithdrawDialog(context, ref)),
                 const SizedBox(width: 12),
                 _actionButton('Transfer', Icons.swap_horiz,
                     const Color(0xFF2196F3), () {}),
@@ -256,5 +257,136 @@ class WalletScreen extends ConsumerWidget {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  void _showWithdrawDialog(BuildContext context, WidgetRef ref) {
+    final amountController = TextEditingController();
+    final bankController = TextEditingController();
+    final accountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: const Color(0xFF1D1E33),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Withdraw Funds',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: bankController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Bank Name',
+                  labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5)),
+                  filled: true,
+                  fillColor: const Color(0xFF0A0E21),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: accountController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Account Number',
+                  labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5)),
+                  filled: true,
+                  fillColor: const Color(0xFF0A0E21),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: amountController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Amount (₦)',
+                  labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5)),
+                  filled: true,
+                  fillColor: const Color(0xFF0A0E21),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final amount =
+                        double.tryParse(amountController.text.trim());
+                    if (amount == null || amount < 500) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Minimum withdrawal is ₦500'),
+                            backgroundColor: Colors.redAccent),
+                      );
+                      return;
+                    }
+                    // Submit withdrawal request
+                    try {
+                      final user = ref.read(currentUserProvider).value;
+                      if (user == null) return;
+                      await ref.read(firestoreProvider).collection('withdrawal_requests').add({
+                        'userId': user.uid,
+                        'amount': amount,
+                        'bankName': bankController.text.trim(),
+                        'accountNumber': accountController.text.trim(),
+                        'status': 'pending',
+                        'createdAt': DateTime.now().toIso8601String(),
+                      });
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Withdrawal request submitted'),
+                              backgroundColor: Color(0xFF4CAF50)),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.redAccent),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9800),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('Request Withdrawal',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

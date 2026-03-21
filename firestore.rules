@@ -1,233 +1,133 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // ==================== HELPER FUNCTIONS ====================
-    
-    // Authentication & Authorization
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-    
+
     function isAdmin() {
-      return isAuthenticated() && getUserRole() == 'admin';
-    }
-    
-    function isDriver() {
-      return isAuthenticated() && getUserRole() == 'driver';
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Input Validation
-    function isValidAmount(amount) {
-      return amount is number && amount > 0;
+    function isDriver() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
     }
-    
-    function hasRequiredFields(requiredFields) {
-      return request.resource.data.keys().hasAll(requiredFields);
-    }
-    
-    function isImmutable(field) {
-      return request.resource.data[field] == resource.data[field];
-    }
-    
-    // ==================== USERS COLLECTION ====================
+
+    // ==================== USERS ====================
+
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow update: if isOwner(userId) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+
+      match /notifications/{notificationId} {
+        allow read, update: if isOwner(userId);
+        allow create: if isAuthenticated();
+      }
     }
 
-    // ==================== RIDES COLLECTION ====================
-    match /rides/{rideId} {
+    // ==================== ORDERS ====================
+
+    match /orders/{orderId} {
       allow read: if isAuthenticated() && (
         resource.data.userId == request.auth.uid ||
         resource.data.driverId == request.auth.uid ||
-        (isDriver() && resource.data.status == 'pending') ||
         isAdmin()
       );
-      
-      allow create: if isAuthenticated() && 
-                    request.resource.data.userId == request.auth.uid;
-      
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
       allow update: if isAuthenticated() && (
+        (resource.data.driverId == request.auth.uid && isDriver()) ||
         resource.data.userId == request.auth.uid ||
-        resource.data.driverId == request.auth.uid ||
-        (isDriver() && resource.data.status == 'pending') ||
         isAdmin()
       );
-      
       allow delete: if isAdmin();
-      
+
       match /messages/{messageId} {
-        allow read, write: if isAuthenticated() && (
-          get(/databases/$(database)/documents/rides/$(rideId)).data.userId == request.auth.uid ||
-          get(/databases/$(database)/documents/rides/$(rideId)).data.driverId == request.auth.uid
+        allow read, create: if isAuthenticated() && (
+          get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/orders/$(orderId)).data.driverId == request.auth.uid ||
+          isAdmin()
         );
       }
     }
 
-    // ==================== COURIERS COLLECTION ====================
-    match /couriers/{courierId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.riderId == request.auth.uid ||
-        (isDriver() && resource.data.status == 'pending') ||
-        isAdmin()
-      );
-      
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      allow update: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.riderId == request.auth.uid ||
-        (isDriver() && resource.data.status == 'pending') ||
-        isAdmin()
-      );
-      
-      allow delete: if isAdmin();
-    }
+    // ==================== TRANSACTIONS ====================
 
-    // ==================== TRANSACTIONS COLLECTION (STRICT) ====================
     match /transactions/{transactionId} {
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      
-      // Enforce strict schema on creation
-      allow create: if isAuthenticated() && 
-                    request.resource.data.userId == request.auth.uid &&
-                    hasRequiredFields(['amount', 'type', 'userId', 'createdAt']) &&
-                    isValidAmount(request.resource.data.amount);
-      
-      // Immutable financial records
-      allow update, delete: if false;
-    }
-
-    // ==================== DRIVER APPLICATIONS COLLECTION ====================
-    match /driver_applications/{applicationId} {
-      allow read: if isOwner(applicationId) || isAdmin();
-      allow create: if isAuthenticated() && applicationId == request.auth.uid;
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // ==================== RATINGS COLLECTION ====================
-    match /ratings/{ratingId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && 
-                    request.resource.data.rating is number &&
-                    request.resource.data.rating >= 1 &&
-                    request.resource.data.rating <= 5;
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if false;
       allow update, delete: if isAdmin();
     }
 
-    // ==================== PROMOS COLLECTION ====================
+    // ==================== BIKES ====================
+
+    match /bikes/{bikeId} {
+      allow read: if isAuthenticated() && (
+        resource.data.investorId == request.auth.uid || isAdmin()
+      );
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==================== ZONES & PROMOS ====================
+
+    match /zones/{zoneId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /promos/{promoId} {
       allow read: if isAuthenticated();
       allow create, update, delete: if isAdmin();
     }
 
-    // ==================== REFERRALS COLLECTION ====================
-    match /referrals/{referralId} {
+    // ==================== DRIVER APPLICATIONS ====================
+
+    match /driver_applications/{applicationId} {
       allow read: if isAuthenticated() && (
-        resource.data.referrerId == request.auth.uid ||
-        resource.data.refereeId == request.auth.uid ||
-        isAdmin()
+        resource.data.userId == request.auth.uid || isAdmin()
       );
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
     }
 
-    // ==================== FAVORITE DRIVERS COLLECTION ====================
-    match /favorite_drivers/{favoriteId} {
-      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-    }
+    // ==================== HP AGREEMENTS ====================
 
-    // ==================== SAVED DESTINATIONS COLLECTION ====================
-    match /saved_destinations/{destId} {
-      allow read, write: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-    }
-
-    // ==================== INVESTORS COLLECTION ====================
-    match /investors/{investorId} {
-      allow read: if isOwner(investorId) || isAdmin();
-      allow create: if isOwner(investorId);
-      allow update: if isOwner(investorId) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // ==================== BIKES COLLECTION (STRICT) ====================
-    match /bikes/{bikeId} {
-      allow read: if isAuthenticated() && (
-        resource.data.status == 'pending_funding' || 
-        resource.data.investorId == request.auth.uid ||
-        resource.data.riderId == request.auth.uid ||
-        isAdmin()
-      );
-      
-      allow create: if isAdmin();
-      
-      // Prevent investors from modifying critical pricing fields
-      allow update: if isAuthenticated() && (
-        (isAdmin()) ||
-        (resource.data.investorId == request.auth.uid && isImmutable('purchasePrice') && isImmutable('commission')) ||
-        (resource.data.riderId == request.auth.uid)
-      );
-      
-      allow delete: if isAdmin();
-    }
-
-    // ==================== HP AGREEMENTS COLLECTION ====================
     match /hp_agreements/{agreementId} {
       allow read: if isAuthenticated() && (
         resource.data.investorId == request.auth.uid ||
         resource.data.riderId == request.auth.uid ||
         isAdmin()
       );
-      
-      allow create: if isAuthenticated() && 
-                    request.resource.data.investorId == request.auth.uid &&
-                    hasRequiredFields(['bikeId', 'totalRepayment', 'status']);
-      
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
-    // ==================== INVESTOR EARNINGS COLLECTION ====================
-    match /investor_earnings/{earningId} {
-      allow read: if isAuthenticated() && (
-        resource.data.investorId == request.auth.uid ||
-        isAdmin()
-      );
-      allow create: if false; // System only
+    // ==================== RATINGS ====================
+
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
 
-    // ==================== INVESTOR WITHDRAWALS COLLECTION (STRICT) ====================
-    match /investor_withdrawals/{withdrawalId} {
-      allow read: if isAuthenticated() && (
-        resource.data.investorId == request.auth.uid ||
-        isAdmin()
-      );
-      
-      allow create: if isAuthenticated() && 
-                    request.resource.data.investorId == request.auth.uid &&
-                    isValidAmount(request.resource.data.amount) &&
-                    request.resource.data.status == 'pending';
-      
-      allow update: if isAdmin();
-      allow delete: if false;
+    // ==================== CATCH-ALL ====================
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
-

@@ -34,6 +34,9 @@ import 'package:fast_delivery/features/admin/presentation/screens/admin_zones_sc
 import 'package:fast_delivery/features/payment/presentation/screens/top_up_screen.dart';
 import 'package:fast_delivery/features/investor/presentation/screens/investor_bike_detail_screen.dart';
 
+// Phase 5 screens
+import 'package:fast_delivery/features/profile/presentation/screens/settings_screen.dart';
+
 
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
 
@@ -381,6 +384,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/wallet/top-up',
         name: 'walletTopUp',
         builder: (context, state) => const TopUpScreen(),
+      ),
+      // Settings
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
