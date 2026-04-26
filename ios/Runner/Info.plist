@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fast Delivery</string>
+	<string>Dilivvafast</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -54,5 +54,14 @@
 	<!-- Disable Firebase App Delegate Proxy for manual FCM handling -->
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
+	<!-- Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location when open to track deliveries and show your position on the map.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to location when in the background to track ongoing deliveries.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to scan QR codes and capture driver documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photos access to upload driver documents from your gallery.</string>
 </dict>
 </plist>
