@@ -1,4 +1,4 @@
-import 'package:fast_delivery/core/presentation/utils/validators.dart';
+import 'package:dilivvafast/core/presentation/utils/validators.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

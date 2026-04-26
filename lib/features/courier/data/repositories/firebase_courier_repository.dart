@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
-import 'package:fast_delivery/features/courier/domain/repositories/i_courier_repository.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
 
 class FirebaseCourierRepository implements ICourierRepository {
   FirebaseCourierRepository({FirebaseFirestore? firestore})

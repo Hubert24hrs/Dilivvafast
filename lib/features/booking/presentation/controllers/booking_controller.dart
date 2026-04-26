@@ -2,9 +2,9 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/services/fare_calculator_service.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/services/fare_calculator_service.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 /// State for the multi-step booking wizard.
 class BookingState {

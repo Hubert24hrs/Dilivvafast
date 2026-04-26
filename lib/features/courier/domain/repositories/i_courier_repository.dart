@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 /// Abstract repository for courier order operations.
 abstract class ICourierRepository {

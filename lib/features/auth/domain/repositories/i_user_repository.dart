@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 /// Abstract user repository interface for user profile operations.
 abstract class IUserRepository {

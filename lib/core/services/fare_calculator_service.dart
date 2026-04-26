@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
-import 'package:fast_delivery/features/booking/domain/entities/zone_model.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/booking/domain/entities/zone_model.dart';
 
 /// Dynamic fare calculator based on zone config from Firestore.
 class FareCalculatorService {

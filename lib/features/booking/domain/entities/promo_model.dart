@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 part 'promo_model.freezed.dart';
 part 'promo_model.g.dart';

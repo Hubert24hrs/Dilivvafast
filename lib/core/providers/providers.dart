@@ -9,37 +9,37 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Services
-import 'package:fast_delivery/core/services/location_tracking_service.dart';
-import 'package:fast_delivery/core/infrastructure/notification/fcm_service.dart';
+import 'package:dilivvafast/core/services/location_tracking_service.dart';
+import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
 
 // Repository interfaces
-import 'package:fast_delivery/features/auth/domain/repositories/i_auth_repository.dart';
-import 'package:fast_delivery/features/auth/domain/repositories/i_user_repository.dart';
-import 'package:fast_delivery/features/courier/domain/repositories/i_courier_repository.dart';
-import 'package:fast_delivery/features/payment/domain/repositories/i_payment_repository.dart';
-import 'package:fast_delivery/features/investor/domain/repositories/i_investor_repository.dart';
+import 'package:dilivvafast/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:dilivvafast/features/auth/domain/repositories/i_user_repository.dart';
+import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
+import 'package:dilivvafast/features/payment/domain/repositories/i_payment_repository.dart';
+import 'package:dilivvafast/features/investor/domain/repositories/i_investor_repository.dart';
 
 // Firebase implementations
-import 'package:fast_delivery/features/auth/data/repositories/firebase_auth_repository.dart';
-import 'package:fast_delivery/features/auth/data/repositories/firebase_user_repository.dart';
-import 'package:fast_delivery/features/courier/data/repositories/firebase_courier_repository.dart';
-import 'package:fast_delivery/features/payment/data/repositories/firebase_payment_repository.dart';
-import 'package:fast_delivery/features/investor/data/repositories/firebase_investor_repository.dart';
+import 'package:dilivvafast/features/auth/data/repositories/firebase_auth_repository.dart';
+import 'package:dilivvafast/features/auth/data/repositories/firebase_user_repository.dart';
+import 'package:dilivvafast/features/courier/data/repositories/firebase_courier_repository.dart';
+import 'package:dilivvafast/features/payment/data/repositories/firebase_payment_repository.dart';
+import 'package:dilivvafast/features/investor/data/repositories/firebase_investor_repository.dart';
 
 // Models
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
-import 'package:fast_delivery/features/payment/domain/entities/transaction_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/hp_agreement_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_earnings_model.dart';
-import 'package:fast_delivery/core/domain/entities/notification_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_earnings_model.dart';
+import 'package:dilivvafast/core/domain/entities/notification_model.dart';
 
 // Core services
-import 'package:fast_delivery/core/services/fare_calculator_service.dart';
-import 'package:fast_delivery/core/infrastructure/notification/notification_service.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/core/services/fare_calculator_service.dart';
+import 'package:dilivvafast/core/infrastructure/notification/notification_service.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
 
 // ==================== FIREBASE INSTANCE PROVIDERS ====================
 

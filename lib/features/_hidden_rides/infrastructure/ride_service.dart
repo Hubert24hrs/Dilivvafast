@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/features/_hidden_rides/domain/entities/ride_model.dart';
+import 'package:dilivvafast/features/_hidden_rides/domain/entities/ride_model.dart';
 
 /// Stub ride service
 class RideService {

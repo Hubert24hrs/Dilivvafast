@@ -46,3 +46,19 @@ app.*.map.json
 
 # Environment variables - NEVER commit!
 .env
+
+# Build & analysis logs
+analyze_log.txt
+build_log.txt
+build_log_2.txt
+web_build_log.txt
+dart_files.txt
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# Keystore files
+key.properties
+*.jks

@@ -2,45 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/features/auth/presentation/screens/login_screen.dart';
-import 'package:fast_delivery/features/home/presentation/screens/home_screen.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart';
+import 'package:dilivvafast/features/home/presentation/screens/home_screen.dart';
 
 // Phase 2 screens
-import 'package:fast_delivery/features/booking/presentation/screens/booking_screen.dart';
-import 'package:fast_delivery/features/courier/presentation/screens/tracking_screen.dart';
-import 'package:fast_delivery/features/courier/presentation/screens/orders_screen.dart';
-import 'package:fast_delivery/features/courier/presentation/screens/chat_screen.dart';
-import 'package:fast_delivery/features/payment/presentation/screens/wallet_screen.dart';
-import 'package:fast_delivery/features/driver/presentation/screens/driver_home_screen.dart';
-import 'package:fast_delivery/features/driver/presentation/screens/driver_active_delivery_screen.dart';
-import 'package:fast_delivery/features/admin/presentation/screens/admin_dashboard_screen.dart';
-import 'package:fast_delivery/features/admin/presentation/screens/admin_screens.dart';
-import 'package:fast_delivery/features/investor/presentation/screens/investor_screens.dart';
-import 'package:fast_delivery/features/profile/presentation/screens/profile_screen.dart';
-import 'package:fast_delivery/features/rating/presentation/screens/rating_screen.dart';
+import 'package:dilivvafast/features/booking/presentation/screens/booking_screen.dart';
+import 'package:dilivvafast/features/courier/presentation/screens/tracking_screen.dart';
+import 'package:dilivvafast/features/courier/presentation/screens/orders_screen.dart';
+import 'package:dilivvafast/features/courier/presentation/screens/chat_screen.dart';
+import 'package:dilivvafast/features/payment/presentation/screens/wallet_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_home_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_active_delivery_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_dashboard_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_screens.dart';
+import 'package:dilivvafast/features/investor/presentation/screens/investor_screens.dart';
+import 'package:dilivvafast/features/profile/presentation/screens/profile_screen.dart';
+import 'package:dilivvafast/features/rating/presentation/screens/rating_screen.dart';
 
 // Phase 3 screens
-import 'package:fast_delivery/features/auth/presentation/screens/register_screen.dart';
-import 'package:fast_delivery/features/auth/presentation/screens/forgot_password_screen.dart';
-import 'package:fast_delivery/features/auth/presentation/screens/onboarding_screen.dart';
-import 'package:fast_delivery/features/notification/presentation/screens/notifications_screen.dart';
-import 'package:fast_delivery/features/driver/presentation/screens/driver_application_screen.dart';
-import 'package:fast_delivery/features/admin/presentation/screens/admin_promos_screen.dart';
-import 'package:fast_delivery/features/admin/presentation/screens/admin_zones_screen.dart';
+import 'package:dilivvafast/features/auth/presentation/screens/register_screen.dart';
+import 'package:dilivvafast/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:dilivvafast/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:dilivvafast/features/notification/presentation/screens/notifications_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_application_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_promos_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_zones_screen.dart';
 
 // Phase 4 screens
-import 'package:fast_delivery/features/payment/presentation/screens/top_up_screen.dart';
-import 'package:fast_delivery/features/investor/presentation/screens/investor_bike_detail_screen.dart';
+import 'package:dilivvafast/features/payment/presentation/screens/top_up_screen.dart';
+import 'package:dilivvafast/features/investor/presentation/screens/investor_bike_detail_screen.dart';
 
 // Phase 5 screens
-import 'package:fast_delivery/features/profile/presentation/screens/settings_screen.dart';
+import 'package:dilivvafast/features/profile/presentation/screens/settings_screen.dart';
 
 // Phase 6 screens
-import 'package:fast_delivery/features/admin/presentation/screens/admin_analytics_screen.dart';
-import 'package:fast_delivery/features/support/presentation/screens/chatbot_screen.dart';
-import 'package:fast_delivery/features/referral/presentation/screens/referral_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_analytics_screen.dart';
+import 'package:dilivvafast/features/support/presentation/screens/chatbot_screen.dart';
+import 'package:dilivvafast/features/referral/presentation/screens/referral_screen.dart';
+
+// Phase 7 screens (new)
+import 'package:dilivvafast/features/auth/presentation/screens/biometric_setup_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_earnings_screen.dart';
+import 'package:dilivvafast/features/booking/presentation/screens/matching_screen.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
@@ -68,8 +74,8 @@ class _ShellScaffold extends StatelessWidget {
         currentIndex: currentIndex,
         onTap: onTap,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF1D1E33),
-        selectedItemColor: const Color(0xFF00F0FF),
+        backgroundColor: AppTheme.surfaceColor,
+        selectedItemColor: AppTheme.primaryColor,
         unselectedItemColor: Colors.white54,
         items: items,
       ),
@@ -92,6 +98,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/onboarding' ||
+          state.matchedLocation == '/biometric-setup' ||
           state.matchedLocation == '/';
 
       // Not logged in — redirect to login
@@ -255,7 +262,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/driver/earnings',
             name: 'driverEarnings',
-            builder: (context, state) => const WalletScreen(),
+            builder: (context, state) => const DriverEarningsScreen(),
           ),
           GoRoute(
             path: '/driver/profile',
@@ -414,6 +421,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'referral',
         builder: (context, state) => const ReferralScreen(),
       ),
+      // Biometric Setup (post-registration)
+      GoRoute(
+        path: '/biometric-setup',
+        name: 'biometricSetup',
+        builder: (context, state) => const BiometricSetupScreen(),
+      ),
+      // Driver Matching (finding driver animation)
+      GoRoute(
+        path: '/matching/:orderId',
+        name: 'matching',
+        builder: (context, state) => MatchingScreen(
+          orderId: state.pathParameters['orderId'],
+        ),
+      ),
     ],
   );
 });
@@ -538,24 +559,24 @@ class _SplashScreenState extends ConsumerState<_SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: AppTheme.backgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.delivery_dining,
-                size: 80, color: Color(0xFF00F0FF)),
+                size: 80, color: AppTheme.primaryColor),
             const SizedBox(height: 24),
             Text(
               'DILIVVAFAST',
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: const Color(0xFF00F0FF),
+                    color: AppTheme.primaryColor,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
                   ),
             ),
             const SizedBox(height: 16),
-            const CircularProgressIndicator(color: Color(0xFF00F0FF)),
+            const CircularProgressIndicator(color: AppTheme.primaryColor),
           ],
         ),
       ),

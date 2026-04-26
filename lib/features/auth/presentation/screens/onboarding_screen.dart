@@ -15,14 +15,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     _OnboardingPage(
       icon: Icons.delivery_dining,
-      color: Color(0xFF00F0FF),
+      color: Color(0xFFFF6B00),
       title: 'Fast & Reliable Delivery',
       subtitle:
           'Send packages across Lagos, Abuja, Kano, and Port Harcourt with real-time tracking and affordable rates.',
     ),
     _OnboardingPage(
       icon: Icons.gps_fixed,
-      color: Color(0xFFFF00AA),
+      color: Color(0xFFFF9500),
       title: 'Track in Real-Time',
       subtitle:
           'Watch your delivery move on the map in real-time. Get instant updates at every step — pickup, transit, and delivery.',

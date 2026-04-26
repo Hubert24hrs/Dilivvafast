@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 
 class ProfileScreen extends ConsumerWidget {
@@ -28,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: userAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -50,8 +50,8 @@ class ProfileScreen extends ConsumerWidget {
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFF00F0FF),
-                        const Color(0xFF00F0FF).withValues(alpha: 0.5),
+                        const Color(0xFFFF6B00),
+                        const Color(0xFFFF6B00).withValues(alpha: 0.5),
                       ],
                     ),
                   ),
@@ -83,13 +83,13 @@ class ProfileScreen extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.1),
+                    color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     user.role.name.toUpperCase(),
                     style: const TextStyle(
-                        color: Color(0xFF00F0FF),
+                        color: Color(0xFFFF6B00),
                         fontSize: 11,
                         fontWeight: FontWeight.w600),
                   ),
@@ -158,7 +158,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF00F0FF), size: 20),
+          Icon(icon, color: const Color(0xFFFF6B00), size: 20),
           const SizedBox(width: 12),
           Text(label,
               style: TextStyle(

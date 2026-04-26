@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/features/payment/presentation/screens/wallet_screen.dart';
+import 'package:dilivvafast/features/payment/presentation/screens/wallet_screen.dart';
 
 void main() {
   group('WalletScreen', () {

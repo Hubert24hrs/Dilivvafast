@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/booking/presentation/widgets/address_search_field.dart';
-import 'package:fast_delivery/features/driver/presentation/controllers/driver_route_controller.dart';
-import 'package:fast_delivery/core/services/route_matching_service.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
+import 'package:dilivvafast/features/driver/presentation/controllers/driver_route_controller.dart';
+import 'package:dilivvafast/core/services/route_matching_service.dart';
 
 class DriverHomeScreen extends ConsumerWidget {
   const DriverHomeScreen({super.key});
@@ -98,8 +98,8 @@ class DriverHomeScreen extends ConsumerWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF00F0FF),
-                  const Color(0xFF00F0FF).withValues(alpha: 0.5),
+                  const Color(0xFFFF6B00),
+                  const Color(0xFFFF6B00).withValues(alpha: 0.5),
                 ],
               ),
             ),
@@ -194,7 +194,7 @@ class DriverHomeScreen extends ConsumerWidget {
             Icons.attach_money, const Color(0xFF4CAF50)),
         const SizedBox(width: 12),
         _statCard('Deliveries', '$deliveries', Icons.local_shipping,
-            const Color(0xFF00F0FF)),
+            const Color(0xFFFF6B00)),
         const SizedBox(width: 12),
         _statCard('Rating', rating.toStringAsFixed(1), Icons.star,
             const Color(0xFFFFAB00)),
@@ -234,20 +234,20 @@ class DriverHomeScreen extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF00F0FF).withValues(alpha: 0.08),
-            const Color(0xFFFF00AA).withValues(alpha: 0.05),
+            const Color(0xFFFF6B00).withValues(alpha: 0.08),
+            const Color(0xFFFF9500).withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: const Color(0xFF00F0FF).withValues(alpha: 0.15)),
+            Border.all(color: const Color(0xFFFF6B00).withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.route, color: Color(0xFF00F0FF), size: 22),
+              Icon(Icons.route, color: Color(0xFFFF6B00), size: 22),
               SizedBox(width: 8),
               Text(
                 'Set Your Route',
@@ -294,7 +294,7 @@ class DriverHomeScreen extends ConsumerWidget {
                   : const Icon(Icons.search, size: 18),
               label: Text(state.isLoading ? 'Searching...' : 'Find Deliveries'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00F0FF),
+                backgroundColor: const Color(0xFFFF6B00),
                 foregroundColor: const Color(0xFF0A0E21),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -357,7 +357,7 @@ class DriverHomeScreen extends ConsumerWidget {
         color: const Color(0xFF1D1E33),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+          color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -370,13 +370,13 @@ class DriverHomeScreen extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+                  color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '₦${order.driverEarnings.toStringAsFixed(0)}',
                   style: const TextStyle(
-                    color: Color(0xFF00F0FF),
+                    color: Color(0xFFFF6B00),
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -407,10 +407,10 @@ class DriverHomeScreen extends ConsumerWidget {
 
           // Route
           _orderRouteRow(Icons.location_on, order.pickupAddress,
-              const Color(0xFF00F0FF)),
+              const Color(0xFFFF6B00)),
           const SizedBox(height: 6),
           _orderRouteRow(
-              Icons.flag, order.dropoffAddress, const Color(0xFFFF00AA)),
+              Icons.flag, order.dropoffAddress, const Color(0xFFFF9500)),
           const SizedBox(height: 6),
 
           // Package info
@@ -449,7 +449,7 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () => ctrl.acceptOrder(order.id),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00F0FF),
+                    backgroundColor: const Color(0xFFFF6B00),
                     foregroundColor: const Color(0xFF0A0E21),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -516,11 +516,11 @@ class DriverHomeScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: const Color(0xFFFF00AA).withValues(alpha: 0.15),
+            color: const Color(0xFFFF9500).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(badge,
-              style: const TextStyle(color: Color(0xFFFF00AA), fontSize: 11)),
+              style: const TextStyle(color: Color(0xFFFF9500), fontSize: 11)),
         ),
       ],
     );
@@ -531,7 +531,7 @@ class DriverHomeScreen extends ConsumerWidget {
 
     return pendingAsync.when(
       loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
       error: (e, _) =>
           Text('Error: $e', style: const TextStyle(color: Colors.red)),
       data: (orders) {
@@ -572,7 +572,7 @@ class DriverHomeScreen extends ConsumerWidget {
                       Text(
                         '₦${order.driverEarnings.toStringAsFixed(0)}',
                         style: const TextStyle(
-                            color: Color(0xFF00F0FF),
+                            color: Color(0xFFFF6B00),
                             fontWeight: FontWeight.bold),
                       ),
                     ],

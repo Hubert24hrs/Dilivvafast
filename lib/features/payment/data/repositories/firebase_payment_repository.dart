@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
-import 'package:fast_delivery/features/payment/domain/entities/transaction_model.dart';
-import 'package:fast_delivery/features/payment/domain/repositories/i_payment_repository.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
+import 'package:dilivvafast/features/payment/domain/repositories/i_payment_repository.dart';
 
 class FirebasePaymentRepository implements IPaymentRepository {
   FirebasePaymentRepository({
@@ -57,9 +57,9 @@ class FirebasePaymentRepository implements IPaymentRepository {
               isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .get();
 
-      final total = snapshot.docs.fold<double>(0.0, (sum, doc) {
+      final total = snapshot.docs.fold<double>(0.0, (total, doc) {
         final data = doc.data();
-        return sum + ((data['amount'] as num?)?.toDouble() ?? 0.0);
+        return total + ((data['amount'] as num?)?.toDouble() ?? 0.0);
       });
 
       return Right(total);
@@ -81,9 +81,9 @@ class FirebasePaymentRepository implements IPaymentRepository {
               isLessThanOrEqualTo: Timestamp.fromDate(end))
           .get();
 
-      final total = snapshot.docs.fold<double>(0.0, (sum, doc) {
+      final total = snapshot.docs.fold<double>(0.0, (total, doc) {
         final data = doc.data();
-        return sum + ((data['amount'] as num?)?.toDouble() ?? 0.0);
+        return total + ((data['amount'] as num?)?.toDouble() ?? 0.0);
       });
 
       return Right(total);

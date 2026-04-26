@@ -1,0 +1,37 @@
+﻿
+┌─────────────────────────────────────────────────────────┐
+│ A new version of Flutter is available!                  │
+│                                                         │
+│ To update to the latest version, run "flutter upgrade". │
+└─────────────────────────────────────────────────────────┘
+Analyzing Dilivvafast...                                        
+
+   info - Angle brackets will be interpreted as HTML - lib\core\errors\failures.dart:2:28 - unintended_html_in_doc_comment
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\admin\presentation\screens\admin_promos_screen.dart:155:13 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\admin\presentation\screens\admin_promos_screen.dart:269:56 - curly_braces_in_flow_control_structures
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\admin\presentation\screens\admin_zones_screen.dart:118:17 - deprecated_member_use
+   info - Unnecessary use of string interpolation - lib\features\admin\presentation\screens\admin_zones_screen.dart:141:19 - unnecessary_string_interpolations
+warning - The declaration '_onDriverFound' isn't referenced - lib\features\booking\presentation\screens\matching_screen.dart:94:8 - unused_element
+   info - Unnecessary use of multiple underscores - lib\features\booking\presentation\widgets\address_search_field.dart:139:37 - unnecessary_underscores
+   info - Angle brackets will be interpreted as HTML - lib\features\courier\domain\entities\courier_order_model.dart:79:28 - unintended_html_in_doc_comment
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\screens\home_screen.dart:146:46 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\screens\home_screen.dart:339:28 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\screens\home_screen.dart:369:28 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\investor\presentation\screens\investor_screens.dart:58:32 - unnecessary_underscores
+   info - The parameter name 'sum' matches a visible type name - lib\features\payment\data\repositories\firebase_payment_repository.dart:60:54 - avoid_types_as_parameter_names
+   info - The parameter name 'sum' matches a visible type name - lib\features\payment\data\repositories\firebase_payment_repository.dart:84:54 - avoid_types_as_parameter_names
+   info - Unnecessary use of multiple underscores - lib\features\payment\presentation\screens\wallet_screen.dart:126:24 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\profile\presentation\screens\settings_screen.dart:44:26 - unnecessary_underscores
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\profile\presentation\screens\settings_screen.dart:275:13 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\referral\presentation\screens\referral_screen.dart:104:26 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\referral\presentation\screens\referral_screen.dart:196:26 - unnecessary_underscores
+   info - The variable name '_MayaService' isn't a lowerCamelCase identifier - lib\features\support\presentation\screens\chatbot_screen.dart:35:25 - non_constant_identifier_names
+   info - Unnecessary use of multiple underscores - lib\features\support\presentation\screens\chatbot_screen.dart:316:31 - unnecessary_underscores
+
+flutter : 21 issues found. (ran in 16.7s)
+At line:1 char:1
++ flutter analyze 2>&1 | Out-File -FilePath fresh_analyze.txt -Encoding ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (21 issues found. (ran in 16.7s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

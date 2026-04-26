@@ -85,7 +85,7 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: _focusNode.hasFocus
-                  ? const Color(0xFF00F0FF)
+                  ? const Color(0xFFFF6B00)
                   : Colors.white12,
               width: 1.5,
             ),
@@ -95,7 +95,7 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
             focusNode: _focusNode,
             style: const TextStyle(color: Colors.white, fontSize: 15),
             decoration: InputDecoration(
-              prefixIcon: Icon(widget.icon, color: const Color(0xFF00F0FF), size: 20),
+              prefixIcon: Icon(widget.icon, color: const Color(0xFFFF6B00), size: 20),
               hintText: widget.label,
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
               border: InputBorder.none,
@@ -136,14 +136,14 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: _suggestions.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   const Divider(height: 1, color: Colors.white10),
               itemBuilder: (context, index) {
                 final suggestion = _suggestions[index];
                 return ListTile(
                   dense: true,
                   leading: const Icon(Icons.location_on,
-                      color: Color(0xFFFF00AA), size: 18),
+                      color: Color(0xFFFF9500), size: 18),
                   title: Text(
                     suggestion.address,
                     style: const TextStyle(color: Colors.white, fontSize: 13),

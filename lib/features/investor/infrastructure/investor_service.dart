@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/hp_agreement_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_earnings_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_earnings_model.dart';
 
 /// Stub investor service
 class InvestorService {

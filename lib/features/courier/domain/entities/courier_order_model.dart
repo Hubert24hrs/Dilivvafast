@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 part 'courier_order_model.freezed.dart';
 part 'courier_order_model.g.dart';
@@ -76,7 +76,7 @@ class GeoPointConverter implements JsonConverter<GeoPoint, Map<String, dynamic>>
   }
 }
 
-/// JSON converter for List<GeoPoint>
+/// JSON converter for `List<GeoPoint>`
 class GeoPointListConverter
     implements JsonConverter<List<GeoPoint>, List<dynamic>> {
   const GeoPointListConverter();

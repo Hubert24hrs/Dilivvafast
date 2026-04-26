@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class InvestorHomeScreen extends ConsumerWidget {
   const InvestorHomeScreen({super.key});
@@ -55,7 +55,7 @@ class InvestorHomeScreen extends ConsumerWidget {
                   investorAsync.when(
                     loading: () => const Text('...',
                         style: TextStyle(color: Colors.white, fontSize: 28)),
-                    error: (_, __) => const Text('₦0',
+                    error: (_, _) => const Text('₦0',
                         style: TextStyle(color: Colors.white, fontSize: 28)),
                     data: (inv) => Text(
                       '₦${(inv?.totalInvested ?? 0).toStringAsFixed(0)}',
@@ -93,7 +93,7 @@ class InvestorHomeScreen extends ConsumerWidget {
             bikesAsync.when(
               loading: () => const Center(
                   child:
-                      CircularProgressIndicator(color: Color(0xFF00F0FF))),
+                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
               error: (e, _) => Text('Error: $e',
                   style: const TextStyle(color: Colors.redAccent)),
               data: (bikes) {
@@ -123,7 +123,7 @@ class InvestorHomeScreen extends ConsumerWidget {
                             child: Row(
                               children: [
                                 const Icon(Icons.two_wheeler,
-                                    color: Color(0xFF00F0FF), size: 28),
+                                    color: Color(0xFFFF6B00), size: 28),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -201,7 +201,7 @@ class InvestorBikesScreen extends ConsumerWidget {
       ),
       body: bikesAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (bikes) {
           if (bikes.isEmpty) {
@@ -228,7 +228,7 @@ class InvestorBikesScreen extends ConsumerWidget {
                     Row(
                       children: [
                         const Icon(Icons.two_wheeler,
-                            color: Color(0xFF00F0FF), size: 24),
+                            color: Color(0xFFFF6B00), size: 24),
                         const SizedBox(width: 10),
                         Text('${b.make} ${b.model}',
                             style: const TextStyle(
@@ -275,7 +275,7 @@ class InvestorEarningsScreen extends ConsumerWidget {
       ),
       body: earningsAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (earnings) {
           if (earnings.isEmpty) {

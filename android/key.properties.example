@@ -1,0 +1,12 @@
+# Dilivvafast Android Keystore Configuration
+# =============================================
+# Generate your keystore with:
+#   keytool -genkey -v -keystore dilivvafast-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias dilivvafast
+#
+# Then fill in the values below and save this file as android/key.properties
+# IMPORTANT: Do NOT commit this file to version control!
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=dilivvafast
+storeFile=../dilivvafast-release.jks

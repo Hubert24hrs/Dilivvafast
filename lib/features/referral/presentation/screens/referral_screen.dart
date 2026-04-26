@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 /// Provider for referral stats
 final _referralStatsProvider =
@@ -58,13 +58,13 @@ class ReferralScreen extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF00F0FF).withValues(alpha: 0.12),
-                    const Color(0xFFFF00AA).withValues(alpha: 0.08),
+                    const Color(0xFFFF6B00).withValues(alpha: 0.12),
+                    const Color(0xFFFF9500).withValues(alpha: 0.08),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.2)),
+                    color: const Color(0xFFFF6B00).withValues(alpha: 0.2)),
               ),
               child: Column(
                 children: [
@@ -73,10 +73,10 @@ class ReferralScreen extends ConsumerWidget {
                     height: 72,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+                      color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                     ),
                     child: const Icon(Icons.card_giftcard,
-                        color: Color(0xFF00F0FF), size: 36),
+                        color: Color(0xFFFF6B00), size: 36),
                   ),
                   const SizedBox(height: 16),
                   const Text('Earn ₦500 per referral!',
@@ -101,7 +101,7 @@ class ReferralScreen extends ConsumerWidget {
             // Referral code card
             userAsync.when(
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
               data: (user) {
                 if (user == null) return const SizedBox.shrink();
                 return Container(
@@ -125,7 +125,7 @@ class ReferralScreen extends ConsumerWidget {
                           color: const Color(0xFF0A0E21),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: const Color(0xFF00F0FF)
+                              color: const Color(0xFFFF6B00)
                                   .withValues(alpha: 0.3)),
                         ),
                         child: Row(
@@ -134,7 +134,7 @@ class ReferralScreen extends ConsumerWidget {
                             Text(
                               user.referralCode,
                               style: const TextStyle(
-                                color: Color(0xFF00F0FF),
+                                color: Color(0xFFFF6B00),
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 4,
@@ -176,7 +176,7 @@ class ReferralScreen extends ConsumerWidget {
                               style:
                                   TextStyle(fontWeight: FontWeight.w700)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00F0FF),
+                            backgroundColor: const Color(0xFFFF6B00),
                             foregroundColor: const Color(0xFF0A0E21),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
@@ -193,11 +193,11 @@ class ReferralScreen extends ConsumerWidget {
             // Stats
             statsAsync.when(
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
               data: (stats) => Row(
                 children: [
                   _statCard('Friends Referred',
-                      '${stats['referred']}', Icons.people, const Color(0xFF00F0FF)),
+                      '${stats['referred']}', Icons.people, const Color(0xFFFF6B00)),
                   const SizedBox(width: 12),
                   _statCard('Total Earned',
                       '₦${(stats['earned'] as double).toStringAsFixed(0)}',
@@ -273,12 +273,12 @@ class ReferralScreen extends ConsumerWidget {
             height: 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF00F0FF).withValues(alpha: 0.12),
+              color: const Color(0xFFFF6B00).withValues(alpha: 0.12),
             ),
             child: Center(
               child: Text(number,
                   style: const TextStyle(
-                      color: Color(0xFF00F0FF),
+                      color: Color(0xFFFF6B00),
                       fontWeight: FontWeight.bold,
                       fontSize: 14)),
             ),

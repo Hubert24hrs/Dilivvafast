@@ -1,4 +1,4 @@
-import 'package:fast_delivery/core/security/input_validator.dart';
+import 'package:dilivvafast/core/security/input_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/features/payment/domain/entities/transaction_model.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 
 /// Abstract repository for payment and transaction operations.
 abstract class IPaymentRepository {

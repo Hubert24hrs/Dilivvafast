@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key, this.isDriver = false});
@@ -25,7 +25,7 @@ class OrdersScreen extends ConsumerWidget {
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -85,7 +85,7 @@ class OrdersScreen extends ConsumerWidget {
                 const Spacer(),
                 Text('₦${order.totalFare.toStringAsFixed(0)}',
                     style: const TextStyle(
-                        color: Color(0xFF00F0FF),
+                        color: Color(0xFFFF6B00),
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
               ],
@@ -96,7 +96,7 @@ class OrdersScreen extends ConsumerWidget {
             Row(
               children: [
                 const Icon(Icons.location_on,
-                    color: Color(0xFF00F0FF), size: 16),
+                    color: Color(0xFFFF6B00), size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(order.pickupAddress,
@@ -109,7 +109,7 @@ class OrdersScreen extends ConsumerWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.flag, color: Color(0xFFFF00AA), size: 16),
+                const Icon(Icons.flag, color: Color(0xFFFF9500), size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(order.dropoffAddress,

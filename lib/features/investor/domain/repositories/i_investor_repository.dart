@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/hp_agreement_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_earnings_model.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_earnings_model.dart';
 
 /// Abstract repository for investor operations.
 abstract class IInvestorRepository {

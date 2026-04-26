@@ -1,22 +1,24 @@
 import 'dart:async';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/services/analytics_service.dart';
 
-import 'package:fast_delivery/core/presentation/components/connectivity_wrapper.dart';
-import 'package:fast_delivery/core/presentation/components/error_boundary.dart';
+import 'package:dilivvafast/core/presentation/components/connectivity_wrapper.dart';
+import 'package:dilivvafast/core/presentation/components/error_boundary.dart';
 import 'package:flutter/foundation.dart';
-import 'package:fast_delivery/core/presentation/routing/app_router.dart';
-import 'package:fast_delivery/firebase_options.dart';
+import 'package:dilivvafast/core/presentation/routing/app_router.dart';
+import 'package:dilivvafast/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:fast_delivery/core/config/mapbox_init_stub.dart'
-    if (dart.library.io) 'package:fast_delivery/core/config/mapbox_init_mobile.dart'
-    if (dart.library.html) 'package:fast_delivery/core/config/mapbox_init_web.dart';
+import 'package:dilivvafast/core/config/mapbox_init_stub.dart'
+    if (dart.library.io) 'package:dilivvafast/core/config/mapbox_init_mobile.dart'
+    if (dart.library.html) 'package:dilivvafast/core/config/mapbox_init_web.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:fast_delivery/core/infrastructure/notification/fcm_service.dart';
+import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   // Register FCM background message handler (must be before runApp)
@@ -26,6 +28,9 @@ void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
     MapboxInit.init();
+    
+    // Initialize Hive for local storage
+    await Hive.initFlutter();
     
     // Set up global error handlers
     _setupErrorHandlers();
@@ -41,11 +46,20 @@ void main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      
+      // Request FCM notification permissions
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
     } catch (e) {
       debugPrint("Firebase initialization failed: $e");
     }
 
-    runApp(const ProviderScope(child: FastDeliveryApp()));
+    runApp(const ProviderScope(child: DilivvafastApp()));
   }, (error, stackTrace) {
     // Handled by Crashlytics in AnalyticsService
     debugPrint('Uncaught async error: $error');
@@ -66,19 +80,19 @@ void _setupErrorHandlers() {
   };
 }
 
-class FastDeliveryApp extends ConsumerStatefulWidget {
-  const FastDeliveryApp({super.key});
+class DilivvafastApp extends ConsumerStatefulWidget {
+  const DilivvafastApp({super.key});
 
   @override
-  ConsumerState<FastDeliveryApp> createState() => _FastDeliveryAppState();
+  ConsumerState<DilivvafastApp> createState() => _DilivvafastAppState();
 }
 
-class _FastDeliveryAppState extends ConsumerState<FastDeliveryApp> {
+class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
   @override
   void initState() {
     super.initState();
     // Initialize Analytics and Crashlytics
-    // ref.read(analyticsServiceProvider).initialize();
+    ref.read(analyticsServiceProvider).initialize();
     
     // Initialize Notification Service
     if (!kIsWeb) {
@@ -86,7 +100,7 @@ class _FastDeliveryAppState extends ConsumerState<FastDeliveryApp> {
     }
     
     // Log app open event
-    // ref.read(analyticsServiceProvider).logAppOpen();
+    ref.read(analyticsServiceProvider).logAppOpen();
   }
 
   @override
@@ -94,7 +108,7 @@ class _FastDeliveryAppState extends ConsumerState<FastDeliveryApp> {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Fast Delivery',
+      title: 'Dilivvafast',
       theme: AppTheme.futuristicTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

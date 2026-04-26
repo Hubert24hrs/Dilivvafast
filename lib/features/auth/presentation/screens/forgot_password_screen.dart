@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/presentation/components/glass_card.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
-import 'package:fast_delivery/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:dilivvafast/core/presentation/components/glass_card.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/features/auth/presentation/controllers/auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});

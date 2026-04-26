@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/infrastructure/notification/fcm_service.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 /// Notification service — wired to FCMService for production push notifications.
 class NotificationService {

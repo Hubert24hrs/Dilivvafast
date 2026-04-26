@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class AdminOrdersScreen extends ConsumerWidget {
   const AdminOrdersScreen({super.key});
@@ -19,7 +19,7 @@ class AdminOrdersScreen extends ConsumerWidget {
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -49,7 +49,7 @@ class AdminOrdersScreen extends ConsumerWidget {
                       children: [
                         Text(o.trackingCode,
                             style: const TextStyle(
-                                color: Color(0xFF00F0FF),
+                                color: Color(0xFFFF6B00),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13)),
                         const Spacer(),
@@ -104,7 +104,7 @@ class AdminUsersScreen extends ConsumerWidget {
       ),
       body: driversAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -131,9 +131,9 @@ class AdminUsersScreen extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+                      backgroundColor: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                       child: Text(u.fullName.isNotEmpty ? u.fullName[0] : '?',
-                          style: const TextStyle(color: Color(0xFF00F0FF))),
+                          style: const TextStyle(color: Color(0xFFFF6B00))),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -187,7 +187,7 @@ class AdminApplicationsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.assignment, color: Color(0xFF00F0FF), size: 48),
+            const Icon(Icons.assignment, color: Color(0xFFFF6B00), size: 48),
             const SizedBox(height: 12),
             Text('Driver applications will appear here',
                 style: TextStyle(
@@ -215,7 +215,7 @@ class AdminFinanceScreen extends ConsumerWidget {
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -231,12 +231,12 @@ class AdminFinanceScreen extends ConsumerWidget {
             child: Column(
               children: [
                 _financeCard('Total Revenue', '₦${revenue.toStringAsFixed(0)}',
-                    const Color(0xFF00F0FF)),
+                    const Color(0xFFFF6B00)),
                 const SizedBox(height: 12),
                 _financeCard(
                     'Platform Commission',
                     '₦${commission.toStringAsFixed(0)}',
-                    const Color(0xFFFF00AA)),
+                    const Color(0xFFFF9500)),
                 const SizedBox(height: 12),
                 _financeCard(
                     'Driver Payouts',

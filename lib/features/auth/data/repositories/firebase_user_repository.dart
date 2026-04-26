@@ -3,10 +3,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'dart:io';
 
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/features/auth/domain/repositories/i_user_repository.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/auth/domain/repositories/i_user_repository.dart';
 
 class FirebaseUserRepository implements IUserRepository {
   FirebaseUserRepository({

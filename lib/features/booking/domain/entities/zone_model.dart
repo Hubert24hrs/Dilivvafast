@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 part 'zone_model.freezed.dart';
 part 'zone_model.g.dart';

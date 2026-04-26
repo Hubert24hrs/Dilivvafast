@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class CustomTextField extends StatelessWidget {
   const CustomTextField({

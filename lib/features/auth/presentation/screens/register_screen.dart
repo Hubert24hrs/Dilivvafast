@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/presentation/components/glass_card.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
-import 'package:fast_delivery/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/core/presentation/components/glass_card.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -181,7 +181,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         TextSpan(
                           text: 'Sign In',
                           style: TextStyle(
-                            color: Color(0xFF00F0FF),
+                            color: Color(0xFFFF6B00),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -338,7 +338,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 if (isSelected)
                   const Icon(Icons.check_circle,
-                      color: Color(0xFF00F0FF), size: 24),
+                      color: Color(0xFFFF6B00), size: 24),
               ],
             ),
           ),
@@ -362,7 +362,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 color: AppTheme.primaryColor.withValues(alpha: 0.15),
               ),
               child: const Icon(Icons.card_giftcard,
-                  color: Color(0xFF00F0FF), size: 36),
+                  color: Color(0xFFFF6B00), size: 36),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -427,7 +427,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Color _roleColor(UserRole role) {
     return switch (role) {
-      UserRole.customer => const Color(0xFF00F0FF),
+      UserRole.customer => const Color(0xFFFF6B00),
       UserRole.driver => const Color(0xFF4CAF50),
       UserRole.investor => const Color(0xFFFF9800),
       UserRole.admin => const Color(0xFFE91E63),

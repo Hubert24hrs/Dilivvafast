@@ -21,7 +21,7 @@ class RoleGuard {
     if (attemptedPath.startsWith('/driver')) {
       if (isAdmin(userRole)) return null; // Admins can access driver routes
       if (isDriver(userRole)) {
-        // Drivers can't access earnings immediately in this mock setup
+        // Drivers can't access earnings until their profile is verified
         if (attemptedPath == '/driver-earnings' && userRole != 'admin') return '/';
         return null;
       }

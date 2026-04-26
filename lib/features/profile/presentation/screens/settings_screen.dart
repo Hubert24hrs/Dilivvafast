@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -41,7 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Profile summary
             userAsync.when(
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
               data: (user) {
                 if (user == null) return const SizedBox.shrink();
                 return Container(
@@ -55,14 +55,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFF00F0FF)
+                        backgroundColor: const Color(0xFFFF6B00)
                             .withValues(alpha: 0.15),
                         child: Text(
                           user.fullName.isNotEmpty
                               ? user.fullName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: Color(0xFF00F0FF),
+                              color: Color(0xFFFF6B00),
                               fontSize: 22,
                               fontWeight: FontWeight.bold),
                         ),
@@ -116,7 +116,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: 'Receive push notifications',
               value: _notificationsEnabled,
               onChanged: (v) => setState(() => _notificationsEnabled = v),
-              color: const Color(0xFF00F0FF),
+              color: const Color(0xFFFF6B00),
             ),
             _switchTile(
               icon: Icons.local_shipping,
@@ -272,7 +272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: color,
+            activeThumbColor: color,
             activeTrackColor: color.withValues(alpha: 0.3),
             inactiveThumbColor: Colors.white24,
             inactiveTrackColor: Colors.white10,

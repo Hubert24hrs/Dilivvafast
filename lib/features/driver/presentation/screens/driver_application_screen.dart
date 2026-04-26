@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/driver/domain/entities/driver_application_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/driver/domain/entities/driver_application_model.dart';
 
 class DriverApplicationScreen extends ConsumerStatefulWidget {
   const DriverApplicationScreen({super.key});
@@ -32,6 +34,13 @@ class _DriverApplicationScreenState
   final _bankNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
   final _accountNameController = TextEditingController();
+
+  // Document uploads tracking
+  final Map<String, String?> _uploadedDocs = {
+    'drivers_license': null,
+    'vehicle_photo': null,
+    'government_id': null,
+  };
 
   static const _vehicleTypes = [
     ('motorcycle', Icons.two_wheeler, 'Motorcycle'),
@@ -90,13 +99,13 @@ class _DriverApplicationScreenState
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+              color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               'Step ${_step + 1}/3',
               style: const TextStyle(
-                  color: Color(0xFF00F0FF),
+                  color: Color(0xFFFF6B00),
                   fontSize: 12,
                   fontWeight: FontWeight.w600),
             ),
@@ -265,7 +274,7 @@ class _DriverApplicationScreenState
             capitalize: TextCapitalization.characters),
 
         const SizedBox(height: 20),
-        // Documents section (placeholder)
+        // Documents upload section
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -320,7 +329,7 @@ class _DriverApplicationScreenState
         gradient: LinearGradient(
           colors: [
             const Color(0xFF4CAF50).withValues(alpha: 0.08),
-            const Color(0xFF00F0FF).withValues(alpha: 0.05),
+            const Color(0xFFFF6B00).withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -394,42 +403,105 @@ class _DriverApplicationScreenState
   }
 
   Widget _buildDocRow(String label, IconData icon) {
+    // Map label to key
+    final key = label.toLowerCase().replaceAll("'", '').replaceAll(' ', '_');
+    final isUploaded = _uploadedDocs[key] != null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white38, size: 20),
+          Icon(icon,
+              color: isUploaded ? const Color(0xFF4CAF50) : Colors.white38,
+              size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                style: TextStyle(
+                    color: isUploaded
+                        ? const Color(0xFF4CAF50)
+                        : Colors.white54,
+                    fontSize: 13)),
           ),
-          GestureDetector(
-            onTap: () {
-              // TODO: Open file picker
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('File picker coming soon')),
-              );
-            },
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00F0FF).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: const Color(0xFF00F0FF).withValues(alpha: 0.3)),
+          if (isUploaded)
+            const Icon(Icons.check_circle,
+                color: Color(0xFF4CAF50), size: 20)
+          else
+            GestureDetector(
+              onTap: () => _pickAndUploadDocument(key, label),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: const Color(0xFFFF6B00).withValues(alpha: 0.3)),
+                ),
+                child: const Text('Upload',
+                    style: TextStyle(
+                        color: Color(0xFFFF6B00),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600)),
               ),
-              child: const Text('Upload',
-                  style: TextStyle(
-                      color: Color(0xFF00F0FF),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  Future<void> _pickAndUploadDocument(String key, String label) async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        imageQuality: 85,
+      );
+      if (image == null) return;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Uploading $label...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      final userId = ref.read(currentUserIdProvider) ?? 'unknown';
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('driver_applications')
+          .child(userId)
+          .child('$key.jpg');
+
+      final bytes = await image.readAsBytes();
+      await storageRef.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      if (mounted) {
+        setState(() => _uploadedDocs[key] = downloadUrl);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$label uploaded successfully'),
+            backgroundColor: const Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   void _handleNext() {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -37,7 +37,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   'Total Orders',
                   '${ordersAsync.value?.length ?? 0}',
                   Icons.receipt_long,
-                  const Color(0xFF00F0FF),
+                  const Color(0xFFFF6B00),
                 ),
                 _statCard(
                   'Active Drivers',
@@ -55,7 +55,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                   'Commission',
                   '₦${_totalCommission(ordersAsync).toStringAsFixed(0)}',
                   Icons.trending_up,
-                  const Color(0xFFFF00AA),
+                  const Color(0xFFFF9500),
                 ),
               ],
             ),
@@ -72,7 +72,7 @@ class AdminDashboardScreen extends ConsumerWidget {
             ordersAsync.when(
               loading: () => const Center(
                   child:
-                      CircularProgressIndicator(color: Color(0xFF00F0FF))),
+                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
               error: (e, _) => Text('Error: $e',
                   style: const TextStyle(color: Colors.redAccent)),
               data: (orders) {
@@ -126,7 +126,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                                 Text(
                                     '₦${order.totalFare.toStringAsFixed(0)}',
                                     style: const TextStyle(
-                                        color: Color(0xFF00F0FF),
+                                        color: Color(0xFFFF6B00),
                                         fontWeight: FontWeight.bold)),
                               ],
                             ),

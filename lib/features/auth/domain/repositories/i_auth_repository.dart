@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 /// Abstract auth repository interface.
 abstract class IAuthRepository {

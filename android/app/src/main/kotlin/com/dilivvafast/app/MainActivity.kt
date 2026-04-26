@@ -1,4 +1,4 @@
-package com.example.fast_delivery
+package com.dilivvafast.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

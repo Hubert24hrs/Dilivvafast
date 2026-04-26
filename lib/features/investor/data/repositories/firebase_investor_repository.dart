@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fpdart/fpdart.dart';
 
-import 'package:fast_delivery/core/errors/failures.dart';
-import 'package:fast_delivery/core/constants/firestore_constants.dart';
-import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/hp_agreement_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_model.dart';
-import 'package:fast_delivery/features/investor/domain/entities/investor_earnings_model.dart';
-import 'package:fast_delivery/features/investor/domain/repositories/i_investor_repository.dart';
+import 'package:dilivvafast/core/errors/failures.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
+import 'package:dilivvafast/features/investor/domain/entities/investor_earnings_model.dart';
+import 'package:dilivvafast/features/investor/domain/repositories/i_investor_repository.dart';
 
 class FirebaseInvestorRepository implements IInvestorRepository {
   FirebaseInvestorRepository({FirebaseFirestore? firestore})

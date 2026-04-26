@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/booking/domain/entities/promo_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/booking/domain/entities/promo_model.dart';
 
 /// Provider for all promos
 final promosProvider = StreamProvider<List<PromoModel>>((ref) {
@@ -30,7 +30,7 @@ class AdminPromosScreen extends ConsumerWidget {
             style: TextStyle(color: Colors.white, fontSize: 18)),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF00F0FF),
+        backgroundColor: const Color(0xFFFF6B00),
         child: const Icon(Icons.add, color: Color(0xFF0A0E21)),
         onPressed: () => _showCreateDialog(context, ref),
       ),
@@ -59,7 +59,7 @@ class AdminPromosScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -90,11 +90,11 @@ class AdminPromosScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isValid
-                  ? const Color(0xFFFF00AA).withValues(alpha: 0.15)
+                  ? const Color(0xFFFF9500).withValues(alpha: 0.15)
                   : Colors.white12,
             ),
             child: Icon(Icons.local_offer,
-                color: isValid ? const Color(0xFFFF00AA) : Colors.white24,
+                color: isValid ? const Color(0xFFFF9500) : Colors.white24,
                 size: 22),
           ),
           const SizedBox(width: 14),
@@ -138,7 +138,7 @@ class AdminPromosScreen extends ConsumerWidget {
                   promo.discountType == DiscountType.flat
                       ? '₦${promo.amount.toStringAsFixed(0)} off'
                       : '${promo.amount.toStringAsFixed(0)}% off',
-                  style: const TextStyle(color: Color(0xFF00F0FF), fontSize: 13),
+                  style: const TextStyle(color: Color(0xFFFF6B00), fontSize: 13),
                 ),
                 Text(
                   'Used ${promo.usedCount}/${promo.maxUses == 0 ? '∞' : promo.maxUses}',
@@ -152,7 +152,7 @@ class AdminPromosScreen extends ConsumerWidget {
           // Toggle active
           Switch(
             value: promo.isActive,
-            activeColor: const Color(0xFF4CAF50),
+            activeThumbColor: const Color(0xFF4CAF50),
             inactiveThumbColor: Colors.white24,
             onChanged: (v) {
               ref
@@ -266,7 +266,9 @@ class AdminPromosScreen extends ConsumerWidget {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (codeC.text.trim().isEmpty ||
-                          amountC.text.trim().isEmpty) return;
+                          amountC.text.trim().isEmpty) {
+                        return;
+                      }
 
                       final now = DateTime.now();
                       await ref
@@ -290,7 +292,7 @@ class AdminPromosScreen extends ConsumerWidget {
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00F0FF),
+                      backgroundColor: const Color(0xFFFF6B00),
                       foregroundColor: const Color(0xFF0A0E21),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -345,16 +347,16 @@ class AdminPromosScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
+              ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? const Color(0xFF00F0FF) : Colors.white24,
+            color: isSelected ? const Color(0xFFFF6B00) : Colors.white24,
           ),
         ),
         child: Text(label,
             style: TextStyle(
-              color: isSelected ? const Color(0xFF00F0FF) : Colors.white54,
+              color: isSelected ? const Color(0xFFFF6B00) : Colors.white54,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             )),

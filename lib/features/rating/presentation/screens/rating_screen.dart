@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class RatingScreen extends ConsumerStatefulWidget {
   const RatingScreen({super.key, required this.orderId});
@@ -38,7 +38,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.delivery_dining,
-                color: Color(0xFF00F0FF), size: 64),
+                color: Color(0xFFFF6B00), size: 64),
             const SizedBox(height: 20),
             const Text('How was your delivery?',
                 style: TextStyle(
@@ -111,7 +111,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _rating > 0
-                      ? const Color(0xFF00F0FF)
+                      ? const Color(0xFFFF6B00)
                       : const Color(0xFF1D1E33),
                   foregroundColor: const Color(0xFF0A0E21),
                   shape: RoundedRectangleBorder(

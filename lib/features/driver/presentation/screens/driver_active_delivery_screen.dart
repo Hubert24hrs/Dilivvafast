@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 class DriverActiveDeliveryScreen extends ConsumerWidget {
   const DriverActiveDeliveryScreen({super.key, required this.orderId});
@@ -27,7 +27,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
       ),
       body: orderAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -62,7 +62,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.navigation,
-                      color: Color(0xFF00F0FF), size: 48),
+                      color: Color(0xFFFF6B00), size: 48),
                   const SizedBox(height: 8),
                   Text('Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
                       style: const TextStyle(color: Colors.white54)),
@@ -144,10 +144,10 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+                      color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                     ),
                     child: const Icon(Icons.chat_bubble,
-                        color: Color(0xFF00F0FF), size: 20),
+                        color: Color(0xFFFF6B00), size: 20),
                   ),
                 ],
               ),
@@ -163,7 +163,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     const Icon(Icons.inventory_2,
-                        color: Color(0xFF00F0FF), size: 18),
+                        color: Color(0xFFFF6B00), size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(order.packageDescription,
@@ -210,7 +210,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
       OrderStatus.accepted => const Color(0xFF2196F3),
       OrderStatus.pickedUp => const Color(0xFF9C27B0),
       OrderStatus.inTransit => const Color(0xFF4CAF50),
-      _ => const Color(0xFF00F0FF),
+      _ => const Color(0xFFFF6B00),
     };
   }
 

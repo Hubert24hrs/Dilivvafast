@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 /// Legacy database service — functionality migrated to repositories.
 /// This file is maintained temporarily for backward compatibility.

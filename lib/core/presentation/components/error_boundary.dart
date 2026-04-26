@@ -47,7 +47,7 @@ class GlobalErrorWidget extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.error_outline,
-                  color: Color(0xFF00F0FF),
+                  color: Color(0xFFFF6B00),
                   size: 64,
                 ),
                 const SizedBox(height: 16),

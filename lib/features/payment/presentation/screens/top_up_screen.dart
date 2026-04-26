@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class TopUpScreen extends ConsumerStatefulWidget {
   const TopUpScreen({super.key});
@@ -51,13 +51,13 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF00F0FF).withValues(alpha: 0.12),
-                    const Color(0xFFFF00AA).withValues(alpha: 0.08),
+                    const Color(0xFFFF6B00).withValues(alpha: 0.12),
+                    const Color(0xFFFF9500).withValues(alpha: 0.08),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                  color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
                 ),
               ),
               child: Column(
@@ -143,12 +143,12 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                         horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
+                          ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
                           : const Color(0xFF1D1E33),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFF00F0FF)
+                            ? const Color(0xFFFF6B00)
                             : Colors.white12,
                         width: isSelected ? 2 : 1,
                       ),
@@ -157,7 +157,7 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                       '₦${_formatAmount(amount)}',
                       style: TextStyle(
                         color: isSelected
-                            ? const Color(0xFF00F0FF)
+                            ? const Color(0xFFFF6B00)
                             : Colors.white54,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -220,10 +220,10 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
               child: ElevatedButton(
                 onPressed: _isProcessing ? null : _handlePayment,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00F0FF),
+                  backgroundColor: const Color(0xFFFF6B00),
                   foregroundColor: const Color(0xFF0A0E21),
                   disabledBackgroundColor:
-                      const Color(0xFF00F0FF).withValues(alpha: 0.4),
+                      const Color(0xFFFF6B00).withValues(alpha: 0.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -357,10 +357,10 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+                  color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                 ),
                 child: const Icon(Icons.hourglass_top,
-                    color: Color(0xFF00F0FF), size: 36),
+                    color: Color(0xFFFF6B00), size: 36),
               ),
               const SizedBox(height: 20),
               const Text('Payment Processing',
@@ -385,7 +385,7 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                     context.pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00F0FF),
+                    backgroundColor: const Color(0xFFFF6B00),
                     foregroundColor: const Color(0xFF0A0E21),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

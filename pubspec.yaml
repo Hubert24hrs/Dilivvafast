@@ -1,5 +1,5 @@
-name: fast_delivery
-description: "A new Flutter project."
+name: dilivvafast
+description: "Dilivvafast — Nigerian on-demand logistics & delivery platform."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -69,6 +69,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   cached_network_image: ^3.4.1
   firebase_analytics: ^12.1.3
+  firebase_crashlytics: ^5.0.8
   encrypt: ^5.0.3
   flutter_secure_storage: ^10.0.0
   hive: ^2.2.3
@@ -80,8 +81,7 @@ dependencies:
   json_annotation: ^4.9.0
   fpdart: ^1.1.0
   rxdart: ^0.28.0
-  google_maps_flutter: ^2.10.0
-  flutter_polyline_points: ^3.1.0
+
   flutter_background_service: ^5.0.12
   package_info_plus: ^9.0.0
 

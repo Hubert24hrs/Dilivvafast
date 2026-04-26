@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/domain/entities/notification_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/domain/entities/notification_model.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -22,7 +22,7 @@ class NotificationsScreen extends ConsumerWidget {
           TextButton(
             onPressed: () => _markAllRead(ref),
             child: const Text('Mark all read',
-                style: TextStyle(color: Color(0xFF00F0FF), fontSize: 12)),
+                style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12)),
           ),
         ],
       ),
@@ -74,7 +74,7 @@ class NotificationsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF00F0FF)),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
         ),
         error: (e, _) => Center(
           child:
@@ -204,11 +204,11 @@ class NotificationsScreen extends ConsumerWidget {
 
   Color _colorForType(NotificationType type) {
     return switch (type) {
-      NotificationType.orderUpdate => const Color(0xFF00F0FF),
+      NotificationType.orderUpdate => const Color(0xFFFF6B00),
       NotificationType.driverAssigned => const Color(0xFF4CAF50),
       NotificationType.deliveryComplete => const Color(0xFF4CAF50),
       NotificationType.payment => const Color(0xFFFF9800),
-      NotificationType.promo => const Color(0xFFFF00AA),
+      NotificationType.promo => const Color(0xFFFF9500),
       NotificationType.system => const Color(0xFF90CAF9),
     };
   }

@@ -1,5 +1,5 @@
 /// Core failure types for the application.
-/// Used with fpdart Either<Failure, T> pattern.
+/// Used with fpdart `Either<Failure, T>` pattern.
 sealed class Failure {
   final String message;
   final String? code;

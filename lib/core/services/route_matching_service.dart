@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 /// Service for matching pending orders to a driver's active route.
 /// Uses corridor-based proximity matching: finds orders whose pickup

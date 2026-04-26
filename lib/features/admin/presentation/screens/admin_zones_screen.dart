@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/booking/domain/entities/zone_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/booking/domain/entities/zone_model.dart';
 
 /// Provider for all zones
 final zonesProvider = StreamProvider<List<ZoneModel>>((ref) {
@@ -30,7 +30,7 @@ class AdminZonesScreen extends ConsumerWidget {
             style: TextStyle(color: Colors.white, fontSize: 18)),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFFF00AA),
+        backgroundColor: const Color(0xFFFF9500),
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () => _showCreateDialog(context, ref),
       ),
@@ -59,7 +59,7 @@ class AdminZonesScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -77,7 +77,7 @@ class AdminZonesScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: zone.isActive
-              ? const Color(0xFF00F0FF).withValues(alpha: 0.2)
+              ? const Color(0xFFFF6B00).withValues(alpha: 0.2)
               : Colors.white12,
         ),
       ),
@@ -91,10 +91,10 @@ class AdminZonesScreen extends ConsumerWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFF00AA).withValues(alpha: 0.15),
+                  color: const Color(0xFFFF9500).withValues(alpha: 0.15),
                 ),
                 child: const Icon(Icons.place,
-                    color: Color(0xFFFF00AA), size: 20),
+                    color: Color(0xFFFF9500), size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -115,7 +115,7 @@ class AdminZonesScreen extends ConsumerWidget {
               ),
               Switch(
                 value: zone.isActive,
-                activeColor: const Color(0xFF4CAF50),
+                activeThumbColor: const Color(0xFF4CAF50),
                 inactiveThumbColor: Colors.white24,
                 onChanged: (v) {
                   ref
@@ -138,7 +138,7 @@ class AdminZonesScreen extends ConsumerWidget {
                   '₦${zone.perKmRate.toStringAsFixed(0)}'),
               const SizedBox(width: 10),
               _rateBadge('Surge ×',
-                  '${zone.currentSurgeMultiplier.toStringAsFixed(1)}'),
+                  zone.currentSurgeMultiplier.toStringAsFixed(1)),
               const SizedBox(width: 10),
               _rateBadge('Surge at',
                   '${zone.surgeThreshold} orders'),
@@ -161,7 +161,7 @@ class AdminZonesScreen extends ConsumerWidget {
           children: [
             Text(value,
                 style: const TextStyle(
-                    color: Color(0xFF00F0FF),
+                    color: Color(0xFFFF6B00),
                     fontSize: 13,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
@@ -266,7 +266,7 @@ class AdminZonesScreen extends ConsumerWidget {
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF00AA),
+                      backgroundColor: const Color(0xFFFF9500),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

@@ -7,7 +7,7 @@ class EarningsChart extends StatelessWidget {
     super.key,
     required this.data,
     this.height = 180,
-    this.lineColor = const Color(0xFF00F0FF),
+    this.lineColor = const Color(0xFFFF6B00),
     this.gradientColors,
     this.title,
   });
@@ -157,7 +157,7 @@ class EarningsChart extends StatelessWidget {
                       return LineTooltipItem(
                         '₦${spot.y.toStringAsFixed(0)}',
                         const TextStyle(
-                          color: Color(0xFF00F0FF),
+                          color: Color(0xFFFF6B00),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),

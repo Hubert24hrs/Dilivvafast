@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fast_delivery/core/presentation/components/custom_text_field.dart';
-import 'package:fast_delivery/core/presentation/components/glass_card.dart';
-import 'package:fast_delivery/core/presentation/components/three_d_button.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
-import 'package:fast_delivery/core/presentation/utils/validators.dart';
-import 'package:fast_delivery/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/components/custom_text_field.dart';
+import 'package:dilivvafast/core/presentation/components/glass_card.dart';
+import 'package:dilivvafast/core/presentation/components/three_d_button.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/validators.dart';
+import 'package:dilivvafast/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

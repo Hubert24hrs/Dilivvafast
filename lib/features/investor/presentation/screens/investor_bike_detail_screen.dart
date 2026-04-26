@@ -1,10 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/investor/domain/entities/bike_model.dart';
-import 'package:fast_delivery/features/investor/presentation/widgets/earnings_chart.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
+import 'package:dilivvafast/features/investor/presentation/widgets/earnings_chart.dart';
 
 /// Provider for a single bike by ID
 final bikeDetailProvider =
@@ -15,6 +16,45 @@ final bikeDetailProvider =
       .doc(bikeId)
       .snapshots()
       .map((snap) => snap.exists ? BikeModel.fromFirestore(snap) : null);
+});
+
+/// Provider for bike earnings (last 30 days) based on the assigned rider's deliveries.
+final bikeEarningsProvider =
+    FutureProvider.family<Map<DateTime, double>, String>((ref, bikeId) async {
+  final firestore = ref.watch(firestoreProvider);
+  final bikeSnap = await firestore.collection('bikes').doc(bikeId).get();
+  final riderId = bikeSnap.data()?['riderId'] as String?;
+  if (riderId == null) return {};
+
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month, now.day)
+      .subtract(const Duration(days: 29));
+
+  final ordersSnap = await firestore
+      .collection('orders')
+      .where('driverId', isEqualTo: riderId)
+      .where('status', isEqualTo: 'delivered')
+      .where('deliveredAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+      .get();
+
+  final data = <DateTime, double>{};
+  for (var i = 0; i < 30; i++) {
+    final day = start.add(Duration(days: i));
+    data[DateTime(day.year, day.month, day.day)] = 0;
+  }
+
+  for (final doc in ordersSnap.docs) {
+    final deliveredAt = (doc.data()['deliveredAt'] as Timestamp?)?.toDate();
+    final earnings =
+        (doc.data()['driverEarnings'] as num?)?.toDouble() ?? 0;
+    if (deliveredAt != null) {
+      final key =
+          DateTime(deliveredAt.year, deliveredAt.month, deliveredAt.day);
+      data[key] = (data[key] ?? 0) + earnings;
+    }
+  }
+
+  return data;
 });
 
 class InvestorBikeDetailScreen extends ConsumerWidget {
@@ -39,7 +79,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
       ),
       body: bikeAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -69,7 +109,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFFF9800).withValues(alpha: 0.12),
-                  const Color(0xFFFF00AA).withValues(alpha: 0.08),
+                  const Color(0xFFFF9500).withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -253,12 +293,37 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
             ),
           const SizedBox(height: 20),
 
-          // Earnings chart (sample data)
-          EarningsChart(
-            title: 'Earnings (Last 30 Days)',
-            data: _generateSampleEarnings(),
-            lineColor: const Color(0xFFFF9800),
-            height: 200,
+          // Earnings chart (live data from Firestore)
+          Builder(
+            builder: (context) {
+              // Access ref via ProviderScope.containerOf or use a Consumer
+              return Consumer(
+                builder: (context, ref, _) {
+                  final earningsAsync = ref.watch(bikeEarningsProvider(bikeId));
+                  return earningsAsync.when(
+                    loading: () => const SizedBox(
+                      height: 200,
+                      child: Center(
+                          child: CircularProgressIndicator(
+                              color: Color(0xFFFF9800))),
+                    ),
+                    error: (e, _) => SizedBox(
+                      height: 200,
+                      child: Center(
+                          child: Text('Chart error: $e',
+                              style:
+                                  const TextStyle(color: Colors.redAccent))),
+                    ),
+                    data: (earningsData) => EarningsChart(
+                      title: 'Earnings (Last 30 Days)',
+                      data: earningsData,
+                      lineColor: const Color(0xFFFF9800),
+                      height: 200,
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
@@ -294,7 +359,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
   Color _statusColor(BikeStatus status) {
     return switch (status) {
       BikeStatus.pendingFunding => const Color(0xFFFF9800),
-      BikeStatus.funded => const Color(0xFF00F0FF),
+      BikeStatus.funded => const Color(0xFFFF6B00),
       BikeStatus.assigned => const Color(0xFF4CAF50),
       BikeStatus.active => const Color(0xFF4CAF50),
       BikeStatus.maintenance => const Color(0xFFFF5252),
@@ -313,16 +378,4 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
     };
   }
 
-  /// Generate sample earnings data for the chart
-  Map<DateTime, double> _generateSampleEarnings() {
-    final now = DateTime.now();
-    final data = <DateTime, double>{};
-    for (var i = 29; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      // Simulate earnings pattern
-      data[DateTime(date.year, date.month, date.day)] =
-          (500 + (i * 37 % 2000)).toDouble();
-    }
-    return data;
-  }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fast_delivery/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 void main() {
   testWidgets('App theme applies correctly', (WidgetTester tester) async {
@@ -22,8 +22,8 @@ void main() {
   });
 
   test('AppTheme has correct colors', () {
-    expect(AppTheme.primaryColor, const Color(0xFF00F0FF));
-    expect(AppTheme.secondaryColor, const Color(0xFFFF00AA));
+    expect(AppTheme.primaryColor, const Color(0xFFFF6B00));
+    expect(AppTheme.secondaryColor, const Color(0xFFFF9500));
     expect(AppTheme.backgroundColor, const Color(0xFF0A0E21));
   });
 }

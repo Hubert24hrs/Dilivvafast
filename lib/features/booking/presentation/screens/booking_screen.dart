@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/features/booking/presentation/controllers/booking_controller.dart';
-import 'package:fast_delivery/features/booking/presentation/widgets/address_search_field.dart';
-import 'package:fast_delivery/features/booking/presentation/widgets/fare_breakdown_card.dart';
-import 'package:fast_delivery/features/booking/presentation/widgets/package_form.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/booking/presentation/controllers/booking_controller.dart';
+import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
+import 'package:dilivvafast/features/booking/presentation/widgets/fare_breakdown_card.dart';
+import 'package:dilivvafast/features/booking/presentation/widgets/package_form.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 class BookingScreen extends ConsumerWidget {
   const BookingScreen({super.key});
@@ -61,13 +62,13 @@ class BookingScreen extends ConsumerWidget {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+              color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               '${state.step + 1}/4',
               style: const TextStyle(
-                color: Color(0xFF00F0FF),
+                color: Color(0xFFFF6B00),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -133,12 +134,12 @@ class BookingScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(2),
                 color: isActive
-                    ? const Color(0xFF00F0FF)
+                    ? const Color(0xFFFF6B00)
                     : const Color(0xFF1D1E33),
                 boxShadow: isCurrent
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF00F0FF).withValues(alpha: 0.4),
+                          color: const Color(0xFFFF6B00).withValues(alpha: 0.4),
                           blurRadius: 6,
                         )
                       ]
@@ -192,7 +193,7 @@ class BookingScreen extends ConsumerWidget {
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: canProceed
-                  ? const Color(0xFF00F0FF)
+                  ? const Color(0xFFFF6B00)
                   : const Color(0xFF1D1E33),
               foregroundColor:
                   canProceed ? const Color(0xFF0A0E21) : Colors.white38,
@@ -250,8 +251,8 @@ class BookingScreen extends ConsumerWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF00F0FF),
-                      const Color(0xFF00F0FF).withValues(alpha: 0.6),
+                      const Color(0xFFFF6B00),
+                      const Color(0xFFFF6B00).withValues(alpha: 0.6),
                     ],
                   ),
                 ),
@@ -279,7 +280,7 @@ class BookingScreen extends ConsumerWidget {
               Text(
                 '₦${fare.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  color: Color(0xFF00F0FF),
+                  color: Color(0xFFFF6B00),
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -293,7 +294,7 @@ class BookingScreen extends ConsumerWidget {
                     context.go('/customer/orders');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00F0FF),
+                    backgroundColor: const Color(0xFFFF6B00),
                     foregroundColor: const Color(0xFF0A0E21),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -345,15 +346,38 @@ class _PickupStep extends StatelessWidget {
           const SizedBox(height: 16),
           // Use current location button
           OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Use geolocator to get current location
-              controller.setPickup('Current Location, Lagos', 6.5244, 3.3792);
+            onPressed: () async {
+              try {
+                LocationPermission permission =
+                    await Geolocator.checkPermission();
+                if (permission == LocationPermission.denied) {
+                  permission = await Geolocator.requestPermission();
+                }
+                if (permission == LocationPermission.deniedForever ||
+                    permission == LocationPermission.denied) {
+                  controller.setPickup(
+                      'Current Location, Lagos', 6.5244, 3.3792);
+                  return;
+                }
+                final position = await Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.high,
+                    timeLimit: Duration(seconds: 10),
+                  ),
+                );
+                controller.setPickup('Current Location',
+                    position.latitude, position.longitude);
+              } catch (_) {
+                // Fallback to Lagos coordinates
+                controller.setPickup(
+                    'Current Location, Lagos', 6.5244, 3.3792);
+              }
             },
             icon: const Icon(Icons.gps_fixed, size: 18),
             label: const Text('Use current location'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF00F0FF),
-              side: const BorderSide(color: Color(0xFF00F0FF), width: 1),
+              foregroundColor: const Color(0xFFFF6B00),
+              side: const BorderSide(color: Color(0xFFFF6B00), width: 1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -393,21 +417,21 @@ class _DropoffStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF00F0FF).withValues(alpha: 0.08),
+              color: const Color(0xFFFF6B00).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF00F0FF).withValues(alpha: 0.2),
+                color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
               ),
             ),
             child: Row(
               children: [
                 const Icon(Icons.location_on,
-                    color: Color(0xFF00F0FF), size: 18),
+                    color: Color(0xFFFF6B00), size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'From: ${state.pickupAddress}',
-                    style: const TextStyle(color: Color(0xFF00F0FF), fontSize: 13),
+                    style: const TextStyle(color: Color(0xFFFF6B00), fontSize: 13),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -501,7 +525,7 @@ class _ReviewStep extends StatelessWidget {
             child: Column(
               children: [
                 _routeRow(Icons.location_on, 'Pickup', state.pickupAddress,
-                    const Color(0xFF00F0FF)),
+                    const Color(0xFFFF6B00)),
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: Column(
@@ -517,7 +541,7 @@ class _ReviewStep extends StatelessWidget {
                   ),
                 ),
                 _routeRow(Icons.flag, 'Dropoff', state.dropoffAddress,
-                    const Color(0xFFFF00AA)),
+                    const Color(0xFFFF9500)),
               ],
             ),
           ),
@@ -636,12 +660,12 @@ class _ReviewStep extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
+                          ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFF00F0FF)
+                            ? const Color(0xFFFF6B00)
                             : Colors.white12,
                       ),
                     ),
@@ -650,7 +674,7 @@ class _ReviewStep extends StatelessWidget {
                         Icon(
                           _paymentIcon(m),
                           color: isSelected
-                              ? const Color(0xFF00F0FF)
+                              ? const Color(0xFFFF6B00)
                               : Colors.white54,
                           size: 22,
                         ),
@@ -659,7 +683,7 @@ class _ReviewStep extends StatelessWidget {
                           m.name[0].toUpperCase() + m.name.substring(1),
                           style: TextStyle(
                             color: isSelected
-                                ? const Color(0xFF00F0FF)
+                                ? const Color(0xFFFF6B00)
                                 : Colors.white54,
                             fontSize: 12,
                           ),
@@ -687,7 +711,7 @@ class _ReviewStep extends StatelessWidget {
         style: const TextStyle(color: Colors.white, fontSize: 15),
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.local_offer,
-              color: Color(0xFFFF00AA), size: 20),
+              color: Color(0xFFFF9500), size: 20),
           hintText: 'Enter promo code',
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
           border: InputBorder.none,
@@ -696,7 +720,7 @@ class _ReviewStep extends StatelessWidget {
           suffixIcon: TextButton(
             onPressed: () => controller.calculateFare(),
             child: const Text('Apply',
-                style: TextStyle(color: Color(0xFFFF00AA), fontSize: 13)),
+                style: TextStyle(color: Color(0xFFFF9500), fontSize: 13)),
           ),
         ),
         onChanged: controller.setPromoCode,
@@ -728,13 +752,13 @@ Widget _buildHeroCard({
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          const Color(0xFF00F0FF).withValues(alpha: 0.08),
-          const Color(0xFFFF00AA).withValues(alpha: 0.05),
+          const Color(0xFFFF6B00).withValues(alpha: 0.08),
+          const Color(0xFFFF9500).withValues(alpha: 0.05),
         ],
       ),
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
-        color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+        color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
       ),
     ),
     child: Row(
@@ -744,9 +768,9 @@ Widget _buildHeroCard({
           height: 48,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
+            color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
           ),
-          child: Icon(icon, color: const Color(0xFF00F0FF), size: 24),
+          child: Icon(icon, color: const Color(0xFFFF6B00), size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(

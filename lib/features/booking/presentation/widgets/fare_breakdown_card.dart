@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/core/services/fare_calculator_service.dart';
+import 'package:dilivvafast/core/services/fare_calculator_service.dart';
 
 /// Itemized fare breakdown card showing base fare, distance, surge, promo, etc.
 class FareBreakdownCard extends StatelessWidget {
@@ -34,14 +34,14 @@ class FareBreakdownCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF00F0FF).withValues(alpha: 0.2)),
+        border: Border.all(color: const Color(0xFFFF6B00).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.receipt_long, color: Color(0xFF00F0FF), size: 20),
+              Icon(Icons.receipt_long, color: Color(0xFFFF6B00), size: 20),
               SizedBox(width: 8),
               Text(
                 'Fare Breakdown',
@@ -92,7 +92,7 @@ class FareBreakdownCard extends StatelessWidget {
               Text(
                 '₦${b.totalFare.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  color: Color(0xFF00F0FF),
+                  color: Color(0xFFFF6B00),
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -105,12 +105,12 @@ class FareBreakdownCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF00F0FF).withValues(alpha: 0.1),
+                color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 '📍 ${b.zoneName}',
-                style: const TextStyle(color: Color(0xFF00F0FF), fontSize: 12),
+                style: const TextStyle(color: Color(0xFFFF6B00), fontSize: 12),
               ),
             ),
           ],
@@ -162,7 +162,7 @@ class FareBreakdownCard extends StatelessWidget {
       ),
       child: const Center(
         child: CircularProgressIndicator(
-          color: Color(0xFF00F0FF),
+          color: Color(0xFFFF6B00),
           strokeWidth: 2,
         ),
       ),

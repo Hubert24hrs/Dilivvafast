@@ -12,9 +12,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     
     <application
-        android:label="fast_delivery"
+        android:label="Dilivvafast"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false"
+        android:enableOnBackInvokedCallback="true">
         
         <!-- FCM Default Notification Channel -->
         <meta-data

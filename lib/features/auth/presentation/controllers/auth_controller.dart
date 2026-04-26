@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 class AuthController extends AsyncNotifier<void> {
   @override

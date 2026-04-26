@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fast_delivery/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 void main() {
   group('UserModel', () {

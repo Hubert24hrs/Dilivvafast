@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/features/ai/data/maya_chat_service.dart';
 
-/// Simple FAQ data model
-class _FaqItem {
-  final String question;
-  final String answer;
-  _FaqItem(this.question, this.answer);
-}
-
-/// Chat message model
+/// Chat message model for display
 class _ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
-  _ChatMessage({required this.text, required this.isUser, DateTime? timestamp})
-      : timestamp = timestamp ?? DateTime.now();
+  final bool isTyping;
+
+  _ChatMessage({
+    required this.text,
+    required this.isUser,
+    DateTime? timestamp,
+    this.isTyping = false,
+  }) : timestamp = timestamp ?? DateTime.now();
 }
 
 class ChatbotScreen extends ConsumerStatefulWidget {
@@ -28,49 +30,17 @@ class ChatbotScreen extends ConsumerStatefulWidget {
 class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
   final List<_ChatMessage> _messages = [];
-
-  static final List<_FaqItem> _faqs = [
-    _FaqItem(
-        'How do I track my delivery?',
-        'You can track your delivery in real-time from the "My Orders" tab. '
-            'Tap on any active order to see the live location of your rider.'),
-    _FaqItem(
-        'What are the delivery charges?',
-        'Delivery charges are calculated based on distance, package weight, '
-            'and the zone. You can see the fare breakdown before confirming your booking.'),
-    _FaqItem(
-        'How do I fund my wallet?',
-        'Go to your Wallet, tap "Fund Wallet", select an amount, and complete '
-            'the payment via Paystack. Your balance updates instantly.'),
-    _FaqItem(
-        'How do I become a driver?',
-        'Tap the menu and select "Become a Driver". Fill out the application '
-            'form with your details and documents. Our team will review and approve your application.'),
-    _FaqItem(
-        'How do I cancel an order?',
-        'You can cancel an order before a driver picks it up. Go to "My Orders", '
-            'select the order, and tap "Cancel". Note: cancellation fees may apply.'),
-    _FaqItem(
-        'What is the referral program?',
-        'Share your referral code with friends. When they sign up and complete '
-            'their first delivery, you both earn a ₦500 bonus!'),
-    _FaqItem(
-        'How long does delivery take?',
-        'Delivery times depend on distance and traffic conditions. Estimated '
-            'time is shown when you book. Most intra-city deliveries take 30-90 minutes.'),
-    _FaqItem(
-        'How do I contact support?',
-        'You\'re already here! Type your question below or tap a suggested topic. '
-            'For urgent issues, call us at 0800-DILIVVA.'),
-  ];
+  final MayaChatService _mayaService = MayaChatService();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Welcome message
     _messages.add(_ChatMessage(
-      text: 'Hello! 👋 I\'m your Dilivvafast assistant. How can I help you today?',
+      text:
+          'Hey there! 👋 I\'m **Maya**, your Dilivvafast assistant.\n\nHow can I help you today? You can ask me about tracking, pricing, payments, or anything else!',
       isUser: false,
     ));
   }
@@ -79,59 +49,50 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty || _isLoading) return;
 
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true));
-    });
+    final userText = text.trim();
     _controller.clear();
 
-    // Find matching FAQ
-    Future.delayed(const Duration(milliseconds: 500), () {
-      final response = _findAnswer(text);
-      setState(() {
-        _messages.add(_ChatMessage(text: response, isUser: false));
-      });
-      _scrollToBottom();
+    setState(() {
+      _messages.add(_ChatMessage(text: userText, isUser: true));
+      _isLoading = true;
+      // Add typing indicator
+      _messages.add(_ChatMessage(text: '', isUser: false, isTyping: true));
     });
+    _scrollToBottom();
+
+    try {
+      final response = await _mayaService.sendMessage(userText);
+
+      setState(() {
+        // Remove typing indicator
+        _messages.removeWhere((m) => m.isTyping);
+        _messages.add(_ChatMessage(text: response, isUser: false));
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _messages.removeWhere((m) => m.isTyping);
+        _messages.add(_ChatMessage(
+          text:
+              'Oops! Something went wrong. Please try again or contact support@dilivvafast.ng 📧',
+          isUser: false,
+        ));
+        _isLoading = false;
+      });
+    }
+
     _scrollToBottom();
   }
 
-  String _findAnswer(String query) {
-    final lower = query.toLowerCase();
-
-    // Check FAQs for keyword matches
-    for (final faq in _faqs) {
-      final keywords = faq.question.toLowerCase().split(' ');
-      final matchCount =
-          keywords.where((k) => k.length > 3 && lower.contains(k)).length;
-      if (matchCount >= 2) return faq.answer;
-    }
-
-    // Keyword-based fallbacks
-    if (lower.contains('track')) return _faqs[0].answer;
-    if (lower.contains('charge') || lower.contains('price') || lower.contains('fare')) {
-      return _faqs[1].answer;
-    }
-    if (lower.contains('fund') || lower.contains('wallet') || lower.contains('pay')) {
-      return _faqs[2].answer;
-    }
-    if (lower.contains('driver') || lower.contains('rider')) return _faqs[3].answer;
-    if (lower.contains('cancel')) return _faqs[4].answer;
-    if (lower.contains('refer')) return _faqs[5].answer;
-    if (lower.contains('time') || lower.contains('long')) return _faqs[6].answer;
-    if (lower.contains('help') || lower.contains('support')) return _faqs[7].answer;
-
-    return 'I\'m not sure about that. Would you like to speak with a human agent? '
-        'Tap the "Escalate" button below to connect with our support team.';
-  }
-
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -144,56 +105,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final quickReplies = _mayaService.getQuickReplies();
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
-              ),
-              child: const Icon(Icons.smart_toy,
-                  color: Color(0xFF00F0FF), size: 18),
-            ),
-            const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Support Bot',
-                    style: TextStyle(color: Colors.white, fontSize: 15)),
-                Text('Online',
-                    style:
-                        TextStyle(color: Color(0xFF4CAF50), fontSize: 10)),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Connecting to human agent...'),
-                    backgroundColor: Color(0xFFFF9800)),
-              );
-            },
-            icon: const Icon(Icons.headset_mic,
-                color: Color(0xFFFF9800), size: 16),
-            label: const Text('Escalate',
-                style: TextStyle(color: Color(0xFFFF9800), fontSize: 11)),
-          ),
-        ],
-      ),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: _buildAppBar(),
       body: Column(
         children: [
           // Messages list
@@ -202,13 +118,18 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               itemCount: _messages.length,
-              itemBuilder: (context, index) =>
-                  _buildMessageBubble(_messages[index]),
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return _buildMessageBubble(message)
+                    .animate()
+                    .fadeIn(duration: 200.ms)
+                    .slideY(begin: 0.1, end: 0, duration: 200.ms);
+              },
             ),
           ),
 
-          // Quick reply chips (only show at start)
-          if (_messages.length <= 2) _buildQuickReplies(),
+          // Quick reply chips
+          if (!_isLoading) _buildQuickReplies(quickReplies),
 
           // Input bar
           _buildInputBar(),
@@ -217,71 +138,192 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppTheme.backgroundColor,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => context.pop(),
+      ),
+      title: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppTheme.primaryGradient,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: -2,
+                ),
+              ],
+            ),
+            child:
+                const Icon(Icons.support_agent, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Maya',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600)),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.successColor,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text('AI Assistant • Online',
+                      style: TextStyle(
+                          color: AppTheme.successColor, fontSize: 10)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded, color: Colors.white54, size: 20),
+          tooltip: 'Clear chat',
+          onPressed: () {
+            _mayaService.clearHistory();
+            setState(() {
+              _messages.clear();
+              _messages.add(_ChatMessage(
+                text: 'Chat cleared! 🧹 How can I help you?',
+                isUser: false,
+              ));
+            });
+          },
+        ),
+        TextButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Connecting to human agent...'),
+                backgroundColor: AppTheme.primaryColor,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          },
+          icon: const Icon(Icons.headset_mic,
+              color: AppTheme.primaryColor, size: 16),
+          label: const Text('Escalate',
+              style: TextStyle(color: AppTheme.primaryColor, fontSize: 11)),
+        ),
+      ],
+    );
+  }
+
   Widget _buildMessageBubble(_ChatMessage message) {
+    if (message.isTyping) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(18),
+            ),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTypingDot(0),
+              _buildTypingDot(1),
+              _buildTypingDot(2),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final isUser = message.isUser;
     return Align(
-      alignment:
-          message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         decoration: BoxDecoration(
-          color: message.isUser
-              ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
-              : const Color(0xFF1D1E33),
+          color: isUser
+              ? AppTheme.primaryColor.withValues(alpha: 0.12)
+              : AppTheme.surfaceColor,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(message.isUser ? 16 : 4),
-            bottomRight: Radius.circular(message.isUser ? 4 : 16),
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isUser ? 18 : 4),
+            bottomRight: Radius.circular(isUser ? 4 : 18),
           ),
           border: Border.all(
-            color: message.isUser
-                ? const Color(0xFF00F0FF).withValues(alpha: 0.2)
+            color: isUser
+                ? AppTheme.primaryColor.withValues(alpha: 0.25)
                 : Colors.white10,
           ),
         ),
         child: Text(
           message.text,
           style: TextStyle(
-            color:
-                message.isUser ? const Color(0xFF00F0FF) : Colors.white70,
-            fontSize: 13,
-            height: 1.4,
+            color: isUser ? AppTheme.primaryColor : Colors.white70,
+            fontSize: 13.5,
+            height: 1.5,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildQuickReplies() {
-    final suggestions = [
-      'Track my delivery',
-      'Delivery charges',
-      'Fund wallet',
-      'Become a driver',
-      'Referral program',
-    ];
-
+  Widget _buildTypingDot(int index) {
     return Container(
-      height: 42,
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      child: const Icon(Icons.circle, size: 6, color: Colors.white38),
+    )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .fadeIn(delay: Duration(milliseconds: index * 200), duration: 400.ms)
+        .slideY(begin: 0, end: -0.3, duration: 400.ms);
+  }
+
+  Widget _buildQuickReplies(List<String> quickReplies) {
+    return Container(
+      height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 12),
+      margin: const EdgeInsets.only(bottom: 4),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: suggestions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: quickReplies.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) => ActionChip(
-          label: Text(suggestions[index],
+          label: Text(quickReplies[index],
               style: const TextStyle(
-                  color: Color(0xFF00F0FF), fontSize: 11)),
-          backgroundColor:
-              const Color(0xFF00F0FF).withValues(alpha: 0.08),
+                  color: AppTheme.primaryColor, fontSize: 11.5)),
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.08),
           side: BorderSide(
-              color: const Color(0xFF00F0FF).withValues(alpha: 0.2)),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          onPressed: () => _sendMessage(suggestions[index]),
+              color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          onPressed: () => _sendMessage(quickReplies[index]),
         ),
       ),
     );
@@ -290,39 +332,68 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   Widget _buildInputBar() {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, 10, 8, MediaQuery.of(context).padding.bottom + 10),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1D1E33),
-        border: Border(top: BorderSide(color: Colors.white10)),
+          16, 12, 10, MediaQuery.of(context).padding.bottom + 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        border: Border(
+            top: BorderSide(
+                color: Colors.white.withValues(alpha: 0.06))),
       ),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: _controller,
+              focusNode: _focusNode,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: 'Ask Maya anything...',
                 hintStyle: TextStyle(
                     color: Colors.white.withValues(alpha: 0.25),
                     fontSize: 14),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                filled: false,
               ),
               onSubmitted: _sendMessage,
+              textInputAction: TextInputAction.send,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFF00F0FF),
+              gradient: _isLoading ? null : AppTheme.primaryGradient,
+              color: _isLoading ? Colors.white12 : null,
+              boxShadow: _isLoading
+                  ? null
+                  : [
+                      BoxShadow(
+                        color:
+                            AppTheme.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        spreadRadius: -2,
+                      ),
+                    ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.send, color: Color(0xFF0A0E21), size: 18),
-              onPressed: () => _sendMessage(_controller.text),
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white54,
+                      ),
+                    )
+                  : const Icon(Icons.send_rounded,
+                      color: Colors.white, size: 18),
+              onPressed:
+                  _isLoading ? null : () => _sendMessage(_controller.text),
             ),
           ),
         ],

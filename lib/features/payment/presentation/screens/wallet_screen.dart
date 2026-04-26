@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/payment/domain/entities/transaction_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 
 class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
@@ -57,7 +57,7 @@ class WalletScreen extends ConsumerWidget {
             transactionsAsync.when(
               loading: () => const Center(
                   child:
-                      CircularProgressIndicator(color: Color(0xFF00F0FF))),
+                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
               error: (e, _) => Text('Error: $e',
                   style: const TextStyle(color: Colors.redAccent)),
               data: (txns) {
@@ -123,7 +123,7 @@ class WalletScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           balanceAsync.when(
             loading: () => const Text('...', style: TextStyle(color: Colors.white, fontSize: 32)),
-            error: (_, __) => const Text('₦0.00', style: TextStyle(color: Colors.white, fontSize: 32)),
+            error: (_, _) => const Text('₦0.00', style: TextStyle(color: Colors.white, fontSize: 32)),
             data: (balance) => Text(
               '₦${balance.toStringAsFixed(2)}',
               style: const TextStyle(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fast_delivery/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
 /// Package details form: category, weight, recipient info, and notes.
 class PackageForm extends StatelessWidget {
@@ -46,12 +46,12 @@ class PackageForm extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
+                      ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
                       : const Color(0xFF1D1E33),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF00F0FF)
+                        ? const Color(0xFFFF6B00)
                         : Colors.white12,
                     width: 1.5,
                   ),
@@ -62,7 +62,7 @@ class PackageForm extends StatelessWidget {
                     Icon(
                       _categoryIcon(category),
                       color: isSelected
-                          ? const Color(0xFF00F0FF)
+                          ? const Color(0xFFFF6B00)
                           : Colors.white54,
                       size: 18,
                     ),
@@ -70,7 +70,7 @@ class PackageForm extends StatelessWidget {
                     Text(
                       _categoryLabel(category),
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFF00F0FF) : Colors.white70,
+                        color: isSelected ? const Color(0xFFFF6B00) : Colors.white70,
                         fontSize: 13,
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -168,7 +168,7 @@ class PackageForm extends StatelessWidget {
       child: TextField(
         style: const TextStyle(color: Colors.white, fontSize: 15),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: const Color(0xFF00F0FF), size: 20),
+          prefixIcon: Icon(icon, color: const Color(0xFFFF6B00), size: 20),
           hintText: hint,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
           border: InputBorder.none,

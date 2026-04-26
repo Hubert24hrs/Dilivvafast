@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/features/courier/domain/entities/chat_message_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/courier/domain/entities/chat_message_model.dart';
 
 /// Streams chat messages for a specific order
 final chatMessagesProvider =
@@ -139,7 +139,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
               loading: () => const Center(
                 child:
-                    CircularProgressIndicator(color: Color(0xFF00F0FF)),
+                    CircularProgressIndicator(color: Color(0xFFFF6B00)),
               ),
               error: (e, _) => Center(
                 child: Text('Error: $e',
@@ -188,7 +188,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     height: 44,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF00F0FF),
+                      color: Color(0xFFFF6B00),
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.send,
@@ -218,7 +218,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMine
-              ? const Color(0xFF00F0FF).withValues(alpha: 0.15)
+              ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
               : const Color(0xFF1D1E33),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
@@ -228,7 +228,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           border: Border.all(
             color: isMine
-                ? const Color(0xFF00F0FF).withValues(alpha: 0.3)
+                ? const Color(0xFFFF6B00).withValues(alpha: 0.3)
                 : Colors.white12,
           ),
         ),
@@ -240,7 +240,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Text(
                 msg.senderRole.toUpperCase(),
                 style: TextStyle(
-                  color: const Color(0xFFFF00AA).withValues(alpha: 0.7),
+                  color: const Color(0xFFFF9500).withValues(alpha: 0.7),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

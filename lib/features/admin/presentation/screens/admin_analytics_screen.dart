@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 /// Providers for admin analytics
 final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
@@ -18,9 +19,30 @@ final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   int activeDrivers =
       usersSnap.docs.where((d) => d.data()['role'] == 'driver' && d.data()['isOnline'] == true).length;
   int totalUsers = usersSnap.docs.length;
-  double totalRevenue = ordersSnap.docs.fold(0.0, (sum, doc) {
-    return sum + ((doc.data()['totalFare'] as num?)?.toDouble() ?? 0);
+  double totalRevenue = ordersSnap.docs.fold<double>(0.0, (total, doc) {
+    return total + ((doc.data()['totalFare'] as num?)?.toDouble() ?? 0);
   });
+
+  // Aggregate daily revenue for the last 7 days from delivered orders
+  final now = DateTime.now();
+  final sevenDaysAgo = DateTime(now.year, now.month, now.day)
+      .subtract(const Duration(days: 6));
+  final dailyRevenue = <int, double>{};
+  for (var i = 0; i < 7; i++) {
+    dailyRevenue[i] = 0;
+  }
+  for (final doc in ordersSnap.docs) {
+    final data = doc.data();
+    if (data['status'] != 'delivered') continue;
+    final deliveredAt = data['deliveredAt'];
+    if (deliveredAt == null) continue;
+    final date = (deliveredAt as Timestamp).toDate();
+    if (date.isBefore(sevenDaysAgo)) continue;
+    final dayIndex = date.difference(sevenDaysAgo).inDays.clamp(0, 6);
+    dailyRevenue[dayIndex] =
+        (dailyRevenue[dayIndex] ?? 0) +
+        ((data['totalFare'] as num?)?.toDouble() ?? 0);
+  }
 
   return {
     'totalOrders': totalOrders,
@@ -28,6 +50,7 @@ final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
     'activeDrivers': activeDrivers,
     'totalUsers': totalUsers,
     'totalRevenue': totalRevenue,
+    'dailyRevenue': dailyRevenue,
   };
 });
 
@@ -51,14 +74,14 @@ class AdminAnalyticsScreen extends ConsumerWidget {
             style: TextStyle(color: Colors.white, fontSize: 18)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF00F0FF)),
+            icon: const Icon(Icons.refresh, color: Color(0xFFFF6B00)),
             onPressed: () => ref.invalidate(_adminStatsProvider),
           ),
         ],
       ),
       body: statsAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF00F0FF))),
+            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
         error: (e, _) => Center(
             child: Text('Error: $e',
                 style: const TextStyle(color: Colors.redAccent))),
@@ -80,7 +103,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                   Icons.attach_money, const Color(0xFF4CAF50)),
               const SizedBox(width: 10),
               _kpiCard('Orders', '${stats['totalOrders']}',
-                  Icons.receipt_long, const Color(0xFF00F0FF)),
+                  Icons.receipt_long, const Color(0xFFFF6B00)),
             ],
           ),
           const SizedBox(height: 10),
@@ -100,14 +123,14 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               stats['deliveredOrders'] as int, stats['totalOrders'] as int),
           const SizedBox(height: 24),
 
-          // Revenue chart (sample data)
+          // Revenue chart (live data)
           const Text('Revenue Trend (Last 7 Days)',
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
-          _revenueChart(),
+          _revenueChart(stats),
           const SizedBox(height: 24),
 
           // Order distribution
@@ -213,10 +236,11 @@ class AdminAnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _revenueChart() {
+  Widget _revenueChart(Map<String, dynamic> stats) {
     final now = DateTime.now();
+    final dailyRevenue = (stats['dailyRevenue'] as Map<int, double>?) ?? {};
     final data = List.generate(7, (i) {
-      return FlSpot(i.toDouble(), (500 + (i * 317 % 3000)).toDouble());
+      return FlSpot(i.toDouble(), dailyRevenue[i] ?? 0);
     });
 
     return Container(
