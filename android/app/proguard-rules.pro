@@ -19,6 +19,11 @@
 -keep class com.google.firebase.crashlytics.** { *; }
 -dontwarn com.google.firebase.crashlytics.**
 
+# Flutter Play Core / Deferred Components fix
+-dontwarn com.google.android.play.core.tasks.**
+-keep class com.google.android.play.core.tasks.** { *; }
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
+
 # Firebase Auth
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**
