@@ -1,7 +1,7 @@
 // import 'dart:io';
 // import 'package:mailer/mailer.dart';
 // import 'package:mailer/smtp_server.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
 import 'package:flutter/foundation.dart';
 
 class EmailService {

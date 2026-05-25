@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;

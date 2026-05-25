@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fast_delivery/presentation/common/platform_map_widget.dart';
+import 'package:dilivvafast/presentation/common/platform_map_widget.dart';
 
 class LocationPickerScreen extends StatelessWidget {
   const LocationPickerScreen({super.key});

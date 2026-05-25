@@ -1,5 +1,5 @@
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/screens/booking/booking_sheet.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/screens/booking/booking_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'map_view_stub.dart'

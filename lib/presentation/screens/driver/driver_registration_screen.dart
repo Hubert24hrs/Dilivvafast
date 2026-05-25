@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:fast_delivery/core/models/driver_application_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/models/driver_application_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

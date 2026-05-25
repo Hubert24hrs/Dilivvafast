@@ -1,8 +1,8 @@
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/glass_card.dart';
-import 'package:fast_delivery/presentation/common/platform_map_widget.dart';
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/glass_card.dart';
+import 'package:dilivvafast/presentation/common/platform_map_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

@@ -1,20 +1,20 @@
 import 'dart:async';
 
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 
-import 'package:fast_delivery/presentation/common/connectivity_wrapper.dart';
-import 'package:fast_delivery/presentation/common/error_boundary.dart';
+import 'package:dilivvafast/presentation/common/connectivity_wrapper.dart';
+import 'package:dilivvafast/presentation/common/error_boundary.dart';
 import 'package:flutter/foundation.dart';
-import 'package:fast_delivery/core/router/app_router.dart';
-import 'package:fast_delivery/firebase_options.dart';
+import 'package:dilivvafast/core/router/app_router.dart';
+import 'package:dilivvafast/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:fast_delivery/core/config/mapbox_init_stub.dart'
-    if (dart.library.io) 'package:fast_delivery/core/config/mapbox_init_mobile.dart'
-    if (dart.library.html) 'package:fast_delivery/core/config/mapbox_init_web.dart';
+import 'package:dilivvafast/core/config/mapbox_init_stub.dart'
+    if (dart.library.io) 'package:dilivvafast/core/config/mapbox_init_mobile.dart'
+    if (dart.library.html) 'package:dilivvafast/core/config/mapbox_init_web.dart';
 
 void main() async {
   // Wrap entire app in error zone

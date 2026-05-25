@@ -1,4 +1,4 @@
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class MapView extends StatelessWidget {

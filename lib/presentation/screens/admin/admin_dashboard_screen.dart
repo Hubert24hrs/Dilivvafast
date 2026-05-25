@@ -1,9 +1,9 @@
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/background_orbs.dart';
-import 'package:fast_delivery/presentation/screens/admin/tabs/admin_analytics_tab.dart';
-import 'package:fast_delivery/presentation/screens/admin/tabs/admin_drivers_tab.dart';
-import 'package:fast_delivery/presentation/screens/admin/tabs/admin_investors_tab.dart';
-import 'package:fast_delivery/presentation/screens/admin/tabs/admin_withdrawals_tab.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/background_orbs.dart';
+import 'package:dilivvafast/presentation/screens/admin/tabs/admin_analytics_tab.dart';
+import 'package:dilivvafast/presentation/screens/admin/tabs/admin_drivers_tab.dart';
+import 'package:dilivvafast/presentation/screens/admin/tabs/admin_investors_tab.dart';
+import 'package:dilivvafast/presentation/screens/admin/tabs/admin_withdrawals_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

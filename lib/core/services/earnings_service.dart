@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/models/earnings_model.dart';
+import 'package:dilivvafast/core/models/earnings_model.dart';
 
 class EarningsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

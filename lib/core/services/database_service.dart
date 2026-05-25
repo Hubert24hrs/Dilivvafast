@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/models/chat_message_model.dart';
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/models/driver_application_model.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
+import 'package:dilivvafast/core/models/chat_message_model.dart';
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/models/driver_application_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/user_model.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

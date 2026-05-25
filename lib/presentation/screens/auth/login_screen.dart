@@ -1,7 +1,7 @@
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
-import 'package:fast_delivery/core/utils/validators.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/models/user_model.dart';
+import 'package:dilivvafast/core/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';

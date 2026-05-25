@@ -1,6 +1,6 @@
 // import 'dart:io';
 // import 'package:path_provider/path_provider.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ReceiptService {

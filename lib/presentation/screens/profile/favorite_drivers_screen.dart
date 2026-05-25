@@ -1,6 +1,6 @@
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/services/favorite_drivers_service.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/services/favorite_drivers_service.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

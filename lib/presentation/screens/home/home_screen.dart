@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/app_drawer.dart';
-import 'package:fast_delivery/presentation/screens/booking/booking_sheet.dart';
-import 'package:fast_delivery/presentation/common/platform_map_widget.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/app_drawer.dart';
+import 'package:dilivvafast/presentation/screens/booking/booking_sheet.dart';
+import 'package:dilivvafast/presentation/common/platform_map_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';

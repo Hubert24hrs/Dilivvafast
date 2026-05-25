@@ -1,10 +1,12 @@
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/app_drawer.dart';
-import 'package:fast_delivery/presentation/common/background_orbs.dart';
-import 'package:fast_delivery/presentation/common/platform_map_widget.dart';
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/rider_payment_status.dart';
+import 'package:dilivvafast/core/services/rider_payment_service.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/app_drawer.dart';
+import 'package:dilivvafast/presentation/common/background_orbs.dart';
+import 'package:dilivvafast/presentation/common/platform_map_widget.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -35,6 +37,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
     final ridesAsync = ref.watch(ridesStreamProvider);
     final couriersAsync = ref.watch(activeCouriersProvider);
     final isOnline = ref.watch(driverOnlineProvider);
+    final isBlocked = ref.watch(riderIsBlockedProvider);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -55,7 +58,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
                 
                 debugPrint('DriverDashboard: isOnline=$isOnline, rides=${rides.length}, couriers=${couriers.length}');
                 
-                if (isOnline) {
+                if (isOnline && !isBlocked) {
                   if (rides.isNotEmpty) {
                     debugPrint('DriverDashboard: Showing ride request');
                     return _buildRequestView(rides.first);
@@ -87,7 +90,13 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
             children: [
               // Top Bar with menu and status toggle
               _buildDashboardAppBar(isOnline),
-              
+
+              // ═══════════ RIDER PAYMENT BANNER ═══════════
+              ref.watch(riderPaymentStatusProvider).maybeWhen(
+                data: (status) => _buildRiderPaymentBanner(status),
+                orElse: () => const SizedBox.shrink(),
+              ),
+
               // Scrollable Content
               Expanded(
                 child: SingleChildScrollView(
@@ -148,6 +157,113 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
     );
   }
   
+  // ─────────────────────────────────────────────────────────────
+  // RIDER PAYMENT BANNER
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildRiderPaymentBanner(RiderPaymentStatus status) {
+    final isBlocked = status.isBlocked;
+    final bannerColor = isBlocked ? Colors.red : AppTheme.primaryColor;
+    final bgColor = isBlocked
+        ? Colors.red.withOpacity(0.12)
+        : AppTheme.primaryColor.withOpacity(0.10);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: bannerColor.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: bannerColor.withOpacity(0.2),
+            blurRadius: 12,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Status dot
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: bannerColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: bannerColor, blurRadius: 6, spreadRadius: 1),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isBlocked ? '🔴 Payment Required' : '🟢 Active — Ride Cycle',
+                  style: TextStyle(
+                    color: bannerColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  isBlocked
+                      ? status.debtSummary
+                      : '${status.completedRidesCount}/$kRidesPerPaymentCycle rides • ₦${status.accumulatedDebt.toStringAsFixed(0)} accrued',
+                  style: TextStyle(
+                    color: bannerColor.withOpacity(0.85),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Pay Now button
+          GestureDetector(
+            onTap: () {
+              if (isBlocked) {
+                context.push('/driver/pay-now');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No outstanding fee. Keep riding! 🚀'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: bannerColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: bannerColor.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Pay Now',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Row(
       children: [

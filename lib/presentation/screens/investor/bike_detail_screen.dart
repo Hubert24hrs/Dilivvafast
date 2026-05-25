@@ -1,8 +1,8 @@
-import 'package:fast_delivery/core/models/bike_model.dart';
-import 'package:fast_delivery/core/models/hp_agreement_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/background_orbs.dart';
+import 'package:dilivvafast/core/models/bike_model.dart';
+import 'package:dilivvafast/core/models/hp_agreement_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/background_orbs.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:fast_delivery/core/models/investor_earnings_model.dart';
+import 'package:dilivvafast/core/models/investor_earnings_model.dart';
 import 'package:intl/intl.dart';
 
 class BikeDetailScreen extends ConsumerStatefulWidget {

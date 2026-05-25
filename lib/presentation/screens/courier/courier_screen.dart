@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/background_orbs.dart';
-import 'package:fast_delivery/presentation/common/glass_card.dart';
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/background_orbs.dart';
+import 'package:dilivvafast/presentation/common/glass_card.dart';
 
-import 'package:fast_delivery/presentation/screens/courier/package_details_sheet.dart';
-import 'package:fast_delivery/presentation/screens/courier/propose_price_sheet.dart';
-import 'package:fast_delivery/presentation/screens/courier/route_entry_sheet.dart';
+import 'package:dilivvafast/presentation/screens/courier/package_details_sheet.dart';
+import 'package:dilivvafast/presentation/screens/courier/propose_price_sheet.dart';
+import 'package:dilivvafast/presentation/screens/courier/route_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

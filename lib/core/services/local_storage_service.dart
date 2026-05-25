@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/user_model.dart';
 
 /// Local storage service using Hive for offline data caching
 class LocalStorageService {

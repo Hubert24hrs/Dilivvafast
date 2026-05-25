@@ -1,5 +1,5 @@
-import 'package:fast_delivery/core/services/database_service.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
+import 'package:dilivvafast/core/services/database_service.dart';
+import 'package:dilivvafast/core/models/user_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 

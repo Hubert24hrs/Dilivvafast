@@ -1,42 +1,43 @@
 import 'package:flutter/foundation.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/utils/role_guard.dart';
-import 'package:fast_delivery/core/utils/router_utils.dart';
-import 'package:fast_delivery/presentation/screens/admin/admin_dashboard_screen.dart';
-import 'package:fast_delivery/presentation/screens/auth/login_screen.dart';
-import 'package:fast_delivery/presentation/screens/common/location_picker_screen.dart';
-import 'package:fast_delivery/presentation/screens/booking/destination_search_screen.dart';
-import 'package:fast_delivery/presentation/screens/chat/chat_screen.dart';
-import 'package:fast_delivery/presentation/screens/courier/courier_screen.dart';
-import 'package:fast_delivery/presentation/screens/courier/courier_tracking_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_dashboard_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_mode_selection_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_navigation_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_pending_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_registration_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_earnings_screen.dart';
-import 'package:fast_delivery/presentation/screens/driver/driver_reviews_screen.dart';
-import 'package:fast_delivery/presentation/screens/profile/favorite_drivers_screen.dart';
-import 'package:fast_delivery/presentation/screens/history/history_details_screen.dart';
-import 'package:fast_delivery/presentation/screens/history/history_screen.dart';
-import 'package:fast_delivery/presentation/screens/home/home_screen.dart';
-import 'package:fast_delivery/presentation/screens/map/map_screen.dart';
-import 'package:fast_delivery/presentation/screens/profile/profile_screen.dart';
-import 'package:fast_delivery/presentation/screens/promo/promo_screen.dart';
-import 'package:fast_delivery/presentation/screens/referral/referral_screen.dart';
-import 'package:fast_delivery/presentation/screens/schedule/schedule_ride_screen.dart';
-import 'package:fast_delivery/presentation/screens/settings/settings_screen.dart';
-import 'package:fast_delivery/presentation/screens/splash/splash_screen.dart';
-import 'package:fast_delivery/presentation/screens/tracking/tracking_screen.dart';
-import 'package:fast_delivery/presentation/screens/wallet/add_card_screen.dart';
-import 'package:fast_delivery/presentation/screens/wallet/transaction_history_screen.dart';
-import 'package:fast_delivery/presentation/screens/wallet/wallet_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/investor_onboarding_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/investor_dashboard_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/fund_bike_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/bike_detail_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/investor_earnings_screen.dart';
-import 'package:fast_delivery/presentation/screens/investor/investor_withdraw_screen.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/utils/role_guard.dart';
+import 'package:dilivvafast/core/utils/router_utils.dart';
+import 'package:dilivvafast/presentation/screens/admin/admin_dashboard_screen.dart';
+import 'package:dilivvafast/presentation/screens/auth/login_screen.dart';
+import 'package:dilivvafast/presentation/screens/common/location_picker_screen.dart';
+import 'package:dilivvafast/presentation/screens/booking/destination_search_screen.dart';
+import 'package:dilivvafast/presentation/screens/chat/chat_screen.dart';
+import 'package:dilivvafast/presentation/screens/courier/courier_screen.dart';
+import 'package:dilivvafast/presentation/screens/courier/courier_tracking_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_dashboard_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_mode_selection_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_navigation_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_pending_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_registration_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_earnings_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/driver_reviews_screen.dart';
+import 'package:dilivvafast/presentation/screens/driver/rider_pay_now_screen.dart';
+import 'package:dilivvafast/presentation/screens/profile/favorite_drivers_screen.dart';
+import 'package:dilivvafast/presentation/screens/history/history_details_screen.dart';
+import 'package:dilivvafast/presentation/screens/history/history_screen.dart';
+import 'package:dilivvafast/presentation/screens/home/home_screen.dart';
+import 'package:dilivvafast/presentation/screens/map/map_screen.dart';
+import 'package:dilivvafast/presentation/screens/profile/profile_screen.dart';
+import 'package:dilivvafast/presentation/screens/promo/promo_screen.dart';
+import 'package:dilivvafast/presentation/screens/referral/referral_screen.dart';
+import 'package:dilivvafast/presentation/screens/schedule/schedule_ride_screen.dart';
+import 'package:dilivvafast/presentation/screens/settings/settings_screen.dart';
+import 'package:dilivvafast/presentation/screens/splash/splash_screen.dart';
+import 'package:dilivvafast/presentation/screens/tracking/tracking_screen.dart';
+import 'package:dilivvafast/presentation/screens/wallet/add_card_screen.dart';
+import 'package:dilivvafast/presentation/screens/wallet/transaction_history_screen.dart';
+import 'package:dilivvafast/presentation/screens/wallet/wallet_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/investor_onboarding_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/investor_dashboard_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/fund_bike_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/bike_detail_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/investor_earnings_screen.dart';
+import 'package:dilivvafast/presentation/screens/investor/investor_withdraw_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -185,6 +186,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/driver',
         builder: (context, state) => const DriverDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/driver/pay-now',
+        builder: (context, state) => const RiderPayNowScreen(),
       ),
       GoRoute(
         path: '/tracking',

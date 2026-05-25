@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/services/notification_service.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/services/notification_service.dart';
 import 'package:flutter/foundation.dart';
 
 class RideService {

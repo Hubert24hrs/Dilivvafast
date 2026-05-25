@@ -1,28 +1,32 @@
 
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/models/bike_model.dart';
-import 'package:fast_delivery/core/models/investor_model.dart';
-import 'package:fast_delivery/core/models/hp_agreement_model.dart';
-import 'package:fast_delivery/core/models/investor_earnings_model.dart';
-import 'package:fast_delivery/core/services/admin_service.dart';
-import 'package:fast_delivery/core/services/auth_service.dart';
-import 'package:fast_delivery/core/services/database_service.dart';
-import 'package:fast_delivery/core/services/location_service.dart';
-import 'package:fast_delivery/core/services/notification_service.dart';
-import 'package:fast_delivery/core/services/paystack_service.dart';
-import 'package:fast_delivery/core/services/payment_service.dart';
-import 'package:fast_delivery/core/services/saved_destinations_service.dart';
-import 'package:fast_delivery/core/services/earnings_service.dart';
-import 'package:fast_delivery/core/services/rating_service.dart';
-import 'package:fast_delivery/core/services/favorite_drivers_service.dart';
-import 'package:fast_delivery/core/services/email_service.dart';
-import 'package:fast_delivery/core/services/investor_service.dart';
-import 'package:fast_delivery/core/services/revenue_split_service.dart';
+import 'package:dilivvafast/core/models/rider_payment_status.dart';
+import 'package:dilivvafast/core/services/rider_payment_service.dart';
+
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/models/bike_model.dart';
+import 'package:dilivvafast/core/models/investor_model.dart';
+import 'package:dilivvafast/core/models/hp_agreement_model.dart';
+import 'package:dilivvafast/core/models/investor_earnings_model.dart';
+import 'package:dilivvafast/core/services/admin_service.dart';
+import 'package:dilivvafast/core/services/auth_service.dart';
+import 'package:dilivvafast/core/services/database_service.dart';
+import 'package:dilivvafast/core/services/location_service.dart';
+import 'package:dilivvafast/core/services/notification_service.dart';
+import 'package:dilivvafast/core/services/paystack_service.dart';
+import 'package:dilivvafast/core/services/payment_service.dart';
+import 'package:dilivvafast/core/services/saved_destinations_service.dart';
+import 'package:dilivvafast/core/services/earnings_service.dart';
+import 'package:dilivvafast/core/services/rating_service.dart';
+import 'package:dilivvafast/core/services/favorite_drivers_service.dart';
+import 'package:dilivvafast/core/services/email_service.dart';
+import 'package:dilivvafast/core/services/investor_service.dart';
+import 'package:dilivvafast/core/services/revenue_split_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fast_delivery/core/services/ride_service.dart';
-import 'package:fast_delivery/core/services/storage_service.dart';
+import 'package:dilivvafast/core/services/ride_service.dart';
+import 'package:dilivvafast/core/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ... other providers
@@ -149,6 +153,36 @@ final adminServiceProvider = Provider<AdminService>((ref) {
 // Paystack Service Provider
 final paystackServiceProvider = Provider<PaystackService>((ref) {
   return PaystackService();
+});
+
+
+// ==================== RIDER PAYMENT PROVIDERS ====================
+
+final riderPaymentServiceProvider = Provider<RiderPaymentService>((ref) {
+  return RiderPaymentService();
+});
+
+/// Stream of the current rider's payment status.
+final riderPaymentStatusProvider =
+    StreamProvider.autoDispose<RiderPaymentStatus>((ref) {
+  final uid = ref.watch(currentUserIdProvider);
+  if (uid == null) {
+    return Stream.value(RiderPaymentStatus(
+      riderId: '',
+      completedRidesCount: 0,
+      accumulatedDebt: 0,
+      isBlocked: false,
+    ));
+  }
+  return ref.watch(riderPaymentServiceProvider).statusStream(uid);
+});
+
+/// Convenience: is the current rider blocked?
+final riderIsBlockedProvider = Provider.autoDispose<bool>((ref) {
+  return ref.watch(riderPaymentStatusProvider).maybeWhen(
+        data: (s) => s.isBlocked,
+        orElse: () => false,
+      );
 });
 
 // --- Constants ---

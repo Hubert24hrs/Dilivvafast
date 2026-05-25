@@ -1,7 +1,7 @@
 
-import 'package:fast_delivery/core/models/driver_application_model.dart';
-import 'package:fast_delivery/core/models/user_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/models/driver_application_model.dart';
+import 'package:dilivvafast/core/models/user_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

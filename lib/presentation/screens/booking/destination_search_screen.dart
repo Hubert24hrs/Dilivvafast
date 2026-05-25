@@ -1,8 +1,8 @@
-import 'package:fast_delivery/core/providers/providers.dart';
-import 'package:fast_delivery/core/services/saved_destinations_service.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
-import 'package:fast_delivery/presentation/common/background_orbs.dart';
-import 'package:fast_delivery/presentation/common/glass_card.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/services/saved_destinations_service.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
+import 'package:dilivvafast/presentation/common/background_orbs.dart';
+import 'package:dilivvafast/presentation/common/glass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -1,8 +1,8 @@
-import 'package:fast_delivery/core/models/courier_model.dart';
-import 'package:fast_delivery/core/models/ride_model.dart';
-import 'package:fast_delivery/core/services/email_service.dart';
-import 'package:fast_delivery/core/services/receipt_service.dart';
-import 'package:fast_delivery/core/theme/app_theme.dart';
+import 'package:dilivvafast/core/models/courier_model.dart';
+import 'package:dilivvafast/core/models/ride_model.dart';
+import 'package:dilivvafast/core/services/email_service.dart';
+import 'package:dilivvafast/core/services/receipt_service.dart';
+import 'package:dilivvafast/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';

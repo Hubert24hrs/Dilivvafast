@@ -1,4 +1,4 @@
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

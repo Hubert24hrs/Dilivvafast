@@ -1,7 +1,7 @@
-import 'package:fast_delivery/core/services/local_storage_service.dart';
-import 'package:fast_delivery/core/services/connectivity_service.dart';
-import 'package:fast_delivery/core/services/database_service.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/services/local_storage_service.dart';
+import 'package:dilivvafast/core/services/connectivity_service.dart';
+import 'package:dilivvafast/core/services/database_service.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

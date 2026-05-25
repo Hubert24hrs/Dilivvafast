@@ -1,7 +1,7 @@
-import 'package:fast_delivery/core/models/investor_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/models/investor_model.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
-import 'package:fast_delivery/presentation/common/glass_card.dart';
+import 'package:dilivvafast/presentation/common/glass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

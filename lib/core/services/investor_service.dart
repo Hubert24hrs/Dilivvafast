@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fast_delivery/core/models/investor_model.dart';
+import 'package:dilivvafast/core/models/investor_model.dart';
 import '../models/bike_model.dart';
 import '../models/hp_agreement_model.dart';
 import '../models/investor_earnings_model.dart';
-import 'package:fast_delivery/core/providers/providers.dart';
+import 'package:dilivvafast/core/providers/providers.dart';
 
 /// Service for investor operations
 class InvestorService {
