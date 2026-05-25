@@ -21,7 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLogin = true;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -35,17 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
 
-      final controller = ref.read(authControllerProvider.notifier);
-      if (_isLogin) {
-        controller.signIn(email, password);
-      } else {
-        controller.signUp(
-          fullName: email.split('@').first, // Temporary — full register screen in Phase 2
-          email: email,
-          phone: '',
-          password: password,
-        );
-      }
+      ref.read(authControllerProvider.notifier).signIn(email, password);
     }
   }
 
@@ -104,20 +94,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.delivery_dining,
-                  size: 80,
-                  color: AppTheme.primaryColor,
+                // Logo
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: AppTheme.primaryGradient,
+                    boxShadow: const [AppTheme.neonShadow],
+                  ),
+                  child: const Icon(
+                    Icons.delivery_dining,
+                    size: 44,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  _isLogin ? 'Login Mode' : 'Signup Mode',
+                  'DILIVVAFAST',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
+                        color: AppTheme.primaryColor,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 4,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Welcome back',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white54,
                       ),
                 ),
                 const SizedBox(height: 32),
+
+                // Login form
                 GlassCard(
                   child: Form(
                     key: _formKey,
@@ -138,94 +148,176 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           controller: _passwordController,
                           label: 'Password',
                           icon: Icons.lock_outline,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           validator: Validators.password,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.white38,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        ThreeDButton(
-                          key: const Key('login_btn'),
-                          text: _isLogin ? 'LOGIN' : 'SIGN UP',
-                          isLoading: authStateAsync.isLoading,
-                          onPressed: _submit,
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          key: const Key('toggle_btn'),
-                          onPressed: () {
-                            setState(() {
-                              _isLogin = !_isLogin;
-                            });
-                          },
-                          child: Text(
-                            _isLogin
-                                ? 'Create Account'
-                                : 'Already have an account?',
-                            style: const TextStyle(
-                              color: AppTheme.primaryColor,
+
+                        // Forgot Password link
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: AppTheme.secondaryColor,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        ThreeDButton(
+                          key: const Key('login_btn'),
+                          text: 'LOGIN',
+                          isLoading: authStateAsync.isLoading,
+                          onPressed: _submit,
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Or continue with',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 16),
+
+                // Social login divider
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      key: const Key('google_btn'),
-                      onTap: () {
-                        ref.read(authControllerProvider.notifier).signInWithGoogle();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.g_mobiledata,
-                          color: Colors.white,
-                          size: 32,
+                    Expanded(
+                      child: Divider(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Or continue with',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 13,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    GestureDetector(
-                      key: const Key('apple_btn'),
-                      onTap: () {
-                        ref.read(authControllerProvider.notifier).signInWithApple();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.apple,
-                          color: Colors.white,
-                          size: 28,
-                        ),
+                    Expanded(
+                      child: Divider(
+                        color: Colors.white.withValues(alpha: 0.15),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+
+                // Social buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _SocialButton(
+                      key: const Key('google_btn'),
+                      icon: Icons.g_mobiledata,
+                      label: 'Google',
+                      onTap: () {
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithGoogle();
+                      },
+                    ),
+                    const SizedBox(width: 16),
+                    _SocialButton(
+                      key: const Key('apple_btn'),
+                      icon: Icons.apple,
+                      label: 'Apple',
+                      onTap: () {
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithApple();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Register link
+                GestureDetector(
+                  onTap: () => context.push('/register'),
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Don't have an account? ",
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
+                      children: const [
+                        TextSpan(
+                          text: 'Sign Up',
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Styled social login button
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

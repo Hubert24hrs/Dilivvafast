@@ -102,6 +102,17 @@ abstract class UserModel with _$UserModel {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     // Ensure uid is set from doc.id
     data['uid'] = doc.id;
+    
+    // Provide safe defaults for required String fields that might be missing in older docs
+    data['fullName'] = data['fullName'] ?? 'User';
+    data['email'] = data['email'] ?? '';
+    data['phone'] = data['phone'] ?? '';
+    data['referralCode'] = data['referralCode'] ?? '';
+    
+    // Ensure timestamps exist to prevent Null subtype errors
+    data['createdAt'] = data['createdAt'] ?? Timestamp.now();
+    data['updatedAt'] = data['updatedAt'] ?? Timestamp.now();
+    
     return UserModel.fromJson(data);
   }
 }

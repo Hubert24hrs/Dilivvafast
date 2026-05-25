@@ -1,0 +1,25 @@
+  Future<void> _updateDriverMarker(RideModel? ride) async {
+    if (ride == null || ride.driverLocation == null || _circleAnnotationManager == null) return;
+    
+    final point = mapbox.Point(
+      coordinates: mapbox.Position(
+        ride.driverLocation!.longitude,
+        ride.driverLocation!.latitude,
+      ),
+    );
+
+    if (_driverAnnotation == null) {
+      _driverAnnotation = await _circleAnnotationManager?.create(
+        mapbox.CircleAnnotationOptions(
+          geometry: point,
+          circleColor: AppTheme.primaryColor.value,
+          circleRadius: 10.0,
+          circleStrokeColor: Colors.white.value,
+          circleStrokeWidth: 2.0,
+        ),
+      );
+    } else {
+      _driverAnnotation?.geometry = point;
+      await _circleAnnotationManager?.update(_driverAnnotation!);
+    }
+  }

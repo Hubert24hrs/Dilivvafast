@@ -1,32 +1,52 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Service that monitors network connectivity status.
+/// Service to monitor network connectivity status
 class ConnectivityService {
-  ConnectivityService() : _connectivity = Connectivity();
+  final Connectivity _connectivity = Connectivity();
+  
+  /// Stream of connectivity changes
+  Stream<List<ConnectivityResult>> get connectivityStream => 
+      _connectivity.onConnectivityChanged;
 
-  final Connectivity _connectivity;
-
-  /// Stream of connectivity status
-  Stream<bool> get onConnectivityChanged {
-    return _connectivity.onConnectivityChanged.map((results) {
-      return results.any((r) => r != ConnectivityResult.none);
-    });
+  /// Check current connectivity status
+  Future<bool> isConnected() async {
+    final result = await _connectivity.checkConnectivity();
+    return result.contains(ConnectivityResult.mobile) || 
+           result.contains(ConnectivityResult.wifi) ||
+           result.contains(ConnectivityResult.ethernet);
   }
 
-  /// Check current connectivity
-  Future<bool> get isConnected async {
-    final results = await _connectivity.checkConnectivity();
-    return results.any((r) => r != ConnectivityResult.none);
+  /// Check if device has active internet (not just WiFi connected)
+  Future<bool> hasInternetConnection() async {
+    try {
+      final isConnected = await this.isConnected();
+      if (!isConnected) return false;
+      
+      // Could add additional ping/HTTP check here if needed
+      return true;
+    } catch (e) {
+      debugPrint('Error checking internet connection: $e');
+      return false;
+    }
   }
 }
 
-/// Provider for connectivity service
-final connectivityServiceProvider =
-    Provider<ConnectivityService>((ref) => ConnectivityService());
+/// Provider for ConnectivityService
+final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
+  return ConnectivityService();
+});
 
-/// Stream provider for connectivity status
-final connectivityStatusProvider = StreamProvider<bool>((ref) {
-  return ref.watch(connectivityServiceProvider).onConnectivityChanged;
+/// Provider for connectivity status stream
+final connectivityStatusProvider = StreamProvider<List<ConnectivityResult>>((ref) {
+  final service = ref.watch(connectivityServiceProvider);
+  return service.connectivityStream;
+});
+
+/// Provider to check if currently connected
+final isConnectedProvider = FutureProvider<bool>((ref) {
+  final service = ref.watch(connectivityServiceProvider);
+  return service.isConnected();
 });

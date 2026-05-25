@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:dilivvafast/core/errors/failures.dart';
@@ -94,13 +95,27 @@ class FirebaseAuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, UserModel>> loginWithGoogle() async {
     try {
+      debugPrint('[Auth] Starting Google Sign-In...');
       final googleProvider = GoogleAuthProvider()..addScope('email');
-      final userCredential = await _auth.signInWithProvider(googleProvider);
+
+      UserCredential userCredential;
+
+      if (kIsWeb) {
+        // Web: use signInWithPopup (signInWithProvider is unimplemented on web)
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // Mobile: signInWithProvider is supported on Android/iOS
+        userCredential = await _auth.signInWithProvider(googleProvider);
+      }
+
+      debugPrint('[Auth] Google Sign-In successful');
       final user = await _getOrCreateUserModel(userCredential.user!);
       return Right(user);
     } on FirebaseAuthException catch (e) {
+      debugPrint('[Auth] Google Sign-In FirebaseAuthException: ${e.code}');
       return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
     } catch (e) {
+      debugPrint('[Auth] Google Sign-In unexpected error: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -108,16 +123,29 @@ class FirebaseAuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, UserModel>> loginWithApple() async {
     try {
+      debugPrint('[Auth] Starting Apple Sign-In...');
       final appleProvider = AppleAuthProvider()
         ..addScope('email')
         ..addScope('name');
 
-      final userCredential = await _auth.signInWithProvider(appleProvider);
+      UserCredential userCredential;
+
+      if (kIsWeb) {
+        // Web: use signInWithPopup
+        userCredential = await _auth.signInWithPopup(appleProvider);
+      } else {
+        // Mobile: signInWithProvider handles native Apple Sign-In
+        userCredential = await _auth.signInWithProvider(appleProvider);
+      }
+
+      debugPrint('[Auth] Apple Sign-In successful');
       final user = await _getOrCreateUserModel(userCredential.user!);
       return Right(user);
     } on FirebaseAuthException catch (e) {
+      debugPrint('[Auth] Apple Sign-In FirebaseAuthException: ${e.code}');
       return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
     } catch (e) {
+      debugPrint('[Auth] Apple Sign-In unexpected error: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -264,6 +292,12 @@ class FirebaseAuthRepository implements IAuthRepository {
         return 'This sign-in method is not enabled.';
       case 'invalid-credential':
         return 'Invalid credentials. Please check and try again.';
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with a different sign-in method.';
+      case 'popup-closed-by-user':
+        return 'Sign-in cancelled.';
+      case 'cancelled-popup-request':
+        return 'Sign-in cancelled.';
       default:
         return 'Authentication error. Please try again.';
     }

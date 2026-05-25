@@ -8,18 +8,28 @@ class CustomTextField extends StatelessWidget {
     required this.label,
     this.hint,
     this.icon,
+    this.suffixIcon,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
+    this.enabled = true,
+    this.onChanged,
   });
 
   final TextEditingController controller;
   final String label;
   final String? hint;
   final IconData? icon;
+  final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final int maxLines;
+  final TextCapitalization textCapitalization;
+  final bool enabled;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +38,10 @@ class CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      maxLines: maxLines,
+      textCapitalization: textCapitalization,
+      enabled: enabled,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
@@ -39,6 +53,7 @@ class CustomTextField extends StatelessWidget {
                 color: AppTheme.primaryColor.withValues(alpha: 0.7),
               )
             : null,
+        suffixIcon: suffixIcon,
       ),
     );
   }

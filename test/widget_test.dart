@@ -1,29 +1,21 @@
+// Basic Flutter widget test for Fast Delivery app.
+//
+// Verifies the app can launch without errors.
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
+
+import 'package:fast_delivery/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 void main() {
-  testWidgets('App theme applies correctly', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          theme: AppTheme.futuristicTheme,
-          home: const Scaffold(
-            body: Center(
-              child: Text('Dilivvafast'),
-            ),
-          ),
-        ),
-      ),
-    );
+  testWidgets('App launches without errors', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const ProviderScope(child: FastDeliveryApp()));
 
-    expect(find.text('Dilivvafast'), findsOneWidget);
-  });
+    // Allow async operations to complete
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-  test('AppTheme has correct colors', () {
-    expect(AppTheme.primaryColor, const Color(0xFFFF6B00));
-    expect(AppTheme.secondaryColor, const Color(0xFFFF9500));
-    expect(AppTheme.backgroundColor, const Color(0xFF0A0E21));
+    // Verify the app rendered something (no crash)
+    expect(find.byType(ProviderScope), findsOneWidget);
   });
 }

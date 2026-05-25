@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
@@ -13,8 +14,11 @@ class AuthController extends AsyncNotifier<void> {
           .read(authRepositoryProvider)
           .loginWithEmail(email: email, password: password);
       result.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => null, // Success — authStateProvider will react
+        (failure) {
+          debugPrint('[AuthController] signIn failure: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (_) => null, // Success — authStateProvider will react
       );
     });
   }
@@ -38,8 +42,11 @@ class AuthController extends AsyncNotifier<void> {
             referralCode: referralCode,
           );
       result.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => null,
+        (failure) {
+          debugPrint('[AuthController] signUp failure: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (_) => null,
       );
     });
   }
@@ -50,8 +57,11 @@ class AuthController extends AsyncNotifier<void> {
       final result =
           await ref.read(authRepositoryProvider).loginWithGoogle();
       result.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => null,
+        (failure) {
+          debugPrint('[AuthController] Google sign-in failure: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (_) => null,
       );
     });
   }
@@ -62,8 +72,11 @@ class AuthController extends AsyncNotifier<void> {
       final result =
           await ref.read(authRepositoryProvider).loginWithApple();
       result.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => null,
+        (failure) {
+          debugPrint('[AuthController] Apple sign-in failure: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (_) => null,
       );
     });
   }
