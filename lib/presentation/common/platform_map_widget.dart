@@ -45,11 +45,13 @@ class PlatformMapWidget extends StatelessWidget {
       );
     }
 
-    return MapWidget(
-      onMapCreated: (MapboxMap mapboxMap) => onMapCreated(mapboxMap),
-      cameraOptions: CameraOptions(
-        center: Point(coordinates: Position(initialLng, initialLat)),
-        zoom: initialZoom,
+    return RepaintBoundary(
+      child: MapWidget(
+        onMapCreated: (MapboxMap mapboxMap) => onMapCreated(mapboxMap),
+        cameraOptions: CameraOptions(
+          center: Point(coordinates: Position(initialLng, initialLat)),
+          zoom: initialZoom,
+        ),
       ),
     );
   }

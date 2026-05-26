@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dilivvafast/core/models/earnings_model.dart';
+import 'package:dilivvafast/core/services/paystack_service.dart';
 
 class EarningsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -143,13 +145,38 @@ class EarningsService {
       remaining -= earning.netAmount;
     }
 
-    // Mock: Complete the withdrawal after a short delay
-    Future.delayed(const Duration(seconds: 2), () async {
-      await _firestore.collection('withdrawals').doc(withdrawal.id).update({
-        'status': 'completed',
-        'completedAt': Timestamp.now(),
-        'reference': 'MOCK_${withdrawal.id}',
-      });
+    // Live Paystack Payout Integration
+    final paystackService = PaystackService();
+    final bankCode = PaystackService.getBankCode(bankName) ?? '044'; // default fallback (Access Bank)
+
+    // Complete withdrawal asynchronously so client is not blocked on slow API
+    Future.microtask(() async {
+      try {
+        final transferData = await paystackService.initiateTransfer(
+          amount: amount,
+          bankCode: bankCode,
+          accountNumber: accountNumber,
+          accountName: accountName,
+          reason: 'Dilivvafast Driver Payout - ID: ${withdrawal.id}',
+        );
+
+        final reference = transferData['transfer_code'] ?? transferData['reference'] ?? 'PAY_${withdrawal.id}';
+
+        await _firestore.collection('withdrawals').doc(withdrawal.id).update({
+          'status': 'completed',
+          'completedAt': Timestamp.now(),
+          'reference': reference,
+        });
+
+        debugPrint('[EarningsService] Live withdrawal processed successfully: $reference');
+      } catch (e) {
+        debugPrint('[EarningsService] Live Paystack transfer failed: $e. Settle manually.');
+        // Set reference to MANUAL-PENDING so Admin knows to payout manually
+        await _firestore.collection('withdrawals').doc(withdrawal.id).update({
+          'reference': 'MANUAL_PENDING_${withdrawal.id}',
+          'status': 'processing',
+        });
+      }
     });
 
     return withdrawal;

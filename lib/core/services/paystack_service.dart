@@ -12,9 +12,7 @@ import 'paystack_stub.dart'
 
 /// Paystack payment service for handling real payments
 class PaystackService {
-  // TODO: Replace with your actual Paystack public key from dashboard
-  // Get yours at: https://dashboard.paystack.com/#/settings/developers
-  static const String _publicKey = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  static String get publicKey => dotenv.env['PAYSTACK_PUBLIC_KEY'] ?? 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   
   /// Initialize Paystack - call this in main() or splash screen
   Future<void> initialize() async {
@@ -63,7 +61,7 @@ class PaystackService {
 
     try {
       await FlutterPaystackPlus.openPaystackPopup(
-        publicKey: _publicKey,
+        publicKey: publicKey,
         customerEmail: email,
         amount: amountInKobo.toString(),
         reference: paymentReference,
@@ -205,5 +203,107 @@ class PaystackService {
     
     debugPrint('Create recipient error: ${response.body}');
     return null;
+  }
+
+  /// Get the standard Paystack Bank Code for a given bank name.
+  /// Supports various formats and common aliases of major Nigerian banks.
+  static String? getBankCode(String bankName) {
+    final cleanName = bankName.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    
+    // Map of common aliases/names to Paystack codes
+    final bankMap = {
+      // Major Commercial Banks
+      'access': '044',
+      'accessbank': '044',
+      'accessdiamond': '044',
+      'diamond': '044',
+      
+      'gtb': '058',
+      'gtbank': '058',
+      'guarantytrust': '058',
+      'guarantytrustbank': '058',
+      
+      'zenith': '057',
+      'zenithbank': '057',
+      
+      'uba': '033',
+      'unitedbankforafrica': '033',
+      
+      'firstbank': '011',
+      'fbn': '011',
+      'firstbankofnigeria': '011',
+      
+      'union': '032',
+      'unionbank': '032',
+      
+      'fidelity': '070',
+      'fidelitybank': '070',
+      
+      'sterling': '232',
+      'sterlingbank': '232',
+      
+      'stanbic': '221',
+      'stanbictbtc': '221',
+      'stanbicibtcbank': '221',
+      
+      'wema': '035',
+      'wemabank': '035',
+      
+      'polaris': '076',
+      'polarisbank': '076',
+      
+      'keystone': '082',
+      'keystonebank': '082',
+      
+      'ecobank': '050',
+      'fcmb': '214',
+      'firstcitymonumentbank': '214',
+      
+      'unity': '215',
+      'unitybank': '215',
+      
+      'providus': '101',
+      'providusbank': '101',
+      
+      'titan': '102',
+      'titantrust': '102',
+      
+      'globus': '103',
+      'globusbank': '103',
+      
+      // Fintechs / Neobanks
+      'opay': '999992',
+      'paycom': '999992',
+      
+      'palmpay': '999991',
+      
+      'kuda': '50211',
+      'kudamicrofinance': '50211',
+      'kudabank': '50211',
+      
+      'moniepoint': '50515',
+      'moniepointmfb': '50515',
+      
+      'fairmoney': '51318',
+      'vfd': '566',
+      'vfdmicrofinance': '566',
+      
+      'rubies': '125',
+      'carbon': '565',
+    };
+
+    // Look for exact match first
+    if (bankMap.containsKey(cleanName)) {
+      return bankMap[cleanName];
+    }
+
+    // Fallback: look for partial matches (e.g. if user types "Access Bank PLC")
+    for (var entry in bankMap.entries) {
+      if (cleanName.contains(entry.key) || entry.key.contains(cleanName)) {
+        return entry.value;
+      }
+    }
+
+    return null; // Return null if not found
   }
 }
