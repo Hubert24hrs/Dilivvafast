@@ -400,19 +400,22 @@ class _BookingSheetState extends ConsumerState<BookingSheet> {
   }
 
   Widget _buildRecentItem(String title, String subtitle) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white10,
-          shape: BoxShape.circle,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: Colors.white10,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.access_time, color: Colors.white70, size: 20),
         ),
-        child: const Icon(Icons.access_time, color: Colors.white70, size: 20),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        onTap: () => context.push('/destination-search'),
       ),
-      title: Text(title, style: const TextStyle(color: Colors.white)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-      onTap: () => context.push('/destination-search'),
     );
   }
 
