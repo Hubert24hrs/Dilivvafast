@@ -169,7 +169,8 @@ class InputValidator {
   static bool containsSqlInjection(String input) {
     final sqlPatterns = [
       'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP',
-      'CREATE', 'ALTER', 'EXEC', 'UNION', '--', ';'
+      'CREATE', 'ALTER', 'EXEC', 'UNION', '--', ';',
+      "' OR", "' AND", "OR 1=1"
     ];
 
     final upperInput = input.toUpperCase();
