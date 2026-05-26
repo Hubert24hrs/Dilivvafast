@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 
+        Mapbox Access Token
+        Replace the value below with your real token from: https://account.mapbox.com
+        Token starts with pk.eyJ1...
+    -->
+    <string name="mapbox_access_token">YOUR_MAPBOX_TOKEN_HERE</string>
+</resources>

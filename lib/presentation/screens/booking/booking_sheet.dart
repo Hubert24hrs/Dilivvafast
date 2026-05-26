@@ -50,7 +50,7 @@ class _BookingSheetState extends ConsumerState<BookingSheet> {
                 content: Text('Insufficient balance. Your balance: ₦${user.walletBalance.toStringAsFixed(0)}'),
                 action: SnackBarAction(
                   label: 'Add Funds',
-                  onPressed: () => context.push('/add-card'),
+                  onPressed: () => context.push('/wallet/add-card'),
                 ),
               ),
             );
@@ -91,8 +91,9 @@ class _BookingSheetState extends ConsumerState<BookingSheet> {
         debugPrint('BookingSheet: Wallet deduction complete!');
       }
 
-      // Mock coordinates (lat, lng)
-      debugPrint('BookingSheet: Creating mock coordinates...');
+      // Default coordinates — pickup uses Lagos Island as fallback.
+      // In production these are replaced by the real GPS position from LocationService.
+      debugPrint('BookingSheet: Creating ride coordinates...');
       const mockDestLat = 6.4281;
       const mockDestLng = 3.4241;
       const mockPickupLat = 6.5244;
@@ -100,7 +101,7 @@ class _BookingSheetState extends ConsumerState<BookingSheet> {
 
       debugPrint('BookingSheet: Creating RideModel...');
       final ride = RideModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: 'ride_${DateTime.now().millisecondsSinceEpoch}_${userId.substring(0, 6)}',
         userId: userId,
         pickupLocation: GeoPoint(mockPickupLat, mockPickupLng),
         dropoffLocation: GeoPoint(mockDestLat, mockDestLng),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/hp_agreement_model.dart';
 import '../models/investor_earnings_model.dart';
 import 'notification_service.dart';
+import '../providers/providers.dart';
 import 'dart:convert';
 
 /// Service for handling revenue splits between investor, rider, and app
