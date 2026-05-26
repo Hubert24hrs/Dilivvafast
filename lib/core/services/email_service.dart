@@ -1,5 +1,5 @@
 import 'dart:io' as io;
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, debugPrint;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
@@ -107,7 +107,7 @@ class EmailService {
   // Helper to build a clean HTML template for the email body
   String _buildEmailHtml(RideModel ride, String? recipientName) {
     final name = recipientName ?? 'Valued Customer';
-    final fare = ride.fare.toStringAsFixed(0);
+    final fare = ride.price.toStringAsFixed(0);
     return '''
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
       <div style="text-align: center; margin-bottom: 20px;">
@@ -127,7 +127,7 @@ class EmailService {
           </tr>
           <tr>
             <td style="color: #666; padding: 5px 0;">Payment Method:</td>
-            <td style="text-align: right; padding: 5px 0; text-transform: capitalize;">${ride.paymentMethod}</td>
+            <td style="text-align: right; padding: 5px 0; text-transform: capitalize;">Wallet / Card</td>
           </tr>
         </table>
       </div>

@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dilivvafast/core/models/rider_payment_status.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/foundation.dart';
 
 /// Platform commission rate charged to riders.
@@ -21,19 +20,14 @@ const String kRiderPaymentCollection = 'rider_payment_status';
 ///  - Clears debt and unblocks after Paystack payment is confirmed.
 class RiderPaymentService {
   final FirebaseFirestore _db;
-  final FirebaseAuth _auth;
 
   RiderPaymentService({
     FirebaseFirestore? db,
-    FirebaseAuth? auth,
-  })  : _db = db ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  })  : _db = db ?? FirebaseFirestore.instance;
 
   // ─────────────────────────────────────────────────────────────
   // READ
   // ─────────────────────────────────────────────────────────────
-
-  String? get _currentRiderId => _auth.currentUser?.uid;
 
   DocumentReference<Map<String, dynamic>> _doc(String riderId) =>
       _db.collection(kRiderPaymentCollection).doc(riderId);

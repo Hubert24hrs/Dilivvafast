@@ -90,7 +90,7 @@ class FCMService {
     );
 
     await _localNotifications.initialize(
-      settings: const InitializationSettings(
+      const InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
@@ -116,10 +116,10 @@ class FCMService {
     if (notification == null) return;
 
     _localNotifications.show(
-      id: notification.hashCode,
-      title: notification.title,
-      body: notification.body,
-      notificationDetails: NotificationDetails(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
         android: AndroidNotificationDetails(
           _androidChannel.id,
           _androidChannel.name,
