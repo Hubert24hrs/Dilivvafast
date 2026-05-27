@@ -3,7 +3,7 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return 'Email is required';
     }
-    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final regex = RegExp(r'^[\w\.\+-]+@([\w\-]+\.)+[\w\-]{2,4}$');
     if (!regex.hasMatch(value)) {
       return 'Please enter a valid email address';
     }

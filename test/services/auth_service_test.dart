@@ -15,7 +15,7 @@ void main() {
 
     setUp(() {
       mockFirebaseAuth = MockFirebaseAuth();
-      authService = AuthService();
+      authService = AuthService(auth: mockFirebaseAuth);
     });
 
     test('currentUser returns null when not logged in', () {
@@ -31,8 +31,17 @@ void main() {
       when(mockUser.email).thenReturn('test@example.com');
       when(mockUserCredential.user).thenReturn(mockUser);
 
-      // Verify sign in was called
-      expect(mockUserCredential.user?.email, equals('test@example.com'));
+      when(mockFirebaseAuth.signInWithEmailAndPassword(
+        email: 'test@example.com',
+        password: 'password123',
+      )).thenAnswer((_) async => mockUserCredential);
+
+      final result = await authService.signIn(
+        email: 'test@example.com',
+        password: 'password123',
+      );
+
+      expect(result.user?.email, equals('test@example.com'));
     });
 
     test('signOut clears current user', () async {

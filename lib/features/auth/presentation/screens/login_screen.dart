@@ -109,6 +109,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   size: 80,
                   color: AppTheme.primaryColor,
                 ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Dilivvafast',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   _isLogin ? 'Login Mode' : 'Signup Mode',
