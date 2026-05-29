@@ -9,7 +9,7 @@ final chatMessagesProvider =
     StreamProvider.family<List<ChatMessageModel>, String>((ref, orderId) {
   return ref
       .watch(firestoreProvider)
-      .collection('orders')
+      .collection('couriers')
       .doc(orderId)
       .collection('messages')
       .orderBy('timestamp', descending: false)
@@ -62,7 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       await ref
           .read(firestoreProvider)
-          .collection('orders')
+          .collection('couriers')
           .doc(widget.orderId)
           .collection('messages')
           .add(ChatMessageModel(

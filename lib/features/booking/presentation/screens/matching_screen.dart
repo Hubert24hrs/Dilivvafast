@@ -8,8 +8,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 
-/// Animated "Finding your driver" screen shown after booking confirmation.
-/// Listens to the ride/order document for driverId assignment.
+/// Animated "Finding your courier" screen shown after booking confirmation.
+/// Listens to the courier order document for driverId assignment.
 class MatchingScreen extends ConsumerStatefulWidget {
   final String? orderId;
 
@@ -28,13 +28,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   int _elapsedSeconds = 0;
   bool _driverFound = false;
   StreamSubscription<DocumentSnapshot>? _orderSubscription;
-  String _statusText = 'Finding your driver...';
+  String _statusText = 'Finding your courier...';
 
   // Driver search phases shown while waiting
   final List<String> _searchPhases = [
-    'Finding your driver...',
-    'Searching nearby drivers...',
-    'Matching you with the best driver...',
+    'Finding your courier...',
+    'Searching nearby couriers...',
+    'Matching you with the best courier...',
     'Almost there...',
     'Expanding search area...',
   ];
@@ -88,7 +88,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
     final firestore = ref.read(firestoreProvider);
     _orderSubscription = firestore
-        .collection('orders')
+        .collection('couriers')
         .doc(orderId)
         .snapshots()
         .listen((snapshot) {
@@ -109,7 +109,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
     setState(() {
       _driverFound = true;
-      _statusText = 'Driver found!';
+      _statusText = 'Courier found!';
     });
 
     _timeoutTimer?.cancel();
@@ -129,10 +129,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('No Drivers Available',
+        title: const Text('No Couriers Available',
             style: TextStyle(color: Colors.white)),
         content: const Text(
-          'We couldn\'t find a driver right now. This might be due to high demand or limited availability in your area.',
+          'We couldn\'t find a courier right now. This might be due to high demand or limited availability in your area.',
           style: TextStyle(color: Colors.white60, height: 1.5),
         ),
         actions: [
@@ -150,7 +150,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/home');
+              context.go('/customer/home');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
@@ -195,7 +195,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   TextButton.icon(
-                    onPressed: () => context.go('/home'),
+                    onPressed: () => context.go('/customer/home'),
                     icon: const Icon(Icons.close, color: Colors.white54, size: 20),
                     label: const Text('Cancel',
                         style: TextStyle(color: Colors.white54)),
@@ -342,7 +342,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
             Text(
               _driverFound
                   ? 'Preparing your delivery...'
-                  : 'Please wait while we connect you with a nearby driver',
+                  : 'Please wait while we connect you with a nearby courier',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
@@ -394,7 +394,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Tip: You can track your driver in real-time once matched!',
+                      'Tip: You can track your courier in real-time once matched!',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,

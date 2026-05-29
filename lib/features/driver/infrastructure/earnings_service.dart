@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 /// Earnings service backed by Firestore.
-/// Queries the `orders` collection for completed deliveries
+/// Queries the `couriers` collection for completed deliveries
 /// belonging to a specific driver.
 class EarningsService {
   final FirebaseFirestore _firestore;
@@ -14,7 +14,7 @@ class EarningsService {
   Future<double> getTotalEarnings(String driverId) async {
     try {
       final snapshot = await _firestore
-          .collection('orders')
+          .collection('couriers')
           .where('driverId', isEqualTo: driverId)
           .where('status', isEqualTo: 'delivered')
           .get();
@@ -33,7 +33,7 @@ class EarningsService {
   Future<List<Map<String, dynamic>>> getEarningsHistory(String driverId) async {
     try {
       final snapshot = await _firestore
-          .collection('orders')
+          .collection('couriers')
           .where('driverId', isEqualTo: driverId)
           .where('status', isEqualTo: 'delivered')
           .orderBy('deliveredAt', descending: true)
@@ -66,7 +66,7 @@ class EarningsService {
 
     try {
       final snapshot = await _firestore
-          .collection('orders')
+          .collection('couriers')
           .where('driverId', isEqualTo: driverId)
           .where('status', isEqualTo: 'delivered')
           .where('deliveredAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))

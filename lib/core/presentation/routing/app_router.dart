@@ -8,7 +8,7 @@ import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart
 import 'package:dilivvafast/features/home/presentation/screens/home_screen.dart';
 
 // Phase 2 screens
-import 'package:dilivvafast/features/booking/presentation/screens/booking_screen.dart';
+import 'package:dilivvafast/features/booking/presentation/screens/courier_booking_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/tracking_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/orders_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/chat_screen.dart';
@@ -152,7 +152,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.add_box), label: 'Book'),
+                  icon: Icon(Icons.local_shipping), label: 'Send'),
               BottomNavigationBarItem(
                   icon: Icon(Icons.receipt_long), label: 'Orders'),
               BottomNavigationBarItem(
@@ -172,7 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/customer/book',
             name: 'customerBook',
-            builder: (context, state) => const BookingScreen(),
+            builder: (context, state) => const CourierBookingScreen(),
           ),
           GoRoute(
             path: '/customer/orders',

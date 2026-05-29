@@ -10,7 +10,7 @@ import 'package:dilivvafast/core/providers/providers.dart';
 final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final firestore = ref.watch(firestoreProvider);
 
-  final ordersSnap = await firestore.collection('orders').get();
+  final ordersSnap = await firestore.collection('couriers').get();
   final usersSnap = await firestore.collection('users').get();
 
   int totalOrders = ordersSnap.docs.length;

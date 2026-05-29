@@ -21,12 +21,14 @@ import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
-  // Register FCM background message handler (must be before runApp)
+  // MUST be first — initializes Flutter engine bindings before any plugin/channel calls
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Register FCM background message handler (must be after ensureInitialized)
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Wrap entire app in error zone
   runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
     MapboxInit.init();
     
     // Initialize Hive for local storage

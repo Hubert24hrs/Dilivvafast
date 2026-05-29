@@ -31,7 +31,7 @@ final bikeEarningsProvider =
       .subtract(const Duration(days: 29));
 
   final ordersSnap = await firestore
-      .collection('orders')
+      .collection('couriers')
       .where('driverId', isEqualTo: riderId)
       .where('status', isEqualTo: 'delivered')
       .where('deliveredAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
