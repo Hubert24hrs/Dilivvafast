@@ -17,9 +17,11 @@ import 'package:dilivvafast/core/config/mapbox_init_stub.dart'
     if (dart.library.html) 'package:dilivvafast/core/config/mapbox_init_web.dart';
 
 void main() async {
+  // MUST be first — initializes Flutter engine bindings before any plugin/channel calls
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Wrap entire app in error zone
   runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
     MapboxInit.init();
     
     // Set up global error handlers
