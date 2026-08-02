@@ -88,7 +88,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
     final firestore = ref.read(firestoreProvider);
     _orderSubscription = firestore
-        .collection('couriers')
+        .collection('orders')
         .doc(orderId)
         .snapshots()
         .listen((snapshot) {

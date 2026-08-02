@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:dilivvafast/core/presentation/components/glass_card.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
@@ -389,6 +390,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Icon(Icons.qr_code, color: Colors.white38, size: 20),
               ),
             ),
+            const SizedBox(height: 20),
+            // Legal consent
+            Center(
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  text: 'By creating an account you agree to our\n',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 12),
+                  children: [
+                    WidgetSpan(
+                      child: GestureDetector(
+                        onTap: () => _openLegalUrl(
+                            'https://hubert24hrs.github.io/Dilivvafast/terms.html'),
+                        child: const Text(
+                          'Terms of Service',
+                          style: TextStyle(
+                            color: Color(0xFFFF6B00),
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Color(0xFFFF6B00),
+                          ),
+                        ),
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' and ',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.45),
+                          fontSize: 12),
+                    ),
+                    WidgetSpan(
+                      child: GestureDetector(
+                        onTap: () => _openLegalUrl(
+                            'https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
+                        child: const Text(
+                          'Privacy Policy',
+                          style: TextStyle(
+                            color: Color(0xFFFF6B00),
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Color(0xFFFF6B00),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -414,6 +466,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 : null,
           );
     }
+  }
+
+  void _openLegalUrl(String url) {
+    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   IconData _roleIcon(UserRole role) {

@@ -186,6 +186,44 @@ class FirebaseAuthRepository implements IAuthRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, Unit>> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Left(const AuthFailure('No authenticated user found to delete.'));
+    }
+    try {
+      final uid = user.uid;
+
+      // 1. Delete notifications sub-collection
+      final notifsSnap = await _firestore
+          .collection(FirestoreConstants.users)
+          .doc(uid)
+          .collection(FirestoreConstants.notifications)
+          .get();
+      
+      final batch = _firestore.batch();
+      for (final doc in notifsSnap.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      // 2. Delete user doc
+      batch.delete(_firestore.collection(FirestoreConstants.users).doc(uid));
+      await batch.commit();
+
+      // 3. Delete Firebase Auth user
+      await user.delete();
+      return const Right(unit);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        return Left(const AuthFailure('This operation requires recent authentication. Please log in again.'));
+      }
+      return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   // --- Private helpers ---
 
   Future<UserModel> _getOrCreateUserModel(User firebaseUser) async {
