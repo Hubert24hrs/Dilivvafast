@@ -1,0 +1,10 @@
+# android/key.properties.template — Template for release build signing.
+# Instructions:
+# 1. Copy this file to android/key.properties
+# 2. Replace the values below with your real keystore credentials
+# 3. NEVER commit android/key.properties (it is gitignored)
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=dilivvafast
+storeFile=C:/path/to/your/dilivvafast-release.jks

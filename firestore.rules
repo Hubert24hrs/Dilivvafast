@@ -34,32 +34,52 @@ service cloud.firestore {
         allow read, update: if isOwner(userId);
         allow create: if isAuthenticated();
       }
+
+      match /saved_addresses/{addressId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /payment_methods/{methodId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
     }
 
-    // ==================== ORDERS ====================
+    // ==================== ORDERS & SUPPORT CHAT ====================
 
     match /orders/{orderId} {
       allow read: if isAuthenticated() && (
         resource.data.userId == request.auth.uid ||
         resource.data.driverId == request.auth.uid ||
+        orderId.matches('support_.*') ||
         isAdmin()
       );
-      allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        orderId.matches('support_.*')
+      );
       allow update: if isAuthenticated() && (
         (resource.data.driverId == request.auth.uid && isDriver()) ||
         resource.data.userId == request.auth.uid ||
+        orderId.matches('support_.*') ||
         isAdmin()
       );
       allow delete: if isAdmin();
 
       match /messages/{messageId} {
         allow read, create: if isAuthenticated() && (
+          orderId.matches('support_.*') ||
           get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid ||
           get(/databases/$(database)/documents/orders/$(orderId)).data.driverId == request.auth.uid ||
           isAdmin()
         );
       }
+    }
+
+    // ==================== REFERRALS ====================
+
+    match /referrals/{referralId} {
+      allow read, create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
 
     // ==================== TRANSACTIONS ====================
