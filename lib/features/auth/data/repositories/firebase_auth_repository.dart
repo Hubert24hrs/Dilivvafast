@@ -284,26 +284,30 @@ class FirebaseAuthRepository implements IAuthRepository {
 
   String _mapAuthError(String code) {
     switch (code) {
+      // Firebase Auth v10+ consolidates wrong-password + user-not-found
+      // into a single 'invalid-credential' code to prevent user enumeration.
+      case 'invalid-credential':
       case 'user-not-found':
-        return 'No account found with this email address.';
       case 'wrong-password':
-        return 'Incorrect password. Please try again.';
+        return 'Invalid email or password. Please check and try again.';
       case 'email-already-in-use':
         return 'An account already exists with this email.';
       case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
+        return 'Password is too weak. Use at least 8 characters with a number.';
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'user-disabled':
-        return 'This account has been disabled.';
+        return 'This account has been suspended. Contact support.';
       case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
+        return 'Too many failed attempts. Please wait a few minutes and try again.';
       case 'operation-not-allowed':
-        return 'This sign-in method is not enabled.';
-      case 'invalid-credential':
-        return 'Invalid credentials. Please check and try again.';
+        return 'This sign-in method is not currently enabled.';
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network and try again.';
+      case 'requires-recent-login':
+        return 'This action requires you to sign in again for security.';
       default:
-        return 'Authentication error. Please try again.';
+        return 'Authentication error ($code). Please try again.';
     }
   }
 }

@@ -23,10 +23,12 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        // TODO(dev): After re-registering bundle ID com.dilivvafast.app in Firebase Console,
+        // replace ios/Runner/GoogleService-Info.plist and re-run `flutterfire configure`
+        // to regenerate this block cleanly. The BUNDLE_ID in GoogleService-Info.plist
+        // is currently 'com.example.fastDelivery' — it must be updated to
+        // 'com.dilivvafast.app' for iOS Sign-In and push notifications to work.
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -51,7 +53,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyAl-MxTQGKmv9aNT00pwq8as6tevtw-l5E',
-    appId: '1:220414378908:web:placeholder', // Placeholder, might fail
+    appId: '1:220414378908:web:placeholder', // Placeholder — web not shipped
     messagingSenderId: '220414378908',
     projectId: 'fast-delivery-d8d5c',
     authDomain: 'fast-delivery-d8d5c.firebaseapp.com',
@@ -64,5 +66,22 @@ class DefaultFirebaseOptions {
     messagingSenderId: '220414378908',
     projectId: 'fast-delivery-d8d5c',
     storageBucket: 'fast-delivery-d8d5c.firebasestorage.app',
+  );
+
+  /// iOS options populated from ios/Runner/GoogleService-Info.plist.
+  ///
+  /// WARNING: The plist currently has BUNDLE_ID=com.example.fastDelivery but the
+  /// actual Xcode bundle identifier is com.dilivvafast.app. Firebase will reject
+  /// APNs/Google Sign-In until the plist is replaced with one registered under
+  /// com.dilivvafast.app. See STORE_READINESS.md for steps.
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyB4D2wHc1zjLzsOXfmLGjWf927el2aajAs',
+    appId: '1:220414378908:ios:205a9b55c360449683fe59',
+    messagingSenderId: '220414378908',
+    projectId: 'fast-delivery-d8d5c',
+    storageBucket: 'fast-delivery-d8d5c.firebasestorage.app',
+    iosClientId:
+        '220414378908-ios.apps.googleusercontent.com', // placeholder — update after Firebase Console re-registration
+    iosBundleId: 'com.dilivvafast.app',
   );
 }

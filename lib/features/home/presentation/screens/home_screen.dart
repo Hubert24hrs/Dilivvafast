@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/presentation/components/glass_card.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text(
           'DILIVVAFAST',

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:dilivvafast/core/presentation/components/glass_card.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/validators.dart';
 import 'package:dilivvafast/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
@@ -267,11 +268,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: toggleObscure,
         ),
       ),
-      validator: validator ??
-          (v) {
-            if (v == null || v.length < 6) return 'Min 6 characters';
-            return null;
-          },
+      validator: validator ?? Validators.password,
     );
   }
 

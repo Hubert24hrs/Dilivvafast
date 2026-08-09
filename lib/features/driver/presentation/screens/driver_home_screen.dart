@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
+import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/driver/presentation/controllers/driver_route_controller.dart';
@@ -25,11 +25,12 @@ class DriverHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: Column(
           children: [
             // Top bar with greeting + online toggle
-            _buildTopBar(user?.fullName ?? 'Driver', routeState, routeCtrl),
+            _buildTopBar(context, user?.fullName ?? 'Driver', routeState, routeCtrl),
 
             Expanded(
               child: SingleChildScrollView(
@@ -77,9 +78,9 @@ class DriverHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildTopBar(
-      String name, DriverRouteState state, DriverRouteController ctrl) {
+      BuildContext context, String name, DriverRouteState state, DriverRouteController ctrl) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -90,6 +91,13 @@ class DriverHomeScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+          const SizedBox(width: 4),
           // Avatar
           Container(
             width: 44,

@@ -65,5 +65,9 @@
 	<string>Dilivvafast requires photo library access to upload package photos or driver onboarding documents from your gallery.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Dilivvafast uses Face ID to securely authenticate and log you into your account.</string>
+	<!-- App Store encryption export compliance -->
+	<!-- Only standard HTTPS/TLS is used — no custom or non-exempt encryption -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -60,6 +60,12 @@ dart_files.txt
 *.freezed.dart
 *.gr.dart
 
-# Keystore files
+# Keystore files — NEVER commit signing credentials!
 key.properties
 *.jks
+*.keystore
+
+# iOS signing — NEVER commit certificates or provisioning profiles
+*.p12
+*.mobileprovision
+*.cer

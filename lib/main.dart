@@ -20,36 +20,54 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+// Global flag — set to true only after Firebase.initializeApp() succeeds.
+bool _firebaseReady = false;
+
 void main() async {
-  // MUST be first — initializes Flutter engine bindings before any plugin/channel calls
+  // MUST be first — initialises Flutter engine bindings before any plugin/channel calls.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Register FCM background message handler (must be after ensureInitialized)
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Wrap entire app in error zone
+  // Wrap entire app in error zone.
   runZonedGuarded(() async {
     MapboxInit.init();
-    
-    // Initialize Hive for local storage
+
+    // Initialise Hive for local storage.
     await Hive.initFlutter();
-    
-    // Set up global error handlers
-    _setupErrorHandlers();
-    
-    // Load environment variables
+
+    // Set up global error handlers (Crashlytics wired in later after Firebase init).
+    _setupPreFirebaseErrorHandlers();
+
+    // Load environment variables.
     try {
-      await dotenv.load(fileName: ".env");
+      await dotenv.load(fileName: '.env');
     } catch (e) {
-      debugPrint("Could not load .env file: $e");
+      debugPrint('Could not load .env file: $e');
     }
-    
+
+    // -----------------------------------------------------------------------
+    // Firebase initialisation — MUST NOT be silent on failure.
+    // If this fails the app has no auth, Firestore, or FCM backend.
+    // We show a blocking error screen instead of proceeding silently.
+    // -----------------------------------------------------------------------
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      
-      // Request FCM notification permissions
+      _firebaseReady = true;
+
+      // REMOVE AFTER VERIFYING iOS AUTH — temporary diagnostic log
+      // ignore: avoid_print
+      if (kDebugMode) {
+        debugPrint(
+          '[Dilivvafast] Firebase ready — iOS options: '
+          '${DefaultFirebaseOptions.currentPlatform.appId}',
+        );
+      }
+
+      // Register FCM background message handler AFTER Firebase is ready.
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // Request FCM notification permissions.
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(
         alert: true,
@@ -57,23 +75,28 @@ void main() async {
         sound: true,
         provisional: false,
       );
-    } catch (e) {
-      debugPrint("Firebase initialization failed: $e");
+    } catch (e, stack) {
+      // Firebase init failed — do NOT proceed with a broken backend.
+      // Log the error then show a non-dismissable error screen.
+      debugPrint('[Dilivvafast] Firebase initialization FAILED: $e\n$stack');
+      _firebaseReady = false;
     }
 
-    runApp(const ProviderScope(child: DilivvafastApp()));
+    runApp(
+      ProviderScope(
+        child: _firebaseReady
+            ? const DilivvafastApp()
+            : const _FirebaseInitErrorApp(),
+      ),
+    );
   }, (error, stackTrace) {
-    // Handled by Crashlytics in AnalyticsService
-    debugPrint('Uncaught async error: $error');
+    debugPrint('[Dilivvafast] Uncaught async error: $error');
   });
 }
 
-/// Set up global error handlers (now handled by AnalyticsService)
-void _setupErrorHandlers() {
-  // Error handling is now managed by AnalyticsService.initialize()
-  // which sets up Crashlytics integration
-  
-  // Override error widget for release mode
+/// Set up Flutter and platform error handlers before Firebase is available.
+/// Crashlytics integration is added later in [AnalyticsService.initialize].
+void _setupPreFirebaseErrorHandlers() {
   ErrorWidget.builder = (FlutterErrorDetails details) {
     if (kDebugMode) {
       return ErrorWidget(details.exception);
@@ -81,6 +104,10 @@ void _setupErrorHandlers() {
     return GlobalErrorWidget(errorDetails: details);
   };
 }
+
+// ---------------------------------------------------------------------------
+// App root — only rendered when Firebase is ready
+// ---------------------------------------------------------------------------
 
 class DilivvafastApp extends ConsumerStatefulWidget {
   const DilivvafastApp({super.key});
@@ -93,15 +120,15 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize Analytics and Crashlytics
+    // Initialise Analytics and Crashlytics (safe — Firebase is ready here).
     ref.read(analyticsServiceProvider).initialize();
-    
-    // Initialize Notification Service
+
+    // Initialise Notification Service.
     if (!kIsWeb) {
       ref.read(notificationServiceProvider).initialize();
     }
-    
-    // Log app open event
+
+    // Log app open event.
     ref.read(analyticsServiceProvider).logAppOpen();
   }
 
@@ -111,11 +138,12 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
 
     return MaterialApp.router(
       title: 'Dilivvafast',
-      theme: AppTheme.futuristicTheme,
+      theme: AppTheme.cleanDarkTheme,
+      darkTheme: AppTheme.cleanDarkTheme,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        // Wrap with error boundary for additional protection
         return ErrorBoundary(
           child: ConnectivityWrapper(
             child: child ?? const SizedBox.shrink(),
@@ -126,3 +154,89 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Blocking error app — shown when Firebase init fails
+// ---------------------------------------------------------------------------
+
+class _FirebaseInitErrorApp extends StatelessWidget {
+  const _FirebaseInitErrorApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
+      home: const _FirebaseInitErrorScreen(),
+    );
+  }
+}
+
+class _FirebaseInitErrorScreen extends StatelessWidget {
+  const _FirebaseInitErrorScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E21),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 72,
+                color: Color(0xFFFF6B00),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Service Unavailable',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Dilivvafast could not connect to its backend services.\n\n'
+                'Please check your internet connection and try again, '
+                'or update the app if a newer version is available.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Restart the app by re-running main.
+                  // On mobile this triggers a hot restart equivalent through
+                  // the platform channel — simplest UX for the user.
+                  main();
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6B00),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
