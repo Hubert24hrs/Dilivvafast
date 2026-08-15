@@ -1,5 +1,6 @@
+import * as crypto from "crypto";
 import * as functions from "firebase-functions";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import Anthropic from "@anthropic-ai/sdk";
@@ -18,6 +19,13 @@ const paystackSecretKey = defineSecret("PAYSTACK_SECRET_KEY");
 
 /** Anthropic key for the Maya support assistant. Server-side only. */
 const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
+
+/**
+ * Signing secret Paystack uses for webhook payloads. This is the same value as
+ * the Paystack secret key, kept as its own secret so the webhook function does
+ * not need the API key itself.
+ */
+const paystackWebhookSecret = defineSecret("PAYSTACK_WEBHOOK_SECRET");
 
 /** Smallest wallet top-up we accept, in Naira. Mirrored in the app's UI. */
 const MIN_TOP_UP_NAIRA = 100;
@@ -150,11 +158,147 @@ export const verifyPaystackPayment = onCall(
   }
 );
 
-// ==================== ORDER CREATED — NOTIFY DRIVERS ====================
+// ==================== SERVER-SIDE FARE ====================
+
+const MINIMUM_FARE_NAIRA = 500;
+const DEFAULT_BASE_FARE = 500;
+const DEFAULT_PER_KM_RATE = 100;
+const PLATFORM_COMMISSION_RATE = 0.2;
+
+interface ZoneConfig {
+  name?: string;
+  baseFare?: number;
+  perKmRate?: number;
+  currentSurgeMultiplier?: number;
+  polygonCoordinates?: admin.firestore.GeoPoint[];
+}
+
+/** Great-circle distance between two points, in kilometres. */
+function haversineKm(
+  a: admin.firestore.GeoPoint,
+  b: admin.firestore.GeoPoint
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLng = toRad(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.latitude)) *
+      Math.cos(toRad(b.latitude)) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(h));
+}
+
+/** Ray-casting point-in-polygon test. Mirrors FareCalculatorService in the app. */
+function isPointInPolygon(
+  point: admin.firestore.GeoPoint,
+  polygon: admin.firestore.GeoPoint[]
+): boolean {
+  if (!polygon || polygon.length < 3) return false;
+
+  let inside = false;
+  let j = polygon.length - 1;
+  for (let i = 0; i < polygon.length; i++) {
+    const xi = polygon[i].latitude;
+    const yi = polygon[i].longitude;
+    const xj = polygon[j].latitude;
+    const yj = polygon[j].longitude;
+    if (
+      yi > point.longitude !== yj > point.longitude &&
+      point.latitude < ((xj - xi) * (point.longitude - yi)) / (yj - yi) + xi
+    ) {
+      inside = !inside;
+    }
+    j = i;
+  }
+  return inside;
+}
+
+async function findZoneForPoint(
+  point: admin.firestore.GeoPoint
+): Promise<ZoneConfig | null> {
+  const zones = await db
+    .collection("zones")
+    .where("isActive", "==", true)
+    .get();
+
+  if (zones.empty) return null;
+
+  for (const doc of zones.docs) {
+    const zone = doc.data() as ZoneConfig;
+    if (isPointInPolygon(point, zone.polygonCoordinates ?? [])) {
+      return zone;
+    }
+  }
+  // City-wide fallback, same as the client.
+  return zones.docs[0].data() as ZoneConfig;
+}
 
 /**
- * When a new order is created, send FCM notification to available drivers
- * in the same zone/city.
+ * Recompute an order's fare from zone configuration and the pickup/dropoff
+ * coordinates, and write the authoritative figures back.
+ *
+ * The client shows an estimate, but the price it submits is never trusted:
+ * distance, surge, fare, and the driver/platform split are all decided here.
+ */
+async function lockOrderFare(
+  orderRef: admin.firestore.DocumentReference,
+  order: admin.firestore.DocumentData
+): Promise<number> {
+  const pickup = order.pickupGeoPoint as admin.firestore.GeoPoint | undefined;
+  const dropoff = order.dropoffGeoPoint as admin.firestore.GeoPoint | undefined;
+  if (!pickup || !dropoff) {
+    console.warn("Order missing coordinates; leaving client fare in place");
+    return Number(order.totalFare) || 0;
+  }
+
+  const zone = await findZoneForPoint(pickup);
+  const baseFare = zone?.baseFare ?? DEFAULT_BASE_FARE;
+  const perKmRate = zone?.perKmRate ?? DEFAULT_PER_KM_RATE;
+  const surgeMultiplier = zone?.currentSurgeMultiplier ?? 1;
+
+  const distanceKm = haversineKm(pickup, dropoff);
+
+  const weightKg = Number(order.packageWeight) || 0;
+  let weightSurcharge = 0;
+  if (weightKg >= 10) {
+    weightSurcharge = 500;
+  } else if (weightKg >= 5) {
+    weightSurcharge = 200;
+  }
+
+  // A discount is only honoured if the client actually claimed one, and it can
+  // never push the fare below the floor.
+  const discount = Math.max(0, Number(order.discountAmount) || 0);
+  const subtotal =
+    (baseFare + distanceKm * perKmRate + weightSurcharge) * surgeMultiplier;
+  const totalFare = Math.max(
+    Math.round(subtotal - discount),
+    MINIMUM_FARE_NAIRA
+  );
+
+  const platformCommission = Math.round(totalFare * PLATFORM_COMMISSION_RATE);
+  const driverEarnings = totalFare - platformCommission;
+
+  await orderRef.update({
+    estimatedDistanceKm: Number(distanceKm.toFixed(2)),
+    baseFare,
+    surgeMultiplier,
+    totalFare,
+    driverEarnings,
+    platformCommission,
+    fareLockedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return totalFare;
+}
+
+// ==================== ORDER CREATED — PRICE, THEN NOTIFY DRIVERS ====================
+
+/**
+ * When a new order is created: lock the fare server-side, then notify
+ * available drivers.
  */
 export const onOrderCreated = functions.firestore
   .document("orders/{orderId}")
@@ -163,6 +307,13 @@ export const onOrderCreated = functions.firestore
     const orderId = context.params.orderId;
 
     if (!order) return;
+
+    let lockedFare = Number(order.totalFare) || 0;
+    try {
+      lockedFare = await lockOrderFare(snapshot.ref, order);
+    } catch (error) {
+      console.error(`Failed to lock fare for order ${orderId}:`, error);
+    }
 
     try {
       // Find online drivers
@@ -198,13 +349,13 @@ export const onOrderCreated = functions.firestore
         tokens,
         notification: {
           title: "🚀 New Delivery Request!",
-          body: `${order.pickupAddress} → ${order.dropoffAddress} · ₦${order.totalFare?.toFixed(0) || "0"}`,
+          body: `${order.pickupAddress} → ${order.dropoffAddress} · ₦${lockedFare.toFixed(0)}`,
         },
         data: {
           type: "new_order",
           orderId,
           pickupAddress: order.pickupAddress || "",
-          totalFare: String(order.totalFare || 0),
+          totalFare: String(lockedFare),
         },
         android: {
           priority: "high",
@@ -876,3 +1027,265 @@ export const mayaChat = onCall(
     }
   }
 );
+
+// ==================== PAYSTACK WEBHOOK ====================
+
+/**
+ * Server-side fallback for wallet crediting.
+ *
+ * The app calls verifyPaystackPayment when the user returns from checkout, but
+ * that depends on the app surviving the round trip. Paystack also posts here
+ * the moment a charge succeeds, so a crash, a killed app, or a dead network
+ * after payment no longer loses the top-up. Both paths share creditWalletOnce,
+ * so whichever arrives second is a no-op.
+ */
+export const paystackWebhook = onRequest(
+  { secrets: [paystackWebhookSecret] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+
+    // Verify the payload really came from Paystack before trusting a word of
+    // it. rawBody is the exact bytes Paystack signed; re-serialising req.body
+    // would change them and break the comparison.
+    const signature = req.get("x-paystack-signature");
+    const expected = crypto
+      .createHmac("sha512", paystackWebhookSecret.value())
+      .update(req.rawBody)
+      .digest("hex");
+
+    if (
+      !signature ||
+      signature.length !== expected.length ||
+      !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+    ) {
+      console.warn("Rejected Paystack webhook with bad signature");
+      res.status(401).send("Invalid signature");
+      return;
+    }
+
+    // Acknowledge immediately — Paystack retries on anything but a 2xx, and we
+    // don't want a slow Firestore write to trigger duplicate deliveries.
+    res.status(200).send("ok");
+
+    const event = req.body;
+    if (event?.event !== "charge.success") return;
+
+    const data = event.data ?? {};
+    const reference = String(data.reference ?? "");
+    const uid = data.metadata?.userId;
+    const amountNaira = Number(data.amount) / 100;
+
+    if (!reference || !uid || !Number.isFinite(amountNaira)) {
+      console.warn("charge.success missing reference/userId/amount", {
+        reference,
+      });
+      return;
+    }
+
+    try {
+      const result = await creditWalletOnce(uid, reference, amountNaira);
+      console.log(
+        result.credited
+          ? `Webhook credited ₦${amountNaira} to ${uid} (${reference})`
+          : `Webhook saw already-processed reference ${reference}`
+      );
+    } catch (error) {
+      console.error("paystackWebhook credit failed:", error);
+    }
+  }
+);
+
+// ==================== ORDER CANCELLATION REFUND ====================
+
+/**
+ * Cancel an order and refund the customer according to policy.
+ *
+ * Cancellation used to be a status flag with no money movement. Refund amount
+ * follows the published policy: full refund before the driver collects the
+ * package, 50% afterwards.
+ */
+export const cancelOrder = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  const orderId = String(request.data?.orderId ?? "").trim();
+  if (!orderId) {
+    throw new HttpsError("invalid-argument", "orderId is required");
+  }
+
+  const reason = String(request.data?.reason ?? "").slice(0, 500);
+  const orderRef = db.collection("orders").doc(orderId);
+
+  return db.runTransaction(async (transaction) => {
+    const orderDoc = await transaction.get(orderRef);
+    if (!orderDoc.exists) {
+      throw new HttpsError("not-found", "Order not found");
+    }
+
+    const order = orderDoc.data() as admin.firestore.DocumentData;
+    if (order.userId !== uid) {
+      throw new HttpsError("permission-denied", "This is not your order");
+    }
+
+    const status = order.status as string;
+    if (status === "delivered" || status === "cancelled") {
+      throw new HttpsError(
+        "failed-precondition",
+        `An order that is ${status} cannot be cancelled`
+      );
+    }
+
+    // Before pickup: full refund. After: the customer keeps 50%.
+    const collected = status === "picked_up" || status === "in_transit";
+    const paid = order.paymentStatus === "paid";
+    const totalFare = Number(order.totalFare) || 0;
+    const refundAmount = paid ? (collected ? totalFare * 0.5 : totalFare) : 0;
+
+    transaction.update(orderRef, {
+      status: "cancelled",
+      cancellationReason: reason,
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+      refundAmount,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    if (refundAmount > 0) {
+      transaction.update(db.collection("users").doc(uid), {
+        walletBalance: admin.firestore.FieldValue.increment(refundAmount),
+      });
+
+      transaction.set(db.collection("transactions").doc(), {
+        userId: uid,
+        type: "refund",
+        amount: refundAmount,
+        description: collected
+          ? "Partial refund — cancelled after pickup"
+          : "Refund — cancelled before pickup",
+        orderId,
+        status: "completed",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    return {
+      success: true,
+      refundAmount,
+      message: refundAmount > 0
+        ? `₦${refundAmount.toLocaleString()} refunded to your wallet`
+        : "Order cancelled",
+    };
+  });
+});
+
+// ==================== DRIVER APPLICATION APPROVAL ====================
+
+/**
+ * Grant the driver role when an admin approves an application.
+ *
+ * This is the only path to the 'driver' role: firestore.rules refuses any
+ * client write to `role`, so promotion happens here with the Admin SDK.
+ */
+export const onDriverApplicationReviewed = functions.firestore
+  .document("driver_applications/{applicationId}")
+  .onUpdate(async (change) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (!before || !after) return;
+    if (before.status === after.status) return;
+
+    const userId = after.userId as string | undefined;
+    if (!userId) return;
+
+    const userRef = db.collection("users").doc(userId);
+
+    if (after.status === "approved") {
+      await userRef.update({
+        role: "driver",
+        isVerifiedDriver: true,
+        vehicleType: after.vehicleType ?? null,
+        vehiclePlate: after.vehiclePlate ?? null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`Driver approved: ${userId}`);
+    } else if (after.status === "rejected" || after.status === "suspended") {
+      // Revoke: a suspended driver drops back to customer and can no longer
+      // go online or accept orders.
+      await userRef.update({
+        role: "customer",
+        isVerifiedDriver: false,
+        isOnline: false,
+        isAvailable: false,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`Driver access revoked: ${userId} (${after.status})`);
+    }
+
+    const userDoc = await userRef.get();
+    const fcmToken = userDoc.data()?.fcmToken;
+    if (fcmToken) {
+      const approved = after.status === "approved";
+      await messaging.send({
+        token: fcmToken,
+        notification: {
+          title: approved ? "You're approved! 🎉" : "Application update",
+          body: approved
+            ? "Your driver application was approved. You can go online now."
+            : `Your driver application is now ${after.status}.`,
+        },
+        data: { type: "driver_application", status: String(after.status) },
+      });
+    }
+  });
+
+// ==================== REFERRAL RESOLUTION ====================
+
+/**
+ * Resolve a referral code to the account that owns it.
+ *
+ * The client submits only the code it was given; firestore.rules refuses a
+ * client-supplied referrerId, because a user who could name the referrer could
+ * mint ₦500 bonuses for any account. The mapping is done here.
+ */
+export const onReferralCreated = functions.firestore
+  .document("referrals/{referralId}")
+  .onCreate(async (snapshot) => {
+    const referral = snapshot.data();
+    if (!referral) return;
+
+    const code = String(referral.referralCode ?? "").trim();
+    const refereeId = referral.refereeId as string | undefined;
+    if (!code || !refereeId) {
+      await snapshot.ref.update({ status: "invalid" });
+      return;
+    }
+
+    const owners = await db
+      .collection("users")
+      .where("referralCode", "==", code)
+      .limit(1)
+      .get();
+
+    if (owners.empty) {
+      await snapshot.ref.update({ status: "invalid" });
+      console.log(`Referral code ${code} matched no account`);
+      return;
+    }
+
+    const referrerId = owners.docs[0].id;
+
+    // Self-referral would be a free ₦1000 for one person.
+    if (referrerId === refereeId) {
+      await snapshot.ref.update({ status: "invalid" });
+      return;
+    }
+
+    await snapshot.ref.update({
+      referrerId,
+      resolvedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });

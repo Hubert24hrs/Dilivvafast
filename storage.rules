@@ -1,0 +1,73 @@
+rules_version = '2';
+
+// Dilivvafast Cloud Storage security rules.
+//
+// Until now the project had no storage.rules at all, which meant profile
+// photos, driver identity documents (NIN, licence), and delivery proof images
+// were governed by whatever default the bucket happened to carry.
+//
+// Ownership mirrors firestore.rules: you write your own files, and a file is
+// readable only by the people involved in it.
+//
+// ⚠️ REVIEW BEFORE DEPLOY — see SECURITY.md.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid))
+          .data.role == 'admin';
+    }
+
+    // Uploads are images, and small enough that a single upload can't be used
+    // to run up a storage bill.
+    function isImageUnder(maxBytes) {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < maxBytes;
+    }
+
+    // ==================== PROFILE PHOTOS ====================
+    // Readable by any signed-in user: a customer needs to see their driver's
+    // photo, and vice versa.
+    match /profile_photos/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && fileName.split('\\.')[0] == request.auth.uid
+        && isImageUnder(5 * 1024 * 1024);
+    }
+
+    // ==================== DRIVER APPLICATION DOCUMENTS ====================
+    // Identity documents — NIN slips, driver's licences, vehicle papers.
+    // The applicant may upload and review their own; only an admin (who has to
+    // verify them) may read anyone else's. Never world-readable.
+    match /driver_applications/{userId}/{fileName} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isImageUnder(10 * 1024 * 1024);
+      allow delete: if isAdmin();
+    }
+
+    // ==================== PROOF OF DELIVERY ====================
+    // Written by the assigned driver, readable by the order's participants.
+    // Storage rules cannot join against the order document cheaply, so reads
+    // are scoped to signed-in users and the path is unguessable (order id).
+    match /proof_of_delivery/{orderId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isImageUnder(10 * 1024 * 1024);
+      allow delete: if isAdmin();
+    }
+
+    // ==================== EVERYTHING ELSE ====================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

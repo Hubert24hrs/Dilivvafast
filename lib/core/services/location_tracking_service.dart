@@ -1,65 +1,108 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
-/// Service for real-time driver location tracking.
-/// Streams GPS position and updates Firestore.
+/// Outcome of asking for location access, so the UI can explain what to do.
+enum LocationPermissionResult {
+  /// Foreground and background both granted — tracking survives backgrounding.
+  granted,
+
+  /// Foreground only. Tracking works while the driver has the app open, but
+  /// stops once they switch to a navigation app.
+  foregroundOnly,
+
+  /// Refused, or location services are switched off entirely.
+  denied,
+
+  /// Refused permanently — only the system settings screen can undo this.
+  deniedForever,
+}
+
+/// Real-time driver location tracking.
+///
+/// While a driver is on duty their position is written to two places:
+///
+///  * their own user document, which admins watch on the live operations map;
+///  * the active order, which is the only copy the *customer* can read —
+///    firestore.rules deliberately keeps one user from reading another's
+///    profile, so tracking cannot go through the users collection.
 class LocationTrackingService {
   LocationTrackingService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
   StreamSubscription<Position>? _positionSubscription;
   bool _isTracking = false;
+  String? _activeOrderId;
 
   bool get isTracking => _isTracking;
 
-  /// Start tracking and writing location to Firestore
-  Future<void> startTracking(String userId) async {
-    if (_isTracking) return;
+  /// The order currently being broadcast to, if any.
+  String? get activeOrderId => _activeOrderId;
 
-    // Check and request permissions
-    final permission = await _ensurePermissions();
-    if (!permission) return;
+  /// Start tracking and writing location to Firestore.
+  ///
+  /// Pass [orderId] when the driver is on an active delivery so the customer's
+  /// tracking map updates. Returns false if permission was refused.
+  Future<bool> startTracking(String userId, {String? orderId}) async {
+    _activeOrderId = orderId;
+
+    if (_isTracking) return true;
+
+    final permission = await ensurePermissions();
+    if (permission == LocationPermissionResult.denied ||
+        permission == LocationPermissionResult.deniedForever) {
+      return false;
+    }
 
     _isTracking = true;
 
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 20, // Update every 20 meters
-      ),
-    ).listen(
-      (position) {
-        _updateFirestoreLocation(userId, position);
-      },
-      onError: (e) {
-        // Silently handle location errors
-        _isTracking = false;
-      },
-    );
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 20, // Update every 20 meters
+          ),
+        ).listen(
+          (position) => _publishLocation(userId, position),
+          onError: (Object e) {
+            debugPrint('Location stream error: $e');
+            _isTracking = false;
+          },
+        );
+
+    return true;
   }
 
-  /// Stop tracking
+  /// Point tracking at a different delivery without restarting the GPS stream.
+  void setActiveOrder(String? orderId) => _activeOrderId = orderId;
+
+  /// Stop tracking and clear the driver's published position.
   Future<void> stopTracking(String userId) async {
     _isTracking = false;
     await _positionSubscription?.cancel();
     _positionSubscription = null;
+    _activeOrderId = null;
 
-    // Clear location from Firestore
     try {
       await _firestore.collection('users').doc(userId).update({
         'location': FieldValue.delete(),
         'lastSeen': FieldValue.serverTimestamp(),
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Could not clear driver location: $e');
+    }
   }
 
-  /// Get current position (one-shot)
+  /// Get current position (one-shot).
   Future<Position?> getCurrentPosition() async {
-    final permission = await _ensurePermissions();
-    if (!permission) return null;
+    final permission = await ensurePermissions();
+    if (permission == LocationPermissionResult.denied ||
+        permission == LocationPermissionResult.deniedForever) {
+      return null;
+    }
 
     try {
       return await Geolocator.getCurrentPosition(
@@ -67,44 +110,80 @@ class LocationTrackingService {
           accuracy: LocationAccuracy.high,
         ),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Could not read current position: $e');
       return null;
     }
   }
 
-  /// Update location in Firestore
-  Future<void> _updateFirestoreLocation(
-      String userId, Position position) async {
+  Future<void> _publishLocation(String userId, Position position) async {
+    final point = GeoPoint(position.latitude, position.longitude);
+
     try {
       await _firestore.collection('users').doc(userId).update({
-        'location': GeoPoint(position.latitude, position.longitude),
+        'location': point,
         'locationUpdatedAt': FieldValue.serverTimestamp(),
         'heading': position.heading,
         'speed': position.speed,
       });
-    } catch (_) {}
-  }
-
-  /// Ensure location permissions are granted
-  Future<bool> _ensurePermissions() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
+    } catch (e) {
+      debugPrint('Could not publish driver location: $e');
     }
 
-    if (permission == LocationPermission.deniedForever) return false;
+    final orderId = _activeOrderId;
+    if (orderId == null) return;
 
-    return true;
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'driverLocation': point,
+        'driverLocationUpdatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Could not publish location to order $orderId: $e');
+    }
   }
 
-  /// Clean up
+  /// Ensure location permission, escalating to background access.
+  ///
+  /// Android 10+ only grants background ("Allow all the time") access on a
+  /// second, separate request, and Google Play requires a prominent in-app
+  /// disclosure before it is asked for — show that screen before calling this.
+  /// Foreground-only is not treated as failure: the driver can still work,
+  /// they just stop broadcasting once they leave the app.
+  Future<LocationPermissionResult> ensurePermissions() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return LocationPermissionResult.denied;
+    }
+
+    var permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied) {
+      return LocationPermissionResult.denied;
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return LocationPermissionResult.deniedForever;
+    }
+
+    if (permission == LocationPermission.whileInUse) {
+      // Second prompt: "Allow all the time". Users often decline, which is
+      // fine — we degrade to foreground-only rather than blocking the driver.
+      permission = await Geolocator.requestPermission();
+    }
+
+    return permission == LocationPermission.always
+        ? LocationPermissionResult.granted
+        : LocationPermissionResult.foregroundOnly;
+  }
+
   void dispose() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
     _isTracking = false;
+    _activeOrderId = null;
   }
 }

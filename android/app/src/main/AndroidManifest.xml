@@ -2,6 +2,23 @@
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!--
+        Drivers must keep reporting their position while the app is in the
+        background, otherwise the customer's tracking map freezes the moment
+        the driver switches to their navigation app.
+
+        Android 10+ requires this to be requested separately, after foreground
+        location has already been granted, and Google Play requires a
+        prominent in-app disclosure before the request. The app asks only when
+        a driver goes on duty — see LocationTrackingService.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Foreground service that carries the location updates while on duty. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     
     <!-- Push Notification Permissions -->
@@ -55,6 +72,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!--
+            flutter_background_service's worker, declared as a location-typed
+            foreground service. Android 14+ rejects a service that starts with
+            a location type it did not declare here.
+        -->
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:foregroundServiceType="location"
+            android:exported="false"
+            android:stopWithTask="false" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
