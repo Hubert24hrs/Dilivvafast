@@ -2,6 +2,38 @@ import 'package:fpdart/fpdart.dart';
 import 'package:dilivvafast/core/errors/failures.dart';
 import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 
+/// A Paystack checkout session created server-side.
+class PaymentSession {
+  const PaymentSession({
+    required this.authorizationUrl,
+    required this.reference,
+  });
+
+  /// Hosted Paystack checkout page to open in a browser.
+  final String authorizationUrl;
+
+  /// Server-generated reference used later to verify the payment.
+  final String reference;
+}
+
+/// Outcome of asking the backend to verify a Paystack reference.
+class PaymentVerification {
+  const PaymentVerification({
+    required this.amount,
+    required this.alreadyProcessed,
+    required this.message,
+  });
+
+  /// Amount credited, in Naira.
+  final double amount;
+
+  /// True when this reference had already been credited by an earlier call or
+  /// by the Paystack webhook — the wallet was not credited twice.
+  final bool alreadyProcessed;
+
+  final String message;
+}
+
 /// Abstract repository for payment and transaction operations.
 abstract class IPaymentRepository {
   /// Stream transactions for a user
@@ -26,13 +58,15 @@ abstract class IPaymentRepository {
   Future<Either<Failure, TransactionModel>> createTransaction(
       TransactionModel transaction);
 
-  /// Initialize Paystack payment
-  Future<Either<Failure, String>> initializePayment({
+  /// Start a Paystack checkout for [amount] Naira.
+  ///
+  /// The reference and the customer email are decided server-side, so the app
+  /// only supplies the amount.
+  Future<Either<Failure, PaymentSession>> initializePayment({
     required double amount,
-    required String email,
-    required String reference,
   });
 
-  /// Verify payment via Cloud Function
-  Future<Either<Failure, Unit>> verifyPayment(String reference);
+  /// Verify a completed payment and credit the wallet. Safe to call more than
+  /// once for the same reference — the backend credits at most once.
+  Future<Either<Failure, PaymentVerification>> verifyPayment(String reference);
 }

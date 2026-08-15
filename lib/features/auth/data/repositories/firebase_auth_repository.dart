@@ -61,12 +61,18 @@ class FirebaseAuthRepository implements IAuthRepository {
       await credential.user!.updateDisplayName(fullName);
 
       final now = DateTime.now();
+
+      // Every account is created as a customer. Elevated roles (driver,
+      // investor, admin) are granted by server-side code after review — a
+      // client that could pick its own role could make itself an admin.
+      // The requested role is recorded so the app can route the user into the
+      // right application flow, and so admins can see what they signed up for.
       final userModel = UserModel(
         uid: credential.user!.uid,
         fullName: fullName,
         email: email,
         phone: phone,
-        role: role,
+        role: UserRole.customer,
         referralCode: _generateReferralCode(),
         referredBy: referralCode,
         createdAt: now,
@@ -76,7 +82,10 @@ class FirebaseAuthRepository implements IAuthRepository {
       await _firestore
           .collection(FirestoreConstants.users)
           .doc(userModel.uid)
-          .set(userModel.toFirestore());
+          .set({
+            ...userModel.toFirestore(),
+            if (role != UserRole.customer) 'requestedRole': role.name,
+          });
 
       // If referred, save referral record
       if (referralCode != null && referralCode.isNotEmpty) {

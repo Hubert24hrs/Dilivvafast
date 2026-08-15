@@ -26,14 +26,6 @@ jobs:
           flutter-version: '3.19.0' # Adjust based on your version
           channel: 'stable'
 
-      - name: Create environment variables
-        run: |
-          echo "MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}" >> .env
-          echo "PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}" >> .env
-          echo "PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}" >> .env
-          echo "APP_ENV=production" >> .env
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> .env
-
       - name: Decode Android Keystore
         run: echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 --decode > android/dilivvafast-release.jks
 
@@ -48,7 +40,12 @@ jobs:
         run: flutter pub get
 
       - name: Build Android AppBundle
-        run: flutter build appbundle --release
+        run: >
+          flutter build appbundle --release
+          --dart-define=MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          --dart-define=PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
+          --dart-define=APP_ENV=production
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

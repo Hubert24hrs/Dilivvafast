@@ -1,110 +1,151 @@
 import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
+import Anthropic from "@anthropic-ai/sdk";
 import axios from "axios";
 
 admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
 
+/**
+ * Paystack secret key. Bound to the functions that need it and injected at
+ * runtime by Cloud Functions — it never reaches the Flutter client.
+ * Set with: firebase functions:secrets:set PAYSTACK_SECRET_KEY
+ */
+const paystackSecretKey = defineSecret("PAYSTACK_SECRET_KEY");
+
+/** Anthropic key for the Maya support assistant. Server-side only. */
+const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
+
+/** Smallest wallet top-up we accept, in Naira. Mirrored in the app's UI. */
+const MIN_TOP_UP_NAIRA = 100;
+
+/** Where Paystack sends the browser after checkout completes. */
+const PAYSTACK_CALLBACK_URL = "https://dilivvafast.com/payment/callback";
+
 // ==================== PAYSTACK PAYMENT VERIFICATION ====================
 
 /**
- * Verify a Paystack payment and credit the user's wallet.
- * Called from the Flutter app after user completes payment in browser.
+ * Ask Paystack about a reference. Returns the raw transaction payload.
  */
-export const verifyPaystackPayment = functions.https.onCall(
+async function fetchPaystackTransaction(reference: string, secret: string) {
+  const response = await axios.get(
+    `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
+    { headers: { Authorization: `Bearer ${secret}` } }
+  );
+  return response.data.data;
+}
+
+/**
+ * Credit a wallet exactly once for a given Paystack reference.
+ *
+ * The reference lookup and the balance write happen inside a single
+ * transaction, so a retry (client retry, webhook racing the callable, or a
+ * duplicate webhook delivery) can never credit the same payment twice.
+ */
+async function creditWalletOnce(
+  uid: string,
+  reference: string,
+  amountNaira: number
+): Promise<{ credited: boolean; amount: number }> {
+  return db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(
+      db
+        .collection("transactions")
+        .where("paystackReference", "==", reference)
+        .limit(1)
+    );
+
+    if (!existing.empty) {
+      const previous = existing.docs[0].data();
+      return {
+        credited: false,
+        amount: (previous.amount as number) ?? amountNaira,
+      };
+    }
+
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await transaction.get(userRef);
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "User not found");
+    }
+
+    transaction.update(userRef, {
+      walletBalance: admin.firestore.FieldValue.increment(amountNaira),
+    });
+
+    const txRef = db.collection("transactions").doc();
+    transaction.set(txRef, {
+      userId: uid,
+      type: "top_up",
+      amount: amountNaira,
+      description: "Wallet top-up via Paystack",
+      paystackReference: reference,
+      status: "completed",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { credited: true, amount: amountNaira };
+  });
+}
+
+/**
+ * Verify a Paystack payment and credit the caller's wallet.
+ * Called from the Flutter app once the user returns from Paystack checkout.
+ */
+export const verifyPaystackPayment = onCall(
+  { secrets: [paystackSecretKey] },
   async (request) => {
-    const { reference } = request.data;
     const uid = request.auth?.uid;
-
     if (!uid) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "User must be authenticated"
-      );
+      throw new HttpsError("unauthenticated", "User must be authenticated");
     }
 
+    const reference = String(request.data?.reference ?? "").trim();
     if (!reference) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Payment reference is required"
-      );
-    }
-
-    // Get Paystack secret key from environment
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-    if (!paystackSecret) {
-      throw new functions.https.HttpsError(
-        "internal",
-        "Paystack secret key not configured"
-      );
+      throw new HttpsError("invalid-argument", "Payment reference is required");
     }
 
     try {
-      // Verify with Paystack API
-      const response = await axios.get(
-        `https://api.paystack.co/transaction/verify/${reference}`,
-        {
-          headers: {
-            Authorization: `Bearer ${paystackSecret}`,
-          },
-        }
+      const data = await fetchPaystackTransaction(
+        reference,
+        paystackSecretKey.value()
       );
 
-      const { data } = response.data;
-
       if (data.status !== "success") {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "failed-precondition",
           `Payment not successful: ${data.status}`
         );
       }
 
-      // Amount is in kobo (1/100 of Naira)
+      // The reference must belong to the caller. Without this a user could
+      // submit someone else's reference and claim their payment.
+      const payerId = data.metadata?.userId;
+      if (payerId && payerId !== uid) {
+        throw new HttpsError(
+          "permission-denied",
+          "This payment belongs to another account"
+        );
+      }
+
       const amountNaira = data.amount / 100;
-
-      // Credit wallet using a transaction
-      await db.runTransaction(async (transaction) => {
-        const userRef = db.collection("users").doc(uid);
-        const userDoc = await transaction.get(userRef);
-
-        if (!userDoc.exists) {
-          throw new functions.https.HttpsError("not-found", "User not found");
-        }
-
-        const currentBalance = userDoc.data()?.walletBalance || 0;
-
-        // Update wallet balance
-        transaction.update(userRef, {
-          walletBalance: currentBalance + amountNaira,
-        });
-
-        // Create transaction record
-        const txRef = db.collection("transactions").doc();
-        transaction.set(txRef, {
-          userId: uid,
-          type: "top_up",
-          amount: amountNaira,
-          description: `Wallet top-up via Paystack`,
-          paystackReference: reference,
-          status: "completed",
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      });
+      const result = await creditWalletOnce(uid, reference, amountNaira);
 
       return {
         success: true,
-        amount: data.amount / 100,
-        message: `₦${(data.amount / 100).toLocaleString()} credited to wallet`,
+        amount: result.amount,
+        alreadyProcessed: !result.credited,
+        message: result.credited
+          ? `₦${result.amount.toLocaleString()} credited to wallet`
+          : "This payment was already credited to your wallet",
       };
     } catch (error: unknown) {
-      if (error instanceof functions.https.HttpsError) throw error;
-      const message =
-        error instanceof Error ? error.message : "Unknown error";
-      throw new functions.https.HttpsError(
-        "internal",
-        `Verification failed: ${message}`
-      );
+      if (error instanceof HttpsError) throw error;
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new HttpsError("internal", `Verification failed: ${message}`);
     }
   }
 );
@@ -366,25 +407,38 @@ export const processDriverPayout = functions.pubsub
  * Initialize a Paystack payment transaction.
  * Returns the authorization URL for the user to complete payment.
  */
-export const initializePaystackPayment = functions.https.onCall(
+export const initializePaystackPayment = onCall(
+  { secrets: [paystackSecretKey] },
   async (request) => {
-    const { amount, email, reference } = request.data;
     const uid = request.auth?.uid;
-
     if (!uid) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "User must be authenticated"
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const amount = Number(request.data?.amount);
+    if (!Number.isFinite(amount) || amount < MIN_TOP_UP_NAIRA) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Amount must be at least ₦${MIN_TOP_UP_NAIRA}`
       );
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-    if (!paystackSecret) {
-      throw new functions.https.HttpsError(
-        "internal",
-        "Paystack secret key not configured"
+    // Trust the authenticated account's email, not whatever the client sent.
+    const email =
+      request.auth?.token?.email ??
+      (await db.collection("users").doc(uid).get()).data()?.email;
+    if (!email) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Your account has no email address for payment receipts"
       );
     }
+
+    // The reference is generated server-side so a client can't replay or
+    // collide with someone else's transaction id.
+    const reference = `DVF-${uid.slice(0, 8)}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
 
     try {
       const response = await axios.post(
@@ -393,7 +447,7 @@ export const initializePaystackPayment = functions.https.onCall(
           amount: Math.round(amount * 100), // Convert to kobo
           email,
           reference,
-          callback_url: "https://dilivvafast.com/payment/callback",
+          callback_url: PAYSTACK_CALLBACK_URL,
           currency: "NGN",
           metadata: {
             userId: uid,
@@ -408,7 +462,7 @@ export const initializePaystackPayment = functions.https.onCall(
         },
         {
           headers: {
-            Authorization: `Bearer ${paystackSecret}`,
+            Authorization: `Bearer ${paystackSecretKey.value()}`,
             "Content-Type": "application/json",
           },
         }
@@ -417,12 +471,11 @@ export const initializePaystackPayment = functions.https.onCall(
       return {
         success: true,
         authorizationUrl: response.data.data.authorization_url,
-        reference: response.data.data.reference,
+        reference: response.data.data.reference ?? reference,
       };
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Unknown error";
-      throw new functions.https.HttpsError(
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new HttpsError(
         "internal",
         `Payment initialization failed: ${message}`
       );
@@ -698,3 +751,128 @@ export const weeklyDriverReport = functions.pubsub
       return null;
     }
   });
+
+// ==================== MAYA SUPPORT ASSISTANT (SERVER-SIDE PROXY) ====================
+
+/**
+ * Maya's persona and product knowledge. This lives server-side so the prompt
+ * (and the Anthropic key) can be updated without shipping a new app build.
+ */
+const MAYA_SYSTEM_PROMPT = `
+You are Maya, the friendly and knowledgeable AI assistant for Dilivvafast — Nigeria's on-demand logistics and delivery platform.
+
+Your personality:
+- Warm, professional, and empathetic
+- You speak naturally with occasional Nigerian English expressions (e.g., "No wahala!")
+- Always helpful and solution-oriented
+- Use emojis sparingly but effectively
+
+Product knowledge:
+- Dilivvafast offers instant courier, package, and document delivery across Nigerian cities
+- Delivery types: Express (1-2 hrs), Standard (same-day), Economy (next-day)
+- Payment: Naira via Paystack (cards, bank transfer, USSD), and wallet top-up
+- Vehicle types: Bike (small packages), Car (medium), Van (large/bulk)
+- Drivers are verified with NIN, driver's licence, and background checks
+- Customers track deliveries in real time on a map
+- Both customers and drivers rate each other from 1 to 5 stars
+- Referral program: earn ₦500 for each friend who completes their first delivery
+- Operating hours: 6am - 10pm daily in Lagos, Abuja, and Port Harcourt
+
+What you help with:
+1. Tracking deliveries and order status
+2. Explaining pricing and fare breakdowns
+3. Account issues (password reset, profile update)
+4. Filing complaints or reporting issues
+5. Explaining how to become a driver
+6. Payment and wallet questions
+7. Cancellation and refund policies
+
+Policies:
+- Cancellation before driver pickup: full refund
+- Cancellation after pickup: 50% charge
+- Damaged items: file a claim within 24 hours with photos
+- Insurance: available for items valued above ₦50,000
+- Response SLA: critical issues within 1 hour, general within 24 hours
+
+Resolve what you can yourself. For anything needing manual review (billing
+disputes, for example), point the customer to support@dilivvafast.ng or
++234-800-DELIVER. Keep replies short enough to read on a phone.
+`.trim();
+
+interface MayaTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/**
+ * Proxy a Maya conversation turn to the Claude API.
+ *
+ * The app sends the conversation so far and gets back one reply. The API key
+ * stays in Cloud Functions secrets — the client never sees it.
+ */
+export const mayaChat = onCall(
+  { secrets: [anthropicApiKey] },
+  async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const rawMessages = request.data?.messages;
+    if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+      throw new HttpsError("invalid-argument", "messages must be a non-empty array");
+    }
+
+    // Keep the tail of the conversation; older turns add cost without much value.
+    const messages: MayaTurn[] = rawMessages
+      .slice(-20)
+      .map(
+        (entry: { role?: unknown; content?: unknown }): MayaTurn => ({
+          role: entry?.role === "assistant" ? "assistant" : "user",
+          content: String(entry?.content ?? "").slice(0, 4000),
+        })
+      )
+      .filter((entry: MayaTurn) => entry.content.length > 0);
+
+    if (messages.length === 0 || messages[messages.length - 1].role !== "user") {
+      throw new HttpsError(
+        "invalid-argument",
+        "The last message must be from the user"
+      );
+    }
+
+    try {
+      const client = new Anthropic({ apiKey: anthropicApiKey.value() });
+      const response = await client.messages.create({
+        model: "claude-opus-5",
+        max_tokens: 1024,
+        system: MAYA_SYSTEM_PROMPT,
+        messages,
+      });
+
+      if (response.stop_reason === "refusal") {
+        return {
+          success: false,
+          reply:
+            "I can't help with that one. For anything sensitive, please reach " +
+            "our team at support@dilivvafast.ng.",
+        };
+      }
+
+      const reply = response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === "text")
+        .map((block) => block.text)
+        .join("\n")
+        .trim();
+
+      if (!reply) {
+        throw new HttpsError("internal", "Empty response from Maya");
+      }
+
+      return { success: true, reply };
+    } catch (error: unknown) {
+      if (error instanceof HttpsError) throw error;
+      console.error("mayaChat error:", error);
+      throw new HttpsError("internal", "Maya is unavailable right now");
+    }
+  }
+);

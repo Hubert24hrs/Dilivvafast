@@ -1,7 +1,5 @@
-import 'dart:convert';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:dilivvafast/core/config/app_config.dart';
 
 /// Message model for Maya chat
 class MayaMessage {
@@ -21,111 +19,50 @@ class MayaMessage {
       };
 }
 
-/// Maya — Dilivvafast's AI Support Agent
-/// Powered by Claude (Anthropic) API
+/// Maya — Dilivvafast's AI support agent.
+///
+/// Backed by Claude through the `mayaChat` Cloud Function. The model choice and
+/// system prompt live server-side (see `functions/src/index.ts`) so they can be
+/// changed without shipping a new app build.
 class MayaChatService {
-  static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
-  static const String _model = 'claude-sonnet-4-20250514';
-  static const int _maxTokens = 1024;
+  MayaChatService({FirebaseFunctions? functions})
+    : _functions = functions ?? FirebaseFunctions.instance;
+
+  final FirebaseFunctions _functions;
 
   final List<MayaMessage> _conversationHistory = [];
 
   List<MayaMessage> get history => List.unmodifiable(_conversationHistory);
 
-  /// System prompt defining Maya's personality and knowledge
-  static const String _systemPrompt = '''
-You are Maya, the friendly and knowledgeable AI assistant for Dilivvafast — Nigeria's premier on-demand logistics and delivery platform.
 
-Your personality:
-- Warm, professional, and empathetic
-- You speak naturally with occasional Nigerian English expressions (e.g., "No wahala!", "I dey for you")
-- Always helpful and solution-oriented
-- Use emojis sparingly but effectively
-
-Your knowledge:
-- Dilivvafast offers instant courier, package, and document delivery across Nigerian cities
-- Delivery types: Express (1-2 hrs), Standard (same-day), Economy (next-day)
-- Payment: Naira via Paystack (cards, bank transfer, USSD), wallet top-up
-- Vehicle types: Bike (small packages), Car (medium), Van (large/bulk)
-- Drivers are verified with NIN, driver's license, and background checks
-- Users can track deliveries in real-time via Mapbox maps
-- Rating system: both customers and drivers rate each other (1-5 stars)
-- Referral program: Earn ₦500 for each friend who completes first delivery
-- Operating hours: 6am - 10pm daily in Lagos, Abuja, Port Harcourt
-
-What you can help with:
-1. Tracking deliveries and order status
-2. Explaining pricing and fare breakdowns
-3. Helping with account issues (password reset, profile update)
-4. Filing complaints or reporting issues
-5. Explaining how to become a driver
-6. Payment and wallet questions
-7. Cancellation and refund policies
-
-Important policies:
-- Cancellation before driver pickup: Full refund
-- Cancellation after pickup: 50% charge
-- Damaged items: File claim within 24hrs with photos
-- Insurance: Available for items valued above ₦50,000
-- Response time SLA: Critical issues within 1 hour, general within 24 hours
-
-Always try to resolve issues yourself. If you truly cannot help (e.g., billing disputes requiring manual review), advise contacting support@dilivvafast.ng or calling +234-800-DELIVER.
-''';
-
-  /// Send a message and get Maya's response
+  /// Send a message and get Maya's response.
+  ///
+  /// The Anthropic API key lives in Cloud Functions secrets, so the app talks
+  /// to the `mayaChat` callable rather than to Anthropic directly. If that call
+  /// fails for any reason we fall back to canned answers so support chat still
+  /// does something useful offline.
   Future<String> sendMessage(String userMessage) async {
-    final apiKey = AppConfig.instance.anthropicApiKey;
-
-    if (apiKey.isEmpty) {
-      return _getFallbackResponse(userMessage);
-    }
-
-    // Add user message to history
-    _conversationHistory.add(MayaMessage(
-      role: 'user',
-      content: userMessage,
-    ));
+    _conversationHistory.add(MayaMessage(role: 'user', content: userMessage));
 
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: jsonEncode({
-          'model': _model,
-          'max_tokens': _maxTokens,
-          'system': _systemPrompt,
-          'messages': _conversationHistory
-              .map((m) => m.toApiFormat())
-              .toList(),
-        }),
-      );
+      final callable = _functions.httpsCallable('mayaChat');
+      final result = await callable.call<Map<String, dynamic>>({
+        'messages': _conversationHistory.map((m) => m.toApiFormat()).toList(),
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final assistantMessage =
-            data['content'][0]['text'] as String;
-
-        // Add assistant response to history
-        _conversationHistory.add(MayaMessage(
-          role: 'assistant',
-          content: assistantMessage,
-        ));
-
-        // Keep history manageable (last 20 messages)
-        if (_conversationHistory.length > 20) {
-          _conversationHistory.removeRange(
-              0, _conversationHistory.length - 20);
-        }
-
-        return assistantMessage;
-      } else {
-        debugPrint('Maya API error: ${response.statusCode} ${response.body}');
+      final reply = (result.data['reply'] as String?)?.trim();
+      if (reply == null || reply.isEmpty) {
         return _getFallbackResponse(userMessage);
       }
+
+      _conversationHistory.add(MayaMessage(role: 'assistant', content: reply));
+
+      // Keep history manageable (last 20 messages)
+      if (_conversationHistory.length > 20) {
+        _conversationHistory.removeRange(0, _conversationHistory.length - 20);
+      }
+
+      return reply;
     } catch (e) {
       debugPrint('Maya chat error: $e');
       return _getFallbackResponse(userMessage);

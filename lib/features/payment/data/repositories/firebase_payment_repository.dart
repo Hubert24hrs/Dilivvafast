@@ -142,26 +142,53 @@ class FirebasePaymentRepository implements IPaymentRepository {
   }
 
   @override
-  Future<Either<Failure, String>> initializePayment({
+  Future<Either<Failure, PaymentSession>> initializePayment({
     required double amount,
-    required String email,
-    required String reference,
   }) async {
     try {
-      // This returns a reference/URL from the Cloud Function
-      // Actual Paystack initialization happens via PaystackService
-      return Right(reference);
+      final callable = _functions.httpsCallable('initializePaystackPayment');
+      final result = await callable.call<Map<String, dynamic>>({
+        'amount': amount,
+      });
+
+      final url = result.data['authorizationUrl'] as String?;
+      final reference = result.data['reference'] as String?;
+
+      if (url == null || url.isEmpty || reference == null || reference.isEmpty) {
+        return const Left(
+          PaymentFailure('Paystack did not return a checkout link'),
+        );
+      }
+
+      return Right(
+        PaymentSession(authorizationUrl: url, reference: reference),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      return Left(PaymentFailure(e.message ?? 'Could not start payment'));
     } catch (e) {
       return Left(PaymentFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, Unit>> verifyPayment(String reference) async {
+  Future<Either<Failure, PaymentVerification>> verifyPayment(
+    String reference,
+  ) async {
     try {
       final callable = _functions.httpsCallable('verifyPaystackPayment');
-      await callable.call({'reference': reference});
-      return const Right(unit);
+      final result = await callable.call<Map<String, dynamic>>({
+        'reference': reference,
+      });
+
+      return Right(
+        PaymentVerification(
+          amount: (result.data['amount'] as num?)?.toDouble() ?? 0,
+          alreadyProcessed: result.data['alreadyProcessed'] as bool? ?? false,
+          message: result.data['message'] as String? ?? 'Payment verified',
+        ),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      return Left(PaymentFailure(e.message ?? 'Could not verify payment'));
     } catch (e) {
       return Left(PaymentFailure(e.toString()));
     }

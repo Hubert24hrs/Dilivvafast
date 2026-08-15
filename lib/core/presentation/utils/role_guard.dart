@@ -12,19 +12,20 @@ class RoleGuard {
     required String? userRole,
     required String attemptedPath,
   }) {
+    // Driver earnings are hidden until driver verification is modeled here.
+    if (attemptedPath == '/driver-earnings') {
+      return isAdmin(userRole) ? null : '/';
+    }
+
     // Admin routes
     if (attemptedPath.startsWith('/admin')) {
       return isAdmin(userRole) ? null : '/';
     }
-    
+
     // Driver routes
     if (attemptedPath.startsWith('/driver')) {
       if (isAdmin(userRole)) return null; // Admins can access driver routes
-      if (isDriver(userRole)) {
-        // Drivers can't access earnings until their profile is verified
-        if (attemptedPath == '/driver-earnings' && userRole != 'admin') return '/';
-        return null;
-      }
+      if (isDriver(userRole)) return null;
       return '/driver-selection';
     }
 

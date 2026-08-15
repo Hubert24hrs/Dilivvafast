@@ -62,3 +62,10 @@ dart_files.txt
 # Keystore files
 key.properties
 *.jks
+
+# Node / Cloud Functions
+node_modules/
+functions/lib/
+
+# Local build config (never commit real keys)
+dart_defines.json

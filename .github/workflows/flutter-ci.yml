@@ -82,7 +82,12 @@ jobs:
         run: flutter pub get
       
       - name: Build APK
-        run: flutter build apk --release
+        run: >
+          flutter build apk --release
+          --dart-define=MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          --dart-define=PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
+          --dart-define=APP_ENV=production
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
       
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -124,7 +129,12 @@ jobs:
         run: flutter pub get
       
       - name: Build App Bundle
-        run: flutter build appbundle --release
+        run: >
+          flutter build appbundle --release
+          --dart-define=MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          --dart-define=PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
+          --dart-define=APP_ENV=production
+          --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
       
       - name: Upload App Bundle artifact
         uses: actions/upload-artifact@v4

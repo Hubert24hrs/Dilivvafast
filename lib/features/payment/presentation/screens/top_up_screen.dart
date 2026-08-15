@@ -12,17 +12,43 @@ class TopUpScreen extends ConsumerStatefulWidget {
   ConsumerState<TopUpScreen> createState() => _TopUpScreenState();
 }
 
-class _TopUpScreenState extends ConsumerState<TopUpScreen> {
+class _TopUpScreenState extends ConsumerState<TopUpScreen>
+    with WidgetsBindingObserver {
   final _amountController = TextEditingController();
   bool _isProcessing = false;
   int? _selectedPreset;
 
+  /// Reference of the checkout the user was last sent to. Kept so we can verify
+  /// it when they come back from the Paystack page.
+  String? _pendingReference;
+
+  /// Whether the "complete your payment" dialog is currently on screen.
+  bool _isPendingDialogOpen = false;
+
   static const _presets = [1000, 2000, 5000, 10000, 20000, 50000];
+
+  /// Must match MIN_TOP_UP_NAIRA in functions/src/index.ts.
+  static const _minimumAmount = 100;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _amountController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back from the Paystack checkout page — settle the payment.
+    if (state == AppLifecycleState.resumed && _pendingReference != null) {
+      _verifyPendingPayment();
+    }
   }
 
   @override
@@ -67,14 +93,31 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 13)),
                   const SizedBox(height: 4),
-                  const Text(
-                    '₦0.00',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  ref.watch(walletBalanceProvider).when(
+                        loading: () => const SizedBox(
+                          height: 38,
+                          width: 38,
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFFF6B00),
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        error: (_, _) => const Text(
+                          'Unavailable',
+                          style: TextStyle(color: Colors.white54, fontSize: 20),
+                        ),
+                        data: (balance) => Text(
+                          '₦${balance.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                 ],
               ),
             ),
@@ -280,70 +323,104 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
     return amount.toString();
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+    );
+  }
+
   Future<void> _handlePayment() async {
-    final amountStr = _amountController.text.trim();
-    final amount = double.tryParse(amountStr);
-    if (amount == null || amount < 100) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Minimum amount is ₦100'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+    final amount = double.tryParse(_amountController.text.trim());
+    if (amount == null || amount < _minimumAmount) {
+      _showError('Minimum amount is ₦$_minimumAmount');
       return;
     }
 
     setState(() => _isProcessing = true);
 
     try {
-      final user = ref.read(currentUserProvider).value;
-      if (user == null) throw Exception('Not authenticated');
+      // The backend creates the Paystack transaction and owns the reference —
+      // the app never handles a Paystack key.
+      final result = await ref
+          .read(paymentRepositoryProvider)
+          .initializePayment(amount: amount);
 
-      final result = await ref.read(paymentRepositoryProvider).initializePayment(
-            amount: amount,
-            email: user.email,
-            reference: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
-          );
-
-      result.fold(
+      final session = result.fold(
         (failure) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('Error: ${failure.message}'),
-                  backgroundColor: Colors.redAccent),
-            );
-          }
+          _showError(failure.message);
+          return null;
         },
-        (paymentUrl) async {
-          // Open Paystack payment page
-          final uri = Uri.parse(paymentUrl);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-          // On return, verify the payment
-          // (In production, this would be handled by a webhook + redirect)
-          if (mounted) {
-            _showPendingDialog();
-          }
-        },
+        (session) => session,
       );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.redAccent),
-        );
+      if (session == null) return;
+
+      final uri = Uri.parse(session.authorizationUrl);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        _showError('Could not open the payment page');
+        return;
       }
+
+      _pendingReference = session.reference;
+      if (mounted) _showPendingDialog();
+    } catch (e) {
+      _showError('Error: $e');
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
+  /// Ask the backend to confirm the pending reference and credit the wallet.
+  ///
+  /// Runs when the user returns to the app and when they tap "I've paid".
+  /// Calling it repeatedly is safe: the Cloud Function credits a given
+  /// reference at most once.
+  Future<void> _verifyPendingPayment() async {
+    final reference = _pendingReference;
+    if (reference == null || _isProcessing) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      final result = await ref
+          .read(paymentRepositoryProvider)
+          .verifyPayment(reference);
+
+      result.fold(
+        (failure) => _showError(failure.message),
+        (verification) {
+          _pendingReference = null;
+          if (!mounted) return;
+          if (_isPendingDialogOpen) {
+            _isPendingDialogOpen = false;
+            Navigator.of(context).pop();
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(verification.message),
+              backgroundColor: const Color(0xFF00C853),
+            ),
+          );
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  /// Shown while the user is completing payment in the browser.
+  ///
+  /// The wallet is credited by the backend (webhook, or the verify call this
+  /// dialog triggers), so this only reports status — it never claims success on
+  /// its own.
   void _showPendingDialog() {
-    showDialog(
+    _isPendingDialogOpen = true;
+    showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => Dialog(
         backgroundColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -359,46 +436,64 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                   shape: BoxShape.circle,
                   color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                 ),
-                child: const Icon(Icons.hourglass_top,
-                    color: Color(0xFFFF6B00), size: 36),
+                child: const Icon(
+                  Icons.hourglass_top,
+                  color: Color(0xFFFF6B00),
+                  size: 36,
+                ),
               ),
               const SizedBox(height: 20),
-              const Text('Payment Processing',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              const Text(
+                'Complete your payment',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
-                'Complete your payment in the browser. Your wallet will be credited automatically once confirmed.',
+                'Finish the payment in your browser, then come back here. '
+                'We check automatically when you return.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 13),
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.pop();
-                  },
+                  onPressed: _isProcessing ? null : _verifyPendingPayment,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6B00),
                     foregroundColor: const Color(0xFF0A0E21),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: const Text('Done',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    "I've completed payment",
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  _isPendingDialogOpen = false;
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  'Close',
+                  style: TextStyle(color: Colors.white54),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
+    ).then((_) => _isPendingDialogOpen = false);
   }
 }

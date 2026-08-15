@@ -3,8 +3,8 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return 'Email is required';
     }
-    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!regex.hasMatch(value)) {
+    final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!regex.hasMatch(value.trim())) {
       return 'Please enter a valid email address';
     }
     return null;
@@ -76,7 +76,9 @@ class Validators {
   }
 
   static String? positiveNumber(String? value) {
-    if (value == null || value.isEmpty) return null; // Let required() handle empty check if needed
+    if (value == null || value.isEmpty) {
+      return null;
+    }
     final num = double.tryParse(value);
     if (num == null) {
       return 'This field must be a valid number';
@@ -98,7 +100,10 @@ class Validators {
     return null;
   }
 
-  static String? combine(String? value, List<String? Function(String?)> validators) {
+  static String? combine(
+    String? value,
+    List<String? Function(String?)> validators,
+  ) {
     for (final validator in validators) {
       final result = validator(value);
       if (result != null) {

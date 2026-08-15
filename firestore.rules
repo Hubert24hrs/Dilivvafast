@@ -22,13 +22,41 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
     }
 
+    // A new account may declare a wallet, but only an empty one. Money is
+    // added exclusively by server code (Paystack verification, payouts,
+    // referral bonuses).
+    function walletStartsEmpty(data) {
+      return !data.keys().hasAny(['walletBalance']) || data.walletBalance == 0;
+    }
+
+    // Figures the server owns. A client may never write these itself.
+    function noServerOwnedFields(data) {
+      return !data.keys().hasAny([
+        'averageRating', 'totalRatings', 'isVerifiedDriver'
+      ]);
+    }
+
     // ==================== USERS ====================
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
+
+      // Sign-up. A new account is always a customer: any other role — including
+      // 'driver' and 'admin' — must come from privileged server code, so a
+      // client cannot mint itself elevated access. Wallet balance and ratings
+      // are likewise server-owned.
+      allow create: if isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.data.role == 'customer'
+        && walletStartsEmpty(request.resource.data)
+        && noServerOwnedFields(request.resource.data);
+
+      // Profile edits. Role and the server-owned counters stay untouchable.
       allow update: if isOwner(userId) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role', 'walletBalance', 'averageRating', 'totalRatings',
+          'isVerifiedDriver'
+        ]);
 
       match /notifications/{notificationId} {
         allow read, update: if isOwner(userId);

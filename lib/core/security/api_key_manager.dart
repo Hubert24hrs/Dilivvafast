@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import 'package:dilivvafast/core/config/app_config.dart';
 
 /// Secure API key management with obfuscation
 class ApiKeyManager {
@@ -9,11 +10,11 @@ class ApiKeyManager {
   factory ApiKeyManager() => _instance;
   ApiKeyManager._internal();
 
-
   /// Get Mapbox access token
   String? getMapboxToken() {
     try {
-      return dotenv.env['MAPBOX_ACCESS_TOKEN'];
+      final token = AppConfig.instance.mapboxAccessToken;
+      return token.isEmpty ? null : token;
     } catch (e) {
       debugPrint('Error getting Mapbox token: $e');
       return null;
@@ -23,7 +24,8 @@ class ApiKeyManager {
   /// Get Paystack public key
   String? getPaystackPublicKey() {
     try {
-      return dotenv.env['PAYSTACK_PUBLIC_KEY'];
+      final key = AppConfig.instance.paystackPublicKey;
+      return key.isEmpty ? null : key;
     } catch (e) {
       debugPrint('Error getting Paystack key: $e');
       return null;
@@ -48,7 +50,7 @@ class ApiKeyManager {
   bool areKeysConfigured() {
     final mapboxToken = getMapboxToken();
     final paystackKey = getPaystackPublicKey();
-    
+
     if (mapboxToken == null || paystackKey == null) {
       debugPrint('Missing required API keys in .env file');
       return false;

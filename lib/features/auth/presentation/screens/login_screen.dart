@@ -40,7 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         controller.signIn(email, password);
       } else {
         controller.signUp(
-          fullName: email.split('@').first, // Temporary — full register screen in Phase 2
+          fullName: email
+              .split('@')
+              .first, // Temporary — full register screen in Phase 2
           email: email,
           phone: '',
           password: password,
@@ -90,10 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            colors: [
-              Color(0xFF1D1E33),
-              AppTheme.backgroundColor,
-            ],
+            colors: [Color(0xFF1D1E33), AppTheme.backgroundColor],
             center: Alignment.topLeft,
             radius: 1.5,
           ),
@@ -111,11 +110,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
+                  'Dilivvafast',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
                   _isLogin ? 'Login Mode' : 'Signup Mode',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 GlassCard(
@@ -181,7 +188,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     GestureDetector(
                       key: const Key('google_btn'),
                       onTap: () {
-                        ref.read(authControllerProvider.notifier).signInWithGoogle();
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithGoogle();
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -203,7 +212,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     GestureDetector(
                       key: const Key('apple_btn'),
                       onTap: () {
-                        ref.read(authControllerProvider.notifier).signInWithApple();
+                        ref
+                            .read(authControllerProvider.notifier)
+                            .signInWithApple();
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),

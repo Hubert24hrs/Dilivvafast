@@ -25,52 +25,52 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Wrap entire app in error zone
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    MapboxInit.init();
-    
-    // Initialize Hive for local storage
-    await Hive.initFlutter();
-    
-    // Set up global error handlers
-    _setupErrorHandlers();
-    
-    // Load environment variables
-    try {
-      await dotenv.load(fileName: ".env");
-    } catch (e) {
-      debugPrint("Could not load .env file: $e");
-    }
-    
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      
-      // Request FCM notification permissions
-      final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
-      );
-    } catch (e) {
-      debugPrint("Firebase initialization failed: $e");
-    }
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      MapboxInit.init();
 
-    runApp(const ProviderScope(child: DilivvafastApp()));
-  }, (error, stackTrace) {
-    // Handled by Crashlytics in AnalyticsService
-    debugPrint('Uncaught async error: $error');
-  });
+      // Initialize Hive for local storage
+      await Hive.initFlutter();
+
+      // Set up global error handlers
+      _setupErrorHandlers();
+
+      // Runtime secrets are supplied with --dart-define in production. The
+      // dotenv file is optional for local builds and is never required by CI.
+      await dotenv.load(fileName: '.env', isOptional: true);
+
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+
+        // Request FCM notification permissions
+        final messaging = FirebaseMessaging.instance;
+        await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+      } catch (e) {
+        debugPrint("Firebase initialization failed: $e");
+      }
+
+      runApp(const ProviderScope(child: DilivvafastApp()));
+    },
+    (error, stackTrace) {
+      // Handled by Crashlytics in AnalyticsService
+      debugPrint('Uncaught async error: $error');
+    },
+  );
 }
 
 /// Set up global error handlers (now handled by AnalyticsService)
 void _setupErrorHandlers() {
   // Error handling is now managed by AnalyticsService.initialize()
   // which sets up Crashlytics integration
-  
+
   // Override error widget for release mode
   ErrorWidget.builder = (FlutterErrorDetails details) {
     if (kDebugMode) {
@@ -93,12 +93,12 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
     super.initState();
     // Initialize Analytics and Crashlytics
     ref.read(analyticsServiceProvider).initialize();
-    
+
     // Initialize Notification Service
     if (!kIsWeb) {
       ref.read(notificationServiceProvider).initialize();
     }
-    
+
     // Log app open event
     ref.read(analyticsServiceProvider).logAppOpen();
   }
@@ -115,12 +115,9 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
       builder: (context, child) {
         // Wrap with error boundary for additional protection
         return ErrorBoundary(
-          child: ConnectivityWrapper(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          child: ConnectivityWrapper(child: child ?? const SizedBox.shrink()),
         );
       },
     );
   }
 }
-
