@@ -107,6 +107,22 @@ When adding a mocked test, add the class to `@GenerateMocks` and re-run
 build_runner. `HttpsCallableResult` has no public constructor, so mock it
 rather than constructing one.
 
+### Security rules
+
+`firestore.rules` and `storage.rules` have their own suite in `rules_test/` —
+88 tests run against the Firebase emulators. **Run it after touching either
+rules file**, before deploying:
+
+```bash
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # no java on PATH
+export PATH="$JAVA_HOME/bin:$PATH"
+cd rules_test && npm test
+```
+
+Keep `--test-concurrency=1` in the npm script: both test files share one
+emulator, and parallel runs let one file's `clearFirestore()` wipe the other's
+fixtures mid-test, which surfaces as phantom rule failures.
+
 ## Conventions
 
 - Comments explain *why*, and are worth writing where a reader would otherwise

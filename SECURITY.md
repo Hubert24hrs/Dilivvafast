@@ -135,13 +135,20 @@ Rules first (they only tighten access), then functions:
 # 1. Review the diff
 git diff HEAD~1 -- firestore.rules storage.rules
 
-# 2. Dry-run against the emulator if you have test data
-firebase emulators:start --only firestore,storage
+# 2. Prove the rules still hold — 88 tests against the emulators
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+export PATH="$JAVA_HOME/bin:$PATH"
+cd rules_test && npm install && npm test && cd ..
 
 # 3. Deploy
 firebase deploy --only firestore:rules,storage:rules
 firebase deploy --only functions
 ```
+
+Step 2 is the gate. `rules_test/` executes the real rules files against the
+Firestore and Storage emulators and asserts each privilege boundary — role
+escalation, order repricing, driver verification, referral minting. Run it
+before every rules deploy; see [rules_test/README.md](rules_test/README.md).
 
 Deploying functions **before** rules would leave a window where the driver
 approval function exists but the rules still allow self-assigned roles.
