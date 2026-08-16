@@ -1,4 +1,3 @@
-
 /// Input validator and sanitizer for security
 class InputValidator {
   /// Validate and sanitize email
@@ -12,7 +11,7 @@ class InputValidator {
     );
 
     final sanitized = email.trim().toLowerCase();
-    
+
     if (!emailRegex.hasMatch(sanitized)) {
       return 'Please enter a valid email';
     }
@@ -63,7 +62,7 @@ class InputValidator {
     }
 
     final sanitized = phone.replaceAll(RegExp(r'[^\d+]'), '');
-    
+
     if (sanitized.length < 10 || sanitized.length > 15) {
       return 'Please enter a valid phone number';
     }
@@ -89,7 +88,7 @@ class InputValidator {
     }
 
     final sanitized = sanitizeText(name.trim());
-    
+
     if (sanitized.length < 2) {
       return 'Name must be at least 2 characters';
     }
@@ -135,7 +134,7 @@ class InputValidator {
     }
 
     final sanitized = sanitizeText(address.trim());
-    
+
     if (sanitized.length < 5) {
       return 'Address is too short';
     }
@@ -160,16 +159,24 @@ class InputValidator {
   /// Sanitize user input for database
   static String sanitizeForDatabase(String input) {
     // Remove null bytes and control characters
-    return input
-        .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
-        .trim();
+    return input.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
   }
 
   /// Check for SQL injection patterns
   static bool containsSqlInjection(String input) {
     final sqlPatterns = [
-      'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP',
-      'CREATE', 'ALTER', 'EXEC', 'UNION', '--', ';', "' OR"
+      'SELECT',
+      'INSERT',
+      'UPDATE',
+      'DELETE',
+      'DROP',
+      'CREATE',
+      'ALTER',
+      'EXEC',
+      'UNION',
+      '--',
+      ';',
+      "' OR",
     ];
 
     final upperInput = input.toUpperCase();

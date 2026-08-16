@@ -10,11 +10,9 @@ import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/auth/domain/repositories/i_auth_repository.dart';
 
 class FirebaseAuthRepository implements IAuthRepository {
-  FirebaseAuthRepository({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseAuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
@@ -210,12 +208,12 @@ class FirebaseAuthRepository implements IAuthRepository {
           .doc(uid)
           .collection(FirestoreConstants.notifications)
           .get();
-      
+
       final batch = _firestore.batch();
       for (final doc in notifsSnap.docs) {
         batch.delete(doc.reference);
       }
-      
+
       // 2. Delete user doc
       batch.delete(_firestore.collection(FirestoreConstants.users).doc(uid));
       await batch.commit();
@@ -225,7 +223,11 @@ class FirebaseAuthRepository implements IAuthRepository {
       return const Right(unit);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
-        return Left(const AuthFailure('This operation requires recent authentication. Please log in again.'));
+        return Left(
+          const AuthFailure(
+            'This operation requires recent authentication. Please log in again.',
+          ),
+        );
       }
       return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
     } catch (e) {

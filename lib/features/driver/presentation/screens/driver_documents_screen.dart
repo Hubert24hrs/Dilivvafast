@@ -14,8 +14,7 @@ class DriverDocumentsScreen extends ConsumerStatefulWidget {
       _DriverDocumentsScreenState();
 }
 
-class _DriverDocumentsScreenState
-    extends ConsumerState<DriverDocumentsScreen> {
+class _DriverDocumentsScreenState extends ConsumerState<DriverDocumentsScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
@@ -32,9 +31,9 @@ class _DriverDocumentsScreenState
     setState(() => _isUploading = true);
     try {
       final bytes = await image.readAsBytes();
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('drivers/$uid/$docType.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'drivers/$uid/$docType.jpg',
+      );
 
       await storageRef.putData(
         bytes,
@@ -97,9 +96,7 @@ class _DriverDocumentsScreenState
             ),
             child: ListTile(
               leading: Icon(
-                user?.isVerified == true
-                    ? Icons.verified
-                    : Icons.hourglass_top,
+                user?.isVerified == true ? Icons.verified : Icons.hourglass_top,
                 color: user?.isVerified == true
                     ? AppTheme.successColor
                     : AppTheme.warningColor,

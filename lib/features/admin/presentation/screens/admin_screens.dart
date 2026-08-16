@@ -18,20 +18,26 @@ class AdminOrdersScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Manage Orders',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Manage Orders',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
             return const Center(
-                child: Text('No orders',
-                    style: TextStyle(color: Colors.white54)));
+              child: Text('No orders', style: TextStyle(color: Colors.white54)),
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -51,36 +57,52 @@ class AdminOrdersScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Text(o.trackingCode,
-                            style: const TextStyle(
-                                color: Color(0xFFFF6B00),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13)),
+                        Text(
+                          o.trackingCode,
+                          style: const TextStyle(
+                            color: Color(0xFFFF6B00),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white10,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(o.status.name,
-                              style: const TextStyle(
-                                  color: Colors.white54, fontSize: 10)),
+                          child: Text(
+                            o.status.name,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text('${o.pickupAddress} → ${o.dropoffAddress}',
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      '${o.pickupAddress} → ${o.dropoffAddress}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                        'Fare: ₦${o.totalFare.toStringAsFixed(0)} | Commission: ₦${o.platformCommission.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                      'Fare: ₦${o.totalFare.toStringAsFixed(0)} | Commission: ₦${o.platformCommission.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -103,20 +125,29 @@ class AdminUsersScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Manage Users',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Manage Users',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: driversAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (users) {
           if (users.isEmpty) {
             return const Center(
-                child: Text('No users online',
-                    style: TextStyle(color: Colors.white54)));
+              child: Text(
+                'No users online',
+                style: TextStyle(color: Colors.white54),
+              ),
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -135,21 +166,33 @@ class AdminUsersScreen extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: const Color(0xFFFF6B00).withValues(alpha: 0.15),
-                      child: Text(u.fullName.isNotEmpty ? u.fullName[0] : '?',
-                          style: const TextStyle(color: Color(0xFFFF6B00))),
+                      backgroundColor: const Color(
+                        0xFFFF6B00,
+                      ).withValues(alpha: 0.15),
+                      child: Text(
+                        u.fullName.isNotEmpty ? u.fullName[0] : '?',
+                        style: const TextStyle(color: Color(0xFFFF6B00)),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(u.fullName,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 14)),
-                          Text('${u.email} • ${u.role.name}',
-                              style: const TextStyle(
-                                  color: Colors.white54, fontSize: 11)),
+                          Text(
+                            u.fullName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            '${u.email} • ${u.role.name}',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -501,41 +544,59 @@ class AdminFinanceScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Finance',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Finance',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (orders) {
           final revenue = orders.fold(0.0, (s, o) => s + o.totalFare);
-          final commission =
-              orders.fold(0.0, (s, o) => s + o.platformCommission);
-          final driverPayouts =
-              orders.fold(0.0, (s, o) => s + o.driverEarnings);
+          final commission = orders.fold(
+            0.0,
+            (s, o) => s + o.platformCommission,
+          );
+          final driverPayouts = orders.fold(
+            0.0,
+            (s, o) => s + o.driverEarnings,
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                _financeCard('Total Revenue', '₦${revenue.toStringAsFixed(0)}',
-                    const Color(0xFFFF6B00)),
+                _financeCard(
+                  'Total Revenue',
+                  '₦${revenue.toStringAsFixed(0)}',
+                  const Color(0xFFFF6B00),
+                ),
                 const SizedBox(height: 12),
                 _financeCard(
-                    'Platform Commission',
-                    '₦${commission.toStringAsFixed(0)}',
-                    const Color(0xFFFF9500)),
+                  'Platform Commission',
+                  '₦${commission.toStringAsFixed(0)}',
+                  const Color(0xFFFF9500),
+                ),
                 const SizedBox(height: 12),
                 _financeCard(
-                    'Driver Payouts',
-                    '₦${driverPayouts.toStringAsFixed(0)}',
-                    const Color(0xFF4CAF50)),
+                  'Driver Payouts',
+                  '₦${driverPayouts.toStringAsFixed(0)}',
+                  const Color(0xFF4CAF50),
+                ),
                 const SizedBox(height: 12),
-                _financeCard('Total Orders', '${orders.length}',
-                    const Color(0xFFFF9800)),
+                _financeCard(
+                  'Total Orders',
+                  '${orders.length}',
+                  const Color(0xFFFF9800),
+                ),
               ],
             ),
           );
@@ -559,15 +620,19 @@ class AdminFinanceScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style:
-                        const TextStyle(color: Colors.white54, fontSize: 13)),
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
-                Text(value,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),

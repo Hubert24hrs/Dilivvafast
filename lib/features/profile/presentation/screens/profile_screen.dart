@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 
-
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -17,8 +16,10 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Profile',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Profile',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white54),
@@ -28,15 +29,22 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: userAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (user) {
           if (user == null) {
             return const Center(
-                child: Text('Not signed in',
-                    style: TextStyle(color: Colors.white54)));
+              child: Text(
+                'Not signed in',
+                style: TextStyle(color: Colors.white54),
+              ),
+            );
           }
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -69,19 +77,25 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(user.fullName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  user.fullName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(user.email,
-                    style: const TextStyle(
-                        color: Colors.white54, fontSize: 14)),
+                Text(
+                  user.email,
+                  style: const TextStyle(color: Colors.white54, fontSize: 14),
+                ),
                 const SizedBox(height: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -89,28 +103,33 @@ class ProfileScreen extends ConsumerWidget {
                   child: Text(
                     user.role.name.toUpperCase(),
                     style: const TextStyle(
-                        color: Color(0xFFFF6B00),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600),
+                      color: Color(0xFFFF6B00),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 28),
 
                 // Info sections
                 _infoTile(Icons.phone, 'Phone', user.phone),
-                _infoTile(Icons.qr_code, 'Referral Code',
-                    user.referralCode),
-                _infoTile(Icons.star, 'Rating',
-                    '${user.rating.toStringAsFixed(1)} ⭐'),
-                _infoTile(Icons.calendar_today, 'Member Since',
-                    '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year}'),
+                _infoTile(Icons.qr_code, 'Referral Code', user.referralCode),
+                _infoTile(
+                  Icons.star,
+                  'Rating',
+                  '${user.rating.toStringAsFixed(1)} ⭐',
+                ),
+                _infoTile(
+                  Icons.calendar_today,
+                  'Member Since',
+                  '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year}',
+                ),
 
                 const SizedBox(height: 28),
 
                 // Menu items
                 _menuTile(Icons.lock, 'Change Password', () {}),
-                _menuTile(Icons.notifications_outlined, 'Notifications',
-                    () {}),
+                _menuTile(Icons.notifications_outlined, 'Notifications', () {}),
                 _menuTile(Icons.help_outline, 'Help & Support', () {}),
                 _menuTile(Icons.info_outline, 'About', () {}),
 
@@ -121,9 +140,7 @@ class ProfileScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      await ref
-                          .read(authRepositoryProvider)
-                          .logout();
+                      await ref.read(authRepositoryProvider).logout();
                       if (context.mounted) {
                         context.go('/login');
                       }
@@ -134,7 +151,8 @@ class ProfileScreen extends ConsumerWidget {
                       foregroundColor: const Color(0xFFE91E63),
                       side: const BorderSide(color: Color(0xFFE91E63)),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -160,12 +178,18 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Icon(icon, color: const Color(0xFFFF6B00), size: 20),
           const SizedBox(width: 12),
-          Text(label,
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6), fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+          ),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(color: Colors.white, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -185,8 +209,10 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             Icon(icon, color: Colors.white54, size: 20),
             const SizedBox(width: 12),
-            Text(label,
-                style: const TextStyle(color: Colors.white, fontSize: 14)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
             const Spacer(),
             const Icon(Icons.chevron_right, color: Colors.white24, size: 20),
           ],

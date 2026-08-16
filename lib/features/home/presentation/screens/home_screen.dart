@@ -41,10 +41,7 @@ class HomeScreen extends ConsumerWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            colors: [
-              Color(0xFF1D1E33),
-              AppTheme.backgroundColor,
-            ],
+            colors: [Color(0xFF1D1E33), AppTheme.backgroundColor],
             center: Alignment.topRight,
             radius: 1.5,
           ),
@@ -75,8 +72,10 @@ class HomeScreen extends ConsumerWidget {
                                 ? NetworkImage(user!.photoUrl!)
                                 : null,
                             child: user?.photoUrl == null
-                                ? const Icon(Icons.person,
-                                    color: AppTheme.primaryColor)
+                                ? const Icon(
+                                    Icons.person,
+                                    color: AppTheme.primaryColor,
+                                  )
                                 : null,
                           ),
                           const SizedBox(width: 16),
@@ -122,11 +121,13 @@ class HomeScreen extends ConsumerWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Wallet Balance',
-                                    style: TextStyle(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.7),
-                                        fontSize: 12)),
+                                Text(
+                                  'Wallet Balance',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
                                 const SizedBox(height: 4),
                                 walletBalance.when(
                                   data: (balance) => Text(
@@ -156,13 +157,14 @@ class HomeScreen extends ConsumerWidget {
                               ],
                             ),
                             ElevatedButton.icon(
-                              onPressed: () =>
-                                  context.go('/customer/wallet'),
+                              onPressed: () => context.go('/customer/wallet'),
                               icon: const Icon(Icons.add, size: 18),
                               label: const Text('Top Up'),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                           ],
@@ -176,14 +178,17 @@ class HomeScreen extends ConsumerWidget {
                     child: Padding(
                       padding: EdgeInsets.all(32),
                       child: CircularProgressIndicator(
-                          color: AppTheme.primaryColor),
+                        color: AppTheme.primaryColor,
+                      ),
                     ),
                   ),
                 ),
                 error: (e, _) => GlassCard(
                   child: Center(
-                    child: Text('Error: $e',
-                        style: const TextStyle(color: AppTheme.errorColor)),
+                    child: Text(
+                      'Error: $e',
+                      style: const TextStyle(color: AppTheme.errorColor),
+                    ),
                   ),
                 ),
               ),
@@ -220,7 +225,8 @@ class HomeScreen extends ConsumerWidget {
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Enter tracking code to track')),
+                            content: Text('Enter tracking code to track'),
+                          ),
                         );
                       },
                     ),
@@ -279,8 +285,9 @@ class HomeScreen extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor
-                                      .withValues(alpha: 0.1),
+                                  color: AppTheme.primaryColor.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -295,10 +302,13 @@ class HomeScreen extends ConsumerWidget {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.primaryColor
-                                            .withValues(alpha: 0.2),
+                                        color: AppTheme.primaryColor.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -313,8 +323,9 @@ class HomeScreen extends ConsumerWidget {
                                     const SizedBox(height: 8),
                                     Text(
                                       '${order.pickupAddress} → ${order.dropoffAddress}',
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -322,14 +333,17 @@ class HomeScreen extends ConsumerWidget {
                                     Text(
                                       '#${order.trackingCode}  •  ₦${order.totalFare.toStringAsFixed(0)}',
                                       style: const TextStyle(
-                                          color: AppTheme.secondaryColor,
-                                          fontWeight: FontWeight.bold),
+                                        color: AppTheme.secondaryColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.chevron_right,
-                                  color: Colors.white54),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Colors.white54,
+                              ),
                             ],
                           ),
                         ),
@@ -355,14 +369,19 @@ class HomeScreen extends ConsumerWidget {
                           color: const Color(0xFF00C853).withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.delivery_dining,
-                            color: Color(0xFF00C853), size: 20),
+                        child: const Icon(
+                          Icons.delivery_dining,
+                          color: Color(0xFF00C853),
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
                         '${drivers.length} drivers available nearby',
                         style: const TextStyle(
-                            color: Colors.white, fontSize: 14),
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -409,7 +428,10 @@ class _QuickActionCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                  color: color, fontWeight: FontWeight.bold, fontSize: 12),
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

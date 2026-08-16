@@ -29,26 +29,38 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
-        title: const Text('Rate Delivery',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Rate Delivery',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.delivery_dining,
-                color: Color(0xFFFF6B00), size: 64),
+            const Icon(
+              Icons.delivery_dining,
+              color: Color(0xFFFF6B00),
+              size: 64,
+            ),
             const SizedBox(height: 20),
-            const Text('How was your delivery?',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              'How was your delivery?',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Your feedback helps us improve',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6), fontSize: 14)),
+            Text(
+              'Your feedback helps us improve',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 14,
+              ),
+            ),
             const SizedBox(height: 32),
 
             // Stars
@@ -73,9 +85,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             Text(
               _ratingLabel(),
               style: const TextStyle(
-                  color: Color(0xFFFFAB00),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500),
+                color: Color(0xFFFFAB00),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -92,8 +105,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Add a comment (optional)',
-                  hintStyle:
-                      TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
                 ),
@@ -106,26 +120,32 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _rating > 0 && !_isSubmitting
-                    ? _submitRating
-                    : null,
+                onPressed: _rating > 0 && !_isSubmitting ? _submitRating : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _rating > 0
                       ? const Color(0xFFFF6B00)
                       : const Color(0xFF1D1E33),
                   foregroundColor: const Color(0xFF0A0E21),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 child: _isSubmitting
                     ? const SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                            color: Color(0xFF0A0E21), strokeWidth: 2.5))
-                    : const Text('Submit Rating',
+                          color: Color(0xFF0A0E21),
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Rating',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ],

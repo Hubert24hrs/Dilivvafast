@@ -12,8 +12,14 @@ void main() {
       test('returns error for invalid email format', () {
         expect(Validators.email('test'), 'Please enter a valid email address');
         expect(Validators.email('test@'), 'Please enter a valid email address');
-        expect(Validators.email('@test.com'), 'Please enter a valid email address');
-        expect(Validators.email('test.com'), 'Please enter a valid email address');
+        expect(
+          Validators.email('@test.com'),
+          'Please enter a valid email address',
+        );
+        expect(
+          Validators.email('test.com'),
+          'Please enter a valid email address',
+        );
       });
 
       test('returns null for valid email', () {
@@ -30,16 +36,28 @@ void main() {
       });
 
       test('returns error for password less than 8 characters', () {
-        expect(Validators.password('abc123'), 'Password must be at least 8 characters');
-        expect(Validators.password('Pass1'), 'Password must be at least 8 characters');
+        expect(
+          Validators.password('abc123'),
+          'Password must be at least 8 characters',
+        );
+        expect(
+          Validators.password('Pass1'),
+          'Password must be at least 8 characters',
+        );
       });
 
       test('returns error for password without letters', () {
-        expect(Validators.password('12345678'), 'Password must contain at least one letter');
+        expect(
+          Validators.password('12345678'),
+          'Password must contain at least one letter',
+        );
       });
 
       test('returns error for password without numbers', () {
-        expect(Validators.password('abcdefgh'), 'Password must contain at least one number');
+        expect(
+          Validators.password('abcdefgh'),
+          'Password must contain at least one number',
+        );
       });
 
       test('returns null for valid password', () {
@@ -51,12 +69,21 @@ void main() {
 
     group('confirmPassword', () {
       test('returns error for empty confirmation', () {
-        expect(Validators.confirmPassword('', 'password'), 'Please confirm your password');
-        expect(Validators.confirmPassword(null, 'password'), 'Please confirm your password');
+        expect(
+          Validators.confirmPassword('', 'password'),
+          'Please confirm your password',
+        );
+        expect(
+          Validators.confirmPassword(null, 'password'),
+          'Please confirm your password',
+        );
       });
 
       test('returns error when passwords do not match', () {
-        expect(Validators.confirmPassword('pass1234', 'pass5678'), 'Passwords do not match');
+        expect(
+          Validators.confirmPassword('pass1234', 'pass5678'),
+          'Passwords do not match',
+        );
       });
 
       test('returns null when passwords match', () {
@@ -71,8 +98,14 @@ void main() {
       });
 
       test('returns error for invalid Nigerian phone number', () {
-        expect(Validators.phoneNumber('1234567890'), 'Please enter a valid Nigerian phone number');
-        expect(Validators.phoneNumber('+1234567890'), 'Please enter a valid Nigerian phone number');
+        expect(
+          Validators.phoneNumber('1234567890'),
+          'Please enter a valid Nigerian phone number',
+        );
+        expect(
+          Validators.phoneNumber('+1234567890'),
+          'Please enter a valid Nigerian phone number',
+        );
       });
 
       test('returns null for valid Nigerian phone numbers', () {
@@ -102,7 +135,10 @@ void main() {
 
     group('minLength', () {
       test('returns error for value less than minimum', () {
-        expect(Validators.minLength('ab', 3), 'This field must be at least 3 characters');
+        expect(
+          Validators.minLength('ab', 3),
+          'This field must be at least 3 characters',
+        );
       });
 
       test('returns null for value meeting minimum', () {
@@ -113,7 +149,10 @@ void main() {
 
     group('maxLength', () {
       test('returns error for value exceeding maximum', () {
-        expect(Validators.maxLength('abcdef', 5), 'This field cannot exceed 5 characters');
+        expect(
+          Validators.maxLength('abcdef', 5),
+          'This field cannot exceed 5 characters',
+        );
       });
 
       test('returns null for value within maximum', () {
@@ -125,7 +164,10 @@ void main() {
     group('numeric', () {
       test('returns error for non-numeric value', () {
         expect(Validators.numeric('abc'), 'This field must be a valid number');
-        expect(Validators.numeric('12.34.56'), 'This field must be a valid number');
+        expect(
+          Validators.numeric('12.34.56'),
+          'This field must be a valid number',
+        );
       });
 
       test('returns null for numeric values', () {
@@ -137,8 +179,14 @@ void main() {
 
     group('positiveNumber', () {
       test('returns error for non-positive numbers', () {
-        expect(Validators.positiveNumber('0'), 'Amount must be greater than zero');
-        expect(Validators.positiveNumber('-10'), 'Amount must be greater than zero');
+        expect(
+          Validators.positiveNumber('0'),
+          'Amount must be greater than zero',
+        );
+        expect(
+          Validators.positiveNumber('-10'),
+          'Amount must be greater than zero',
+        );
       });
 
       test('returns null for positive numbers', () {
@@ -153,7 +201,10 @@ void main() {
       });
 
       test('returns error for name with numbers or special chars', () {
-        expect(Validators.name('John123'), "Name can only contain letters, spaces, and hyphens");
+        expect(
+          Validators.name('John123'),
+          "Name can only contain letters, spaces, and hyphens",
+        );
         expect(Validators.name('John@Doe'), isNotNull);
       });
 

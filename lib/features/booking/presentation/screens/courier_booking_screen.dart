@@ -39,8 +39,10 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
     final controller = ref.read(courierBookingControllerProvider.notifier);
 
     // Listen for order creation and navigate to matching screen
-    ref.listen<CourierBookingState>(courierBookingControllerProvider,
-        (prev, next) {
+    ref.listen<CourierBookingState>(courierBookingControllerProvider, (
+      prev,
+      next,
+    ) {
       if (next.createdOrderId != null && prev?.createdOrderId == null) {
         context.push('/matching/${next.createdOrderId}');
       }
@@ -99,8 +101,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
               return Container(
                 decoration: const BoxDecoration(
                   color: Color(0xFF141629),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black38,
@@ -111,8 +112,10 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                 ),
                 child: ListView(
                   controller: scrollController,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   children: [
                     // Handle bar
                     Center(
@@ -160,10 +163,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                     AddressSearchField(
                       label: 'To',
                       icon: Icons.search,
-                      initialAddress:
-                          state.dropoffAddress.isNotEmpty
-                              ? state.dropoffAddress
-                              : null,
+                      initialAddress: state.dropoffAddress.isNotEmpty
+                          ? state.dropoffAddress
+                          : null,
                       onAddressSelected: controller.setDropoff,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -220,8 +222,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                         }
                       },
                     ),
-                    SizedBox(
-                        height: MediaQuery.of(context).padding.bottom + 8),
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
                   ],
                 ),
               );
@@ -233,7 +234,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
   }
 
   void _showPickupSearch(
-      BuildContext context, CourierBookingController controller) {
+    BuildContext context,
+    CourierBookingController controller,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -284,7 +287,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -319,10 +324,7 @@ class _CircleIconButton extends StatelessWidget {
 }
 
 class _VehicleTypeSelector extends StatelessWidget {
-  const _VehicleTypeSelector({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _VehicleTypeSelector({required this.selected, required this.onChanged});
   final VehicleType selected;
   final ValueChanged<VehicleType> onChanged;
 
@@ -368,14 +370,10 @@ class _VehicleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF1D1E33)
-              : Colors.transparent,
+          color: isSelected ? const Color(0xFF1D1E33) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFFFF6B00)
-                : Colors.white24,
+            color: isSelected ? const Color(0xFFFF6B00) : Colors.white24,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -384,21 +382,16 @@ class _VehicleChip extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? const Color(0xFFFF6B00)
-                  : Colors.white54,
+              color: isSelected ? const Color(0xFFFF6B00) : Colors.white54,
               size: 18,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? const Color(0xFFFF6B00)
-                    : Colors.white54,
+                color: isSelected ? const Color(0xFFFF6B00) : Colors.white54,
                 fontSize: 13,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],
@@ -443,9 +436,7 @@ class _PickupLocationRow extends StatelessWidget {
           children: [
             Icon(
               Icons.radio_button_checked,
-              color: hasLocation
-                  ? const Color(0xFF4CAF50)
-                  : Colors.white38,
+              color: hasLocation ? const Color(0xFF4CAF50) : Colors.white38,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -495,7 +486,9 @@ class _PickupLocationRow extends StatelessWidget {
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -584,9 +577,7 @@ class _PackageDetailsSection extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.chevron_right,
+                  isExpanded ? Icons.keyboard_arrow_up : Icons.chevron_right,
                   color: Colors.white38,
                 ),
               ],
@@ -614,11 +605,14 @@ class _PackageDetailsSection extends StatelessWidget {
                           onTap: () => onCategoryChanged(cat),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFFFF6B00)
-                                      .withValues(alpha: 0.15)
+                                  ? const Color(
+                                      0xFFFF6B00,
+                                    ).withValues(alpha: 0.15)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
@@ -628,8 +622,7 @@ class _PackageDetailsSection extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              cat.name[0].toUpperCase() +
-                                  cat.name.substring(1),
+                              cat.name[0].toUpperCase() + cat.name.substring(1),
                               style: TextStyle(
                                 color: isSelected
                                     ? const Color(0xFFFF6B00)
@@ -645,11 +638,13 @@ class _PackageDetailsSection extends StatelessWidget {
                     _buildField(
                       hint: 'Weight (kg)',
                       icon: Icons.fitness_center,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,1}')),
+                          RegExp(r'^\d*\.?\d{0,1}'),
+                        ),
                       ],
                       onChanged: (val) {
                         final w = double.tryParse(val) ?? 0.0;
@@ -700,13 +695,14 @@ class _PackageDetailsSection extends StatelessWidget {
       child: TextField(
         style: const TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
-          prefixIcon:
-              Icon(icon, color: const Color(0xFFFF6B00), size: 18),
+          prefixIcon: Icon(icon, color: const Color(0xFFFF6B00), size: 18),
           hintText: hint,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
@@ -732,8 +728,8 @@ class _ProposePriceRow extends StatelessWidget {
     final displayPrice = currentPrice > 0
         ? '₦${currentPrice.toStringAsFixed(0)}'
         : (fareBreakdown != null
-            ? '₦${fareBreakdown!.totalFare.toStringAsFixed(0)}'
-            : '');
+              ? '₦${fareBreakdown!.totalFare.toStringAsFixed(0)}'
+              : '');
 
     return GestureDetector(
       onTap: () => _showPriceDialog(context),
@@ -746,8 +742,11 @@ class _ProposePriceRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calculate_outlined,
-                color: Colors.white54, size: 20),
+            const Icon(
+              Icons.calculate_outlined,
+              color: Colors.white54,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -789,10 +788,11 @@ class _ProposePriceRow extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1D1E33),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Propose your price',
-            style: TextStyle(color: Colors.white)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Propose your price',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -809,16 +809,22 @@ class _ProposePriceRow extends StatelessWidget {
               keyboardType: TextInputType.number,
               autofocus: true,
               style: const TextStyle(
-                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 prefixText: '₦ ',
                 prefixStyle: const TextStyle(
-                    color: Color(0xFFFF6B00),
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
+                  color: Color(0xFFFF6B00),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
                 hintText: '0',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: const BorderSide(color: Colors.white24),
@@ -835,23 +841,27 @@ class _ProposePriceRow extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
-              final val =
-                  double.tryParse(textController.text) ?? 0.0;
+              final val = double.tryParse(textController.text) ?? 0.0;
               onPriceChanged(val);
               Navigator.of(ctx).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF6B00),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Set Price',
-                style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Set Price',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -877,10 +887,10 @@ class _FindCourierButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: canSubmit && !isSubmitting ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              canSubmit ? const Color(0xFF00E676) : const Color(0xFF1D1E33),
-          foregroundColor:
-              canSubmit ? const Color(0xFF0A0E21) : Colors.white38,
+          backgroundColor: canSubmit
+              ? const Color(0xFF00E676)
+              : const Color(0xFF1D1E33),
+          foregroundColor: canSubmit ? const Color(0xFF0A0E21) : Colors.white38,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

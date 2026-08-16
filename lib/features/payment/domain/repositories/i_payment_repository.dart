@@ -41,22 +41,30 @@ abstract class IPaymentRepository {
 
   /// Stream transactions filtered by type
   Stream<List<TransactionModel>> watchTransactionsByType(
-      String userId, TransactionType type);
+    String userId,
+    TransactionType type,
+  );
 
   /// Get today's earnings for a driver
   Future<Either<Failure, double>> getTodayEarnings(String userId);
 
   /// Get earnings for a date range
   Future<Either<Failure, double>> getEarningsForRange(
-      String userId, DateTime start, DateTime end);
+    String userId,
+    DateTime start,
+    DateTime end,
+  );
 
   /// Get daily earnings for last N days (for charts)
   Future<Either<Failure, Map<DateTime, double>>> getDailyEarnings(
-      String userId, int days);
+    String userId,
+    int days,
+  );
 
   /// Create a transaction record
   Future<Either<Failure, TransactionModel>> createTransaction(
-      TransactionModel transaction);
+    TransactionModel transaction,
+  );
 
   /// Start a Paystack checkout for [amount] Naira.
   ///

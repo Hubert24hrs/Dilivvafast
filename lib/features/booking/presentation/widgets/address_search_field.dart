@@ -94,7 +94,10 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
   void _selectSuggestion(GeocodedAddress suggestion) {
     _controller.text = suggestion.address;
     widget.onAddressSelected(
-        suggestion.address, suggestion.lat, suggestion.lng);
+      suggestion.address,
+      suggestion.lat,
+      suggestion.lng,
+    );
     _focusNode.unfocus();
     setState(() => _showSuggestions = false);
   }
@@ -122,43 +125,50 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  style:
-                      const TextStyle(color: Colors.white, fontSize: 15),
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                   decoration: InputDecoration(
-                    prefixIcon: Icon(widget.icon,
-                        color: const Color(0xFFFF6B00), size: 20),
+                    prefixIcon: Icon(
+                      widget.icon,
+                      color: const Color(0xFFFF6B00),
+                      size: 20,
+                    ),
                     hintText: widget.label,
-                    hintStyle:
-                        TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     suffixIcon: _controller.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear,
-                                color: Colors.white38, size: 18),
+                            icon: const Icon(
+                              Icons.clear,
+                              color: Colors.white38,
+                              size: 18,
+                            ),
                             onPressed: () {
                               _controller.clear();
                               _onTextChanged('');
                             },
                           )
                         : (_isSearching
-                            ? const Padding(
-                                padding: EdgeInsets.all(14),
-                                child: SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Color(0xFFFF6B00),
+                              ? const Padding(
+                                  padding: EdgeInsets.all(14),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFFFF6B00),
+                                    ),
                                   ),
-                                ),
-                              )
-                            : null),
+                                )
+                              : null),
                   ),
                   onChanged: _onTextChanged,
-                  inputFormatters: [
-                      LengthLimitingTextInputFormatter(200)],
+                  inputFormatters: [LengthLimitingTextInputFormatter(200)],
                 ),
               ),
               if (widget.trailing != null)
@@ -197,12 +207,14 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                 final suggestion = _suggestions[index];
                 return ListTile(
                   dense: true,
-                  leading: const Icon(Icons.location_on,
-                      color: Color(0xFFFF9500), size: 18),
+                  leading: const Icon(
+                    Icons.location_on,
+                    color: Color(0xFFFF9500),
+                    size: 18,
+                  ),
                   title: Text(
                     suggestion.address,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 13),
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

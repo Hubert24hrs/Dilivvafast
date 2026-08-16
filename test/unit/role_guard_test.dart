@@ -78,21 +78,30 @@ void main() {
 
       test('allows drivers to access driver routes', () {
         expect(
-          RoleGuard.getRedirectPath(userRole: 'driver', attemptedPath: '/driver'),
+          RoleGuard.getRedirectPath(
+            userRole: 'driver',
+            attemptedPath: '/driver',
+          ),
           null,
         );
       });
 
       test('allows admins to access driver routes', () {
         expect(
-          RoleGuard.getRedirectPath(userRole: 'admin', attemptedPath: '/driver'),
+          RoleGuard.getRedirectPath(
+            userRole: 'admin',
+            attemptedPath: '/driver',
+          ),
           null,
         );
       });
 
       test('redirects users from driver earnings', () {
         expect(
-          RoleGuard.getRedirectPath(userRole: 'user', attemptedPath: '/driver-earnings'),
+          RoleGuard.getRedirectPath(
+            userRole: 'user',
+            attemptedPath: '/driver-earnings',
+          ),
           '/',
         );
       });
@@ -103,7 +112,10 @@ void main() {
           null,
         );
         expect(
-          RoleGuard.getRedirectPath(userRole: 'user', attemptedPath: '/profile'),
+          RoleGuard.getRedirectPath(
+            userRole: 'user',
+            attemptedPath: '/profile',
+          ),
           null,
         );
       });

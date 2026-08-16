@@ -15,7 +15,9 @@ class NotificationService {
     try {
       final user = _ref.read(currentUserProvider).value;
       if (user == null) {
-        debugPrint('NotificationService: No authenticated user, skipping FCM init');
+        debugPrint(
+          'NotificationService: No authenticated user, skipping FCM init',
+        );
         return;
       }
 

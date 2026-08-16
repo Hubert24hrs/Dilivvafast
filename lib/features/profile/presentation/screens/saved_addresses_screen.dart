@@ -41,10 +41,10 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
           .doc(uid)
           .collection('saved_addresses')
           .add({
-        'label': label,
-        'address': address,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+            'label': label,
+            'address': address,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
       _labelCtrl.clear();
       _addressCtrl.clear();
       if (mounted) {
@@ -108,9 +108,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                 controller: _addressCtrl,
                 style: const TextStyle(color: Colors.white),
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Full Address',
-                ),
+                decoration: const InputDecoration(labelText: 'Full Address'),
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -212,18 +210,12 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                         const SizedBox(height: 16),
                         const Text(
                           'No saved addresses yet',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
                         ),
                         const SizedBox(height: 8),
                         const Text(
                           'Tap + to save home, work, or favorite places',
-                          style: TextStyle(
-                            color: Colors.white38,
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Colors.white38, fontSize: 13),
                         ),
                       ],
                     ),
@@ -247,8 +239,9 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor:
-                              AppTheme.primaryColor.withValues(alpha: 0.15),
+                          backgroundColor: AppTheme.primaryColor.withValues(
+                            alpha: 0.15,
+                          ),
                           child: Icon(
                             _getLabelIcon(label),
                             color: AppTheme.primaryColor,

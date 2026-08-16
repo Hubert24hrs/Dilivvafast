@@ -56,7 +56,8 @@ enum PaymentStatus {
 }
 
 /// JSON converter for Firestore GeoPoint
-class GeoPointConverter implements JsonConverter<GeoPoint, Map<String, dynamic>> {
+class GeoPointConverter
+    implements JsonConverter<GeoPoint, Map<String, dynamic>> {
   const GeoPointConverter();
 
   @override
@@ -69,10 +70,7 @@ class GeoPointConverter implements JsonConverter<GeoPoint, Map<String, dynamic>>
 
   @override
   Map<String, dynamic> toJson(GeoPoint geoPoint) {
-    return {
-      'latitude': geoPoint.latitude,
-      'longitude': geoPoint.longitude,
-    };
+    return {'latitude': geoPoint.latitude, 'longitude': geoPoint.longitude};
   }
 }
 
@@ -134,6 +132,7 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     String? ratingComment,
     @Default(0.0) double driverEarnings,
     @Default(0.0) double platformCommission,
+
     /// Live position of the assigned driver, written while they are on duty.
     /// This is the copy the customer's tracking map reads — security rules
     /// keep one user from reading another's profile, so it cannot come from
@@ -193,8 +192,9 @@ extension CourierOrderModelX on CourierOrderModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'pickedUpAt': pickedUpAt != null ? Timestamp.fromDate(pickedUpAt!) : null,
-      'deliveredAt':
-          deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'deliveredAt': deliveredAt != null
+          ? Timestamp.fromDate(deliveredAt!)
+          : null,
       'estimatedDeliveryTime': estimatedDeliveryTime != null
           ? Timestamp.fromDate(estimatedDeliveryTime!)
           : null,

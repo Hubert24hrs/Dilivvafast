@@ -112,11 +112,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white, fontSize: 15),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                        ),
                         decoration: const InputDecoration(
                           labelText: 'Email Address',
-                          prefixIcon: Icon(Icons.email_outlined,
-                              color: Colors.white38, size: 20),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: Colors.white38,
+                            size: 20,
+                          ),
                         ),
                         validator: (v) {
                           if (v == null || !v.contains('@')) {
@@ -137,8 +143,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: const Color(0xFF0A0E21),
-                      disabledBackgroundColor:
-                          AppTheme.primaryColor.withValues(alpha: 0.4),
+                      disabledBackgroundColor: AppTheme.primaryColor.withValues(
+                        alpha: 0.4,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),

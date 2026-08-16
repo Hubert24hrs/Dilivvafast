@@ -7,11 +7,7 @@ import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart
 void main() {
   group('LoginScreen', () {
     Widget createTestWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
-          home: LoginScreen(),
-        ),
-      );
+      return const ProviderScope(child: MaterialApp(home: LoginScreen()));
     }
 
     testWidgets('renders email and password fields', (tester) async {

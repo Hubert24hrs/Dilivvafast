@@ -67,8 +67,7 @@ extension DriverApplicationModelX on DriverApplicationModel {
       'status': status.name,
       'rejectionReason': rejectionReason,
       'createdAt': Timestamp.fromDate(createdAt),
-      'reviewedAt':
-          reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
+      'reviewedAt': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
     };
   }
 }

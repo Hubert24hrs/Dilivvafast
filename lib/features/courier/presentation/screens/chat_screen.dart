@@ -7,16 +7,19 @@ import 'package:dilivvafast/features/courier/domain/entities/chat_message_model.
 /// Streams chat messages for a specific order
 final chatMessagesProvider =
     StreamProvider.family<List<ChatMessageModel>, String>((ref, orderId) {
-  return ref
-      .watch(firestoreProvider)
-      .collection('couriers')
-      .doc(orderId)
-      .collection('messages')
-      .orderBy('timestamp', descending: false)
-      .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => ChatMessageModel.fromFirestore(d)).toList());
-});
+      return ref
+          .watch(firestoreProvider)
+          .collection('couriers')
+          .doc(orderId)
+          .collection('messages')
+          .orderBy('timestamp', descending: false)
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map((d) => ChatMessageModel.fromFirestore(d))
+                .toList(),
+          );
+    });
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.orderId});
@@ -65,18 +68,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .collection('couriers')
           .doc(widget.orderId)
           .collection('messages')
-          .add(ChatMessageModel(
-            id: '',
-            senderId: userId,
-            senderRole: user?.role.name ?? 'customer',
-            text: text,
-            timestamp: DateTime.now(),
-          ).toFirestore());
+          .add(
+            ChatMessageModel(
+              id: '',
+              senderId: userId,
+              senderRole: user?.role.name ?? 'customer',
+              text: text,
+              timestamp: DateTime.now(),
+            ).toFirestore(),
+          );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
     }
   }
@@ -93,10 +98,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Chat',
-                style: TextStyle(color: Colors.white, fontSize: 16)),
-            Text('Order: ${widget.orderId.substring(0, 8)}...',
-                style: const TextStyle(color: Colors.white38, fontSize: 11)),
+            const Text(
+              'Chat',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            Text(
+              'Order: ${widget.orderId.substring(0, 8)}...',
+              style: const TextStyle(color: Colors.white38, fontSize: 11),
+            ),
           ],
         ),
       ),
@@ -111,23 +120,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_outline,
-                            size: 48,
-                            color: Colors.white.withValues(alpha: 0.15)),
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 48,
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
                         const SizedBox(height: 12),
-                        const Text('No messages yet',
-                            style: TextStyle(color: Colors.white38)),
+                        const Text(
+                          'No messages yet',
+                          style: TextStyle(color: Colors.white38),
+                        ),
                         const SizedBox(height: 4),
-                        const Text('Start the conversation!',
-                            style:
-                                TextStyle(color: Colors.white24, fontSize: 12)),
+                        const Text(
+                          'Start the conversation!',
+                          style: TextStyle(color: Colors.white24, fontSize: 12),
+                        ),
                       ],
                     ),
                   );
                 }
 
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _scrollToBottom());
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _scrollToBottom(),
+                );
 
                 return ListView.builder(
                   controller: _scrollController,
@@ -138,12 +153,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 );
               },
               loading: () => const Center(
-                child:
-                    CircularProgressIndicator(color: Color(0xFFFF6B00)),
+                child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
               ),
               error: (e, _) => Center(
-                child: Text('Error: $e',
-                    style: const TextStyle(color: Colors.redAccent)),
+                child: Text(
+                  'Error: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
             ),
           ),
@@ -154,8 +170,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF1D1E33),
               border: Border(
-                  top: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1))),
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              ),
             ),
             child: SafeArea(
               child: Row(
@@ -170,11 +186,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       child: TextField(
                         controller: _controller,
                         style: const TextStyle(
-                            color: Colors.white, fontSize: 14),
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Type a message...',
                           hintStyle: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3)),
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) => _sendMessage(),
@@ -191,8 +210,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       color: Color(0xFFFF6B00),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send,
-                          color: Color(0xFF0A0E21), size: 20),
+                      icon: const Icon(
+                        Icons.send,
+                        color: Color(0xFF0A0E21),
+                        size: 20,
+                      ),
                       onPressed: _sendMessage,
                     ),
                   ),
@@ -213,8 +235,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMine
@@ -233,8 +256,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             if (!isMine)
               Text(

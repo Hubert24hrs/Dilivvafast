@@ -7,7 +7,7 @@ import 'package:dilivvafast/features/booking/domain/entities/zone_model.dart';
 /// Dynamic fare calculator based on zone config from Firestore.
 class FareCalculatorService {
   FareCalculatorService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
   static const double _minimumFare = 500.0; // ₦500
@@ -57,8 +57,10 @@ class FareCalculatorService {
   }
 
   /// Calculate driver earnings and platform commission
-  EarningsSplit calculateEarningsSplit(double totalFare,
-      {double platformCommissionRate = 0.20}) {
+  EarningsSplit calculateEarningsSplit(
+    double totalFare, {
+    double platformCommissionRate = 0.20,
+  }) {
     final platformCommission = totalFare * platformCommissionRate;
     final driverEarnings = totalFare - platformCommission;
     return EarningsSplit(
@@ -69,8 +71,7 @@ class FareCalculatorService {
     );
   }
 
-  Future<ZoneModel?> _findZoneForCoordinates(
-      double lat, double lng) async {
+  Future<ZoneModel?> _findZoneForCoordinates(double lat, double lng) async {
     try {
       final snapshot = await _firestore
           .collection(FirestoreConstants.zones)
@@ -94,8 +95,7 @@ class FareCalculatorService {
   }
 
   /// Ray-casting algorithm for point-in-polygon test
-  bool _isPointInPolygon(
-      double lat, double lng, List<GeoPoint> polygon) {
+  bool _isPointInPolygon(double lat, double lng, List<GeoPoint> polygon) {
     if (polygon.length < 3) return false;
 
     var inside = false;

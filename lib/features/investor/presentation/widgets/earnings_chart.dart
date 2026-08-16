@@ -29,9 +29,13 @@ class EarningsChart extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Center(
-          child: Text('No earnings data',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3), fontSize: 13)),
+          child: Text(
+            'No earnings data',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 13,
+            ),
+          ),
         ),
       );
     }
@@ -43,8 +47,7 @@ class EarningsChart extends StatelessWidget {
       return FlSpot(entry.key.toDouble(), entry.value.value);
     }).toList();
 
-    final maxY =
-        spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.2;
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.2;
 
     return Container(
       height: height,
@@ -60,11 +63,14 @@ class EarningsChart extends StatelessWidget {
           if (title != null)
             Padding(
               padding: const EdgeInsets.only(left: 8, bottom: 8),
-              child: Text(title!,
-                  style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
+              child: Text(
+                title!,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           Expanded(
             child: LineChart(
@@ -86,8 +92,9 @@ class EarningsChart extends StatelessWidget {
                       getTitlesWidget: (v, meta) => Text(
                         _formatValue(v),
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            fontSize: 9),
+                          color: Colors.white.withValues(alpha: 0.3),
+                          fontSize: 9,
+                        ),
                       ),
                     ),
                   ),
@@ -104,16 +111,19 @@ class EarningsChart extends StatelessWidget {
                         return Text(
                           '${date.day}/${date.month}',
                           style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              fontSize: 9),
+                            color: Colors.white.withValues(alpha: 0.3),
+                            fontSize: 9,
+                          ),
                         );
                       },
                     ),
                   ),
                   topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
@@ -131,18 +141,19 @@ class EarningsChart extends StatelessWidget {
                       show: true,
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
-                        radius: 3,
-                        color: lineColor,
-                        strokeWidth: 1,
-                        strokeColor: Colors.white24,
-                      ),
+                            radius: 3,
+                            color: lineColor,
+                            strokeWidth: 1,
+                            strokeColor: Colors.white24,
+                          ),
                     ),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: gradientColors ??
+                        colors:
+                            gradientColors ??
                             [
                               lineColor.withValues(alpha: 0.2),
                               lineColor.withValues(alpha: 0.0),

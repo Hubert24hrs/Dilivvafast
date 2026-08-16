@@ -14,7 +14,8 @@ class AppliedPromoNotifier extends Notifier<Map<String, dynamic>?> {
 
 final appliedPromoProvider =
     NotifierProvider<AppliedPromoNotifier, Map<String, dynamic>?>(
-        AppliedPromoNotifier.new);
+      AppliedPromoNotifier.new,
+    );
 
 class PromotionsScreen extends ConsumerStatefulWidget {
   const PromotionsScreen({super.key});
@@ -245,8 +246,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color:
-                                AppTheme.primaryColor.withValues(alpha: 0.2),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(

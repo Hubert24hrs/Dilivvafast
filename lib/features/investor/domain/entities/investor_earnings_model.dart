@@ -86,8 +86,9 @@ extension InvestorWithdrawalModelX on InvestorWithdrawalModel {
       'status': status,
       'adminNotes': adminNotes,
       'createdAt': Timestamp.fromDate(createdAt),
-      'processedAt':
-          processedAt != null ? Timestamp.fromDate(processedAt!) : null,
+      'processedAt': processedAt != null
+          ? Timestamp.fromDate(processedAt!)
+          : null,
     };
   }
 }

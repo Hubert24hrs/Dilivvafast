@@ -37,11 +37,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
         .doc(threadId)
         .collection('messages')
         .add({
-      'senderId': uid,
-      'senderName': 'Customer',
-      'text': text,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+          'senderId': uid,
+          'senderName': 'Customer',
+          'text': text,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 
   @override
@@ -69,8 +69,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
                           child: CircularProgressIndicator(
                             color: AppTheme.primaryColor,

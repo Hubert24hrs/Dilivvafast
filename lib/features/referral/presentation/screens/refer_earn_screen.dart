@@ -93,7 +93,9 @@ class ReferEarnScreen extends ConsumerWidget {
                           Clipboard.setData(ClipboardData(text: referralCode));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Referral code copied to clipboard!'),
+                              content: Text(
+                                'Referral code copied to clipboard!',
+                              ),
                             ),
                           );
                         },

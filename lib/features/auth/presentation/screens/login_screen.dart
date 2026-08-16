@@ -207,8 +207,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             height: 52,
                             child: ElevatedButton(
                               key: const Key('login_btn'),
-                              onPressed:
-                                  authStateAsync.isLoading ? null : _submit,
+                              onPressed: authStateAsync.isLoading
+                                  ? null
+                                  : _submit,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryColor,
                                 foregroundColor: Colors.black,
@@ -302,7 +303,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icons.g_mobiledata,
                   label: 'Continue with Google',
                   onTap: () {
-                    ref.read(authControllerProvider.notifier).signInWithGoogle();
+                    ref
+                        .read(authControllerProvider.notifier)
+                        .signInWithGoogle();
                   },
                 ),
                 const SizedBox(height: 12),

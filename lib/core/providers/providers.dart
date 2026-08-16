@@ -45,16 +45,20 @@ import 'package:dilivvafast/core/constants/firestore_constants.dart';
 // ==================== FIREBASE INSTANCE PROVIDERS ====================
 
 final firestoreProvider = Provider<FirebaseFirestore>(
-    (ref) => FirebaseFirestore.instance);
+  (ref) => FirebaseFirestore.instance,
+);
 
 final firebaseAuthProvider = Provider<FirebaseAuth>(
-    (ref) => FirebaseAuth.instance);
+  (ref) => FirebaseAuth.instance,
+);
 
 final firebaseStorageProvider = Provider<FirebaseStorage>(
-    (ref) => FirebaseStorage.instance);
+  (ref) => FirebaseStorage.instance,
+);
 
 final firebaseFunctionsProvider = Provider<FirebaseFunctions>(
-    (ref) => FirebaseFunctions.instance);
+  (ref) => FirebaseFunctions.instance,
+);
 
 // ==================== REPOSITORY PROVIDERS ====================
 
@@ -73,9 +77,7 @@ final userRepositoryProvider = Provider<IUserRepository>((ref) {
 });
 
 final courierRepositoryProvider = Provider<ICourierRepository>((ref) {
-  return FirebaseCourierRepository(
-    firestore: ref.watch(firestoreProvider),
-  );
+  return FirebaseCourierRepository(firestore: ref.watch(firestoreProvider));
 });
 
 final paymentRepositoryProvider = Provider<IPaymentRepository>((ref) {
@@ -86,9 +88,7 @@ final paymentRepositoryProvider = Provider<IPaymentRepository>((ref) {
 });
 
 final investorRepositoryProvider = Provider<IInvestorRepository>((ref) {
-  return FirebaseInvestorRepository(
-    firestore: ref.watch(firestoreProvider),
-  );
+  return FirebaseInvestorRepository(firestore: ref.watch(firestoreProvider));
 });
 
 // ==================== CORE SERVICE PROVIDERS ====================
@@ -97,8 +97,9 @@ final fareCalculatorProvider = Provider<FareCalculatorService>((ref) {
   return FareCalculatorService(firestore: ref.watch(firestoreProvider));
 });
 
-final notificationServiceProvider =
-    Provider<NotificationService>((ref) => NotificationService(ref));
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(ref),
+);
 
 // ==================== AUTH STATE PROVIDERS ====================
 
@@ -189,8 +190,10 @@ final pendingDriverApplicationsProvider =
     });
 
 /// Watch a specific order
-final orderStreamProvider =
-    StreamProvider.family<CourierOrderModel?, String>((ref, orderId) {
+final orderStreamProvider = StreamProvider.family<CourierOrderModel?, String>((
+  ref,
+  orderId,
+) {
   return ref.watch(courierRepositoryProvider).watchOrder(orderId);
 });
 
@@ -225,40 +228,35 @@ final availableBikesProvider = StreamProvider<List<BikeModel>>((ref) {
 });
 
 /// Investor HP agreements
-final investorAgreementsProvider =
-    StreamProvider<List<HPAgreementModel>>((ref) {
+final investorAgreementsProvider = StreamProvider<List<HPAgreementModel>>((
+  ref,
+) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
-  return ref
-      .watch(investorRepositoryProvider)
-      .watchInvestorAgreements(userId);
+  return ref.watch(investorRepositoryProvider).watchInvestorAgreements(userId);
 });
 
 /// Investor earnings
-final investorEarningsProvider =
-    StreamProvider<List<InvestorEarningsModel>>((ref) {
+final investorEarningsProvider = StreamProvider<List<InvestorEarningsModel>>((
+  ref,
+) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
-  return ref
-      .watch(investorRepositoryProvider)
-      .watchInvestorEarnings(userId);
+  return ref.watch(investorRepositoryProvider).watchInvestorEarnings(userId);
 });
 
 /// Investor withdrawals
 final investorWithdrawalsProvider =
     StreamProvider<List<InvestorWithdrawalModel>>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return Stream.value([]);
-  return ref
-      .watch(investorRepositoryProvider)
-      .watchWithdrawals(userId);
-});
+      final userId = ref.watch(currentUserIdProvider);
+      if (userId == null) return Stream.value([]);
+      return ref.watch(investorRepositoryProvider).watchWithdrawals(userId);
+    });
 
 // ==================== NOTIFICATION PROVIDERS ====================
 
 /// Notifications for current user
-final notificationsProvider =
-    StreamProvider<List<NotificationModel>>((ref) {
+final notificationsProvider = StreamProvider<List<NotificationModel>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
   return ref
@@ -268,8 +266,10 @@ final notificationsProvider =
       .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
       .limit(50)
       .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => NotificationModel.fromFirestore(d)).toList());
+      .map(
+        (snap) =>
+            snap.docs.map((d) => NotificationModel.fromFirestore(d)).toList(),
+      );
 });
 
 /// Unread notification count
@@ -300,13 +300,16 @@ class DriverStatusNotifier extends Notifier<bool> {
   void set(bool value) => state = value;
 }
 
-final driverOnlineProvider =
-    NotifierProvider<DriverStatusNotifier, bool>(DriverStatusNotifier.new);
+final driverOnlineProvider = NotifierProvider<DriverStatusNotifier, bool>(
+  DriverStatusNotifier.new,
+);
 
 // ==================== PHASE 4: LOCATION & FCM PROVIDERS ====================
 
 /// Location tracking service (singleton)
-final locationTrackingServiceProvider = Provider<LocationTrackingService>((ref) {
+final locationTrackingServiceProvider = Provider<LocationTrackingService>((
+  ref,
+) {
   final service = LocationTrackingService(
     firestore: ref.watch(firestoreProvider),
   );
@@ -316,22 +319,22 @@ final locationTrackingServiceProvider = Provider<LocationTrackingService>((ref) 
 
 /// FCM notification service
 final fcmServiceProvider = Provider<FCMService>((ref) {
-  return FCMService(
-    firestore: ref.watch(firestoreProvider),
-  );
+  return FCMService(firestore: ref.watch(firestoreProvider));
 });
 
 /// Stream driver location in real-time
-final driverLocationProvider =
-    StreamProvider.family<GeoPoint?, String>((ref, driverId) {
+final driverLocationProvider = StreamProvider.family<GeoPoint?, String>((
+  ref,
+  driverId,
+) {
   return ref
       .watch(firestoreProvider)
       .collection('users')
       .doc(driverId)
       .snapshots()
       .map((snap) {
-    final data = snap.data();
-    if (data == null || data['location'] == null) return null;
-    return data['location'] as GeoPoint;
-  });
+        final data = snap.data();
+        if (data == null || data['location'] == null) return null;
+        return data['location'] as GeoPoint;
+      });
 });

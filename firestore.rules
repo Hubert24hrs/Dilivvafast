@@ -213,6 +213,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ==================== DRIVER PAYOUTS ====================
+
+    // One document per driver per payout date. Its existence is what makes the
+    // daily payout job idempotent, so nothing but server code may touch it.
+    match /driver_payouts/{payoutId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ==================== BIKES ====================
 
     match /bikes/{bikeId} {

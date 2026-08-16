@@ -34,10 +34,7 @@ class CustomTextField extends StatelessWidget {
         hintText: hint,
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
         prefixIcon: icon != null
-            ? Icon(
-                icon,
-                color: AppTheme.primaryColor.withValues(alpha: 0.7),
-              )
+            ? Icon(icon, color: AppTheme.primaryColor.withValues(alpha: 0.7))
             : null,
       ),
     );

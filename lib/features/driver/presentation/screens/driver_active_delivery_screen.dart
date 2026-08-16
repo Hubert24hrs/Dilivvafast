@@ -48,8 +48,10 @@ class _DriverActiveDeliveryScreenState
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Active Delivery',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Active Delivery',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
         actions: [
           // Emergency alert — long-press raises an SOS to the admin team.
           Padding(
@@ -62,15 +64,22 @@ class _DriverActiveDeliveryScreenState
       ),
       body: orderAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (order) {
           if (order == null) {
             return const Center(
-                child: Text('Order not found',
-                    style: TextStyle(color: Colors.white54)));
+              child: Text(
+                'Order not found',
+                style: TextStyle(color: Colors.white54),
+              ),
+            );
           }
           return _buildBody(context, ref, order);
         },
@@ -79,7 +88,10 @@ class _DriverActiveDeliveryScreenState
   }
 
   Widget _buildBody(
-      BuildContext context, WidgetRef ref, CourierOrderModel order) {
+    BuildContext context,
+    WidgetRef ref,
+    CourierOrderModel order,
+  ) {
     return Column(
       children: [
         // Map placeholder
@@ -96,18 +108,22 @@ class _DriverActiveDeliveryScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.navigation,
-                      color: Color(0xFFFF6B00), size: 48),
+                  const Icon(
+                    Icons.navigation,
+                    color: Color(0xFFFF6B00),
+                    size: 48,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
-                      style: const TextStyle(color: Colors.white54)),
+                  Text(
+                    'Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
+                    style: const TextStyle(color: Colors.white54),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     order.status == OrderStatus.accepted
                         ? order.pickupAddress
                         : order.dropoffAddress,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 14),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -121,13 +137,13 @@ class _DriverActiveDeliveryScreenState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: const Color(0xFF1D1E33),
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4)),
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
             ],
           ),
           child: Column(
@@ -151,14 +167,21 @@ class _DriverActiveDeliveryScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(order.recipientName,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600)),
-                        Text(order.recipientPhone,
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 13)),
+                        Text(
+                          order.recipientName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          order.recipientPhone,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -170,8 +193,11 @@ class _DriverActiveDeliveryScreenState
                       shape: BoxShape.circle,
                       color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.phone,
-                        color: Color(0xFF4CAF50), size: 20),
+                    child: const Icon(
+                      Icons.phone,
+                      color: Color(0xFF4CAF50),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Container(
@@ -181,8 +207,11 @@ class _DriverActiveDeliveryScreenState
                       shape: BoxShape.circle,
                       color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.chat_bubble,
-                        color: Color(0xFFFF6B00), size: 20),
+                    child: const Icon(
+                      Icons.chat_bubble,
+                      color: Color(0xFFFF6B00),
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -197,18 +226,28 @@ class _DriverActiveDeliveryScreenState
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.inventory_2,
-                        color: Color(0xFFFF6B00), size: 18),
+                    const Icon(
+                      Icons.inventory_2,
+                      color: Color(0xFFFF6B00),
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(order.packageDescription,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 13)),
-                    ),
-                    Text('₦${order.driverEarnings.toStringAsFixed(0)}',
+                      child: Text(
+                        order.packageDescription,
                         style: const TextStyle(
-                            color: Color(0xFF4CAF50),
-                            fontWeight: FontWeight.bold)),
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '₦${order.driverEarnings.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -224,12 +263,15 @@ class _DriverActiveDeliveryScreenState
                     backgroundColor: _getStatusButtonColor(order.status),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: Text(
                     _getStatusButtonLabel(order.status),
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

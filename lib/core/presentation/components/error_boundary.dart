@@ -62,10 +62,7 @@ class GlobalErrorWidget extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Please restart the app and try again.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               ],

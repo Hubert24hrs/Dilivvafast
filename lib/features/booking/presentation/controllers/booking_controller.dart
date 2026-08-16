@@ -104,7 +104,8 @@ class BookingState {
     const earthRadius = 6371.0;
     final dLat = _degToRad(dropoffLat - pickupLat);
     final dLng = _degToRad(dropoffLng - pickupLng);
-    final a = sin(dLat / 2) * sin(dLat / 2) +
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
         cos(_degToRad(pickupLat)) *
             cos(_degToRad(dropoffLat)) *
             sin(dLng / 2) *
@@ -147,17 +148,14 @@ class BookingController extends Notifier<BookingState> {
   void setPackageCategory(PackageCategory cat) =>
       state = state.copyWith(packageCategory: cat);
 
-  void setPackageWeight(double w) =>
-      state = state.copyWith(packageWeight: w);
+  void setPackageWeight(double w) => state = state.copyWith(packageWeight: w);
 
   void setPackageDescription(String d) =>
       state = state.copyWith(packageDescription: d);
 
-  void setRecipientName(String n) =>
-      state = state.copyWith(recipientName: n);
+  void setRecipientName(String n) => state = state.copyWith(recipientName: n);
 
-  void setRecipientPhone(String p) =>
-      state = state.copyWith(recipientPhone: p);
+  void setRecipientPhone(String p) => state = state.copyWith(recipientPhone: p);
 
   void setNotes(String n) => state = state.copyWith(notes: n);
 
@@ -215,8 +213,7 @@ class BookingController extends Notifier<BookingState> {
     try {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) {
-        state = state.copyWith(
-            isSubmitting: false, error: 'Not authenticated');
+        state = state.copyWith(isSubmitting: false, error: 'Not authenticated');
         return;
       }
 
@@ -230,11 +227,9 @@ class BookingController extends Notifier<BookingState> {
         userId: userId,
         status: OrderStatus.pending,
         pickupAddress: state.pickupAddress,
-        pickupGeoPoint:
-            GeoPoint(state.pickupLat, state.pickupLng),
+        pickupGeoPoint: GeoPoint(state.pickupLat, state.pickupLng),
         dropoffAddress: state.dropoffAddress,
-        dropoffGeoPoint:
-            GeoPoint(state.dropoffLat, state.dropoffLng),
+        dropoffGeoPoint: GeoPoint(state.dropoffLat, state.dropoffLng),
         packageDescription: state.packageDescription,
         packageWeight: state.packageWeight,
         packageCategory: state.packageCategory,
@@ -246,8 +241,7 @@ class BookingController extends Notifier<BookingState> {
         surgeMultiplier: state.fareBreakdown?.surgeMultiplier ?? 1.0,
         totalFare: state.fareBreakdown?.totalFare ?? 0,
         paymentMethod: state.paymentMethod,
-        promoCode:
-            state.promoCode.isNotEmpty ? state.promoCode : null,
+        promoCode: state.promoCode.isNotEmpty ? state.promoCode : null,
         discountAmount: state.fareBreakdown?.promoDiscount ?? 0,
         trackingCode: trackingCode,
         notes: state.notes.isNotEmpty ? state.notes : null,
@@ -259,10 +253,8 @@ class BookingController extends Notifier<BookingState> {
 
       final result = await courierRepo.createOrder(order);
       result.fold(
-        (failure) => state = state.copyWith(
-          isSubmitting: false,
-          error: failure.message,
-        ),
+        (failure) =>
+            state = state.copyWith(isSubmitting: false, error: failure.message),
         (createdOrder) => state = state.copyWith(
           isSubmitting: false,
           createdOrderId: createdOrder.id,
@@ -280,5 +272,4 @@ class BookingController extends Notifier<BookingState> {
 }
 
 final bookingControllerProvider =
-    NotifierProvider<BookingController, BookingState>(
-        BookingController.new);
+    NotifierProvider<BookingController, BookingState>(BookingController.new);

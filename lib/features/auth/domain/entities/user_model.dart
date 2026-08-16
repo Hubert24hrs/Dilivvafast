@@ -57,10 +57,7 @@ class NullableGeoPointConverter
   @override
   Map<String, dynamic>? toJson(GeoPoint? geoPoint) {
     if (geoPoint == null) return null;
-    return {
-      'latitude': geoPoint.latitude,
-      'longitude': geoPoint.longitude,
-    };
+    return {'latitude': geoPoint.latitude, 'longitude': geoPoint.longitude};
   }
 }
 

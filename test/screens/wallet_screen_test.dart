@@ -7,11 +7,7 @@ import 'package:dilivvafast/features/payment/presentation/screens/wallet_screen.
 void main() {
   group('WalletScreen', () {
     Widget createTestWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
-          home: WalletScreen(),
-        ),
-      );
+      return const ProviderScope(child: MaterialApp(home: WalletScreen()));
     }
 
     testWidgets('renders wallet title', (tester) async {
@@ -28,7 +24,8 @@ void main() {
       // Should show balance-related text
       expect(
         find.byWidgetPredicate(
-            (w) => w is Text && w.data?.contains('Balance') == true),
+          (w) => w is Text && w.data?.contains('Balance') == true,
+        ),
         findsAtLeast(1),
       );
     });

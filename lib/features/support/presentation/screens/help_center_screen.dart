@@ -56,37 +56,39 @@ class HelpCenterScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          ...faqs.map((faq) => Card(
-                color: AppTheme.surfaceColor,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ExpansionTile(
-                  iconColor: AppTheme.primaryColor,
-                  collapsedIconColor: Colors.white70,
-                  title: Text(
-                    faq['question']!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
+          ...faqs.map(
+            (faq) => Card(
+              color: AppTheme.surfaceColor,
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ExpansionTile(
+                iconColor: AppTheme.primaryColor,
+                collapsedIconColor: Colors.white70,
+                title: Text(
+                  faq['question']!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Text(
-                        faq['answer']!,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          height: 1.4,
-                        ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Text(
+                      faq['answer']!,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           const SizedBox(height: 24),
           Card(

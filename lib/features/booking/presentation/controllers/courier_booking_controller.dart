@@ -122,7 +122,8 @@ class CourierBookingState {
     const earthRadius = 6371.0;
     final dLat = _degToRad(dropoffLat - pickupLat);
     final dLng = _degToRad(dropoffLng - pickupLng);
-    final a = sin(dLat / 2) * sin(dLat / 2) +
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
         cos(_degToRad(pickupLat)) *
             cos(_degToRad(dropoffLat)) *
             sin(dLng / 2) *
@@ -197,10 +198,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
       );
     } else {
       // Fallback to Lagos
-      state = state.copyWith(
-        isLoadingLocation: false,
-        locationStatus: status,
-      );
+      state = state.copyWith(isLoadingLocation: false, locationStatus: status);
     }
   }
 
@@ -228,28 +226,25 @@ class CourierBookingController extends Notifier<CourierBookingState> {
   void setPackageCategory(PackageCategory cat) =>
       state = state.copyWith(packageCategory: cat);
 
-  void setPackageWeight(double w) =>
-      state = state.copyWith(packageWeight: w);
+  void setPackageWeight(double w) => state = state.copyWith(packageWeight: w);
 
   void setPackageDescription(String d) =>
       state = state.copyWith(packageDescription: d);
 
-  void setRecipientName(String n) =>
-      state = state.copyWith(recipientName: n);
+  void setRecipientName(String n) => state = state.copyWith(recipientName: n);
 
-  void setRecipientPhone(String p) =>
-      state = state.copyWith(recipientPhone: p);
+  void setRecipientPhone(String p) => state = state.copyWith(recipientPhone: p);
 
   void setNotes(String n) => state = state.copyWith(notes: n);
 
-  void setProposedPrice(double p) =>
-      state = state.copyWith(proposedPrice: p);
+  void setProposedPrice(double p) => state = state.copyWith(proposedPrice: p);
 
   void setPaymentMethod(PaymentMethod m) =>
       state = state.copyWith(paymentMethod: m);
 
   void togglePackageDetails() => state = state.copyWith(
-      packageDetailsExpanded: !state.packageDetailsExpanded);
+    packageDetailsExpanded: !state.packageDetailsExpanded,
+  );
 
   /// Calculate the fare based on current state.
   Future<void> calculateFare() async {
@@ -296,8 +291,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
     try {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) {
-        state = state.copyWith(
-            isSubmitting: false, error: 'Not authenticated');
+        state = state.copyWith(isSubmitting: false, error: 'Not authenticated');
         return null;
       }
 
@@ -353,10 +347,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
       final result = await courierRepo.createOrder(order);
       return result.fold(
         (failure) {
-          state = state.copyWith(
-            isSubmitting: false,
-            error: failure.message,
-          );
+          state = state.copyWith(isSubmitting: false, error: failure.message);
           return null;
         },
         (createdOrder) {
@@ -384,4 +375,5 @@ class CourierBookingController extends Notifier<CourierBookingState> {
 
 final courierBookingControllerProvider =
     NotifierProvider<CourierBookingController, CourierBookingState>(
-        CourierBookingController.new);
+      CourierBookingController.new,
+    );

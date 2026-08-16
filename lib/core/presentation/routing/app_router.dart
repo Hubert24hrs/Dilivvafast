@@ -62,7 +62,6 @@ import 'package:dilivvafast/features/auth/presentation/screens/delete_account_sc
 import 'package:dilivvafast/features/driver/presentation/screens/driver_documents_screen.dart';
 import 'package:dilivvafast/features/driver/presentation/screens/driver_vehicle_screen.dart';
 
-
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
 
 class _ShellScaffold extends StatelessWidget {
@@ -108,7 +107,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isLoggedIn = authState.value != null;
-      final isAuthRoute = state.matchedLocation == '/login' ||
+      final isAuthRoute =
+          state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
           state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/onboarding' ||
@@ -166,13 +166,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.local_shipping), label: 'Send'),
+                icon: Icon(Icons.local_shipping),
+                label: 'Send',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long), label: 'Orders'),
+                icon: Icon(Icons.receipt_long),
+                label: 'Orders',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
+                icon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
             ],
             child: child,
           );
@@ -210,16 +218,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/customer/track/:orderId',
         name: 'customerTrack',
-        builder: (context, state) => TrackingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            TrackingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/customer/orders/:orderId',
         name: 'customerOrderDetail',
-        builder: (context, state) => TrackingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            TrackingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/customer/notifications',
@@ -229,16 +235,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chat/:orderId',
         name: 'chat',
-        builder: (context, state) => ChatScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            ChatScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/rate/:orderId',
         name: 'rate',
-        builder: (context, state) => RatingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            RatingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
 
       // ========== DRIVER ROUTES ==========
@@ -252,11 +256,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.history), label: 'History'),
+                icon: Icon(Icons.history),
+                label: 'History',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
+                icon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
             ],
             child: child,
           );
@@ -270,8 +280,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/driver/history',
             name: 'driverHistory',
-            builder: (context, state) =>
-                const OrdersScreen(isDriver: true),
+            builder: (context, state) => const OrdersScreen(isDriver: true),
           ),
           GoRoute(
             path: '/driver/earnings',
@@ -310,15 +319,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             onTap: (i) => _onAdminTabTap(context, i),
             items: const [
               BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard), label: 'Dashboard'),
+                icon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long), label: 'Orders'),
+                icon: Icon(Icons.receipt_long),
+                label: 'Orders',
+              ),
+              BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.people), label: 'Users'),
+                icon: Icon(Icons.assignment),
+                label: 'Applications',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.assignment), label: 'Applications'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.attach_money), label: 'Finance'),
+                icon: Icon(Icons.attach_money),
+                label: 'Finance',
+              ),
             ],
             child: child,
           );
@@ -373,9 +389,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.attach_money), label: 'Earnings'),
+                icon: Icon(Icons.attach_money),
+                label: 'Earnings',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
             ],
             child: child,
           );
@@ -445,9 +465,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/matching/:orderId',
         name: 'matching',
-        builder: (context, state) => MatchingScreen(
-          orderId: state.pathParameters['orderId'],
-        ),
+        builder: (context, state) =>
+            MatchingScreen(orderId: state.pathParameters['orderId']),
       ),
 
       // ── Phase 2: Drawer-linked screens ─────────────────────────────
@@ -594,11 +613,7 @@ int _getInvestorTabIndex(String location) {
 }
 
 void _onInvestorTabTap(BuildContext context, int index) {
-  const routes = [
-    '/investor/home',
-    '/investor/earnings',
-    '/investor/profile',
-  ];
+  const routes = ['/investor/home', '/investor/earnings', '/investor/profile'];
   context.go(routes[index]);
 }
 
@@ -640,16 +655,19 @@ class _SplashScreenState extends ConsumerState<_SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.delivery_dining,
-                size: 80, color: AppTheme.primaryColor),
+            const Icon(
+              Icons.delivery_dining,
+              size: 80,
+              color: AppTheme.primaryColor,
+            ),
             const SizedBox(height: 24),
             Text(
               'DILIVVAFAST',
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 4,
-                  ),
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
+              ),
             ),
             const SizedBox(height: 16),
             const CircularProgressIndicator(color: AppTheme.primaryColor),

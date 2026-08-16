@@ -518,28 +518,55 @@ export const processDriverPayout = functions.pubsub
         }
       });
 
-      // Update each driver's wallet
+      // Pub/Sub delivers at-least-once, so this function can run twice for the
+      // same day. Each payout is keyed by driver + date, and the write only
+      // lands if that key does not already exist — a redelivery pays nothing.
+      const payoutDate = yesterday.toISOString().slice(0, 10); // YYYY-MM-DD
       const batch = db.batch();
-      for (const [driverId, earnings] of Object.entries(driverEarnings)) {
-        const driverRef = db.collection("users").doc(driverId);
+      let scheduled = 0;
 
-        // Create earnings transaction
+      for (const [driverId, earnings] of Object.entries(driverEarnings)) {
+        const payoutId = `${driverId}_${payoutDate}`;
+        const payoutRef = db.collection("driver_payouts").doc(payoutId);
+
+        // eslint-disable-next-line no-await-in-loop
+        const already = await payoutRef.get();
+        if (already.exists) {
+          console.log(`Payout ${payoutId} already processed; skipping`);
+          continue;
+        }
+
+        batch.create(payoutRef, {
+          driverId,
+          payoutDate,
+          amount: earnings,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
         const txRef = db.collection("transactions").doc();
         batch.set(txRef, {
           userId: driverId,
           type: "delivery_earning",
           amount: earnings,
-          description: `Daily earnings for ${yesterday.toLocaleDateString()}`,
+          description: `Daily earnings for ${payoutDate}`,
+          payoutId,
           status: "completed",
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
 
-        // Credit wallet
-        batch.update(driverRef, {
+        batch.update(db.collection("users").doc(driverId), {
           walletBalance: admin.firestore.FieldValue.increment(earnings),
         });
+        scheduled++;
       }
 
+      if (scheduled === 0) {
+        console.log("All payouts for this date were already processed");
+        return null;
+      }
+
+      // batch.create fails the whole batch if a payout doc appeared in the
+      // meantime, so two concurrent runs cannot both credit.
       await batch.commit();
       console.log(
         `Processed earnings for ${Object.keys(driverEarnings).length} drivers`
@@ -866,19 +893,27 @@ export const weeklyDriverReport = functions.pubsub
           totalEarnings += doc.data().driverEarnings || 0;
         });
 
-        // Save weekly report
-        await db
+        // Keyed by week so a Pub/Sub redelivery overwrites the same report
+        // instead of appending a duplicate (and re-notifying the driver).
+        const weekKey = oneWeekAgo.toISOString().slice(0, 10);
+        const reportRef = db
           .collection("users")
           .doc(driverId)
           .collection("weekly_reports")
-          .add({
-            weekEnding: admin.firestore.FieldValue.serverTimestamp(),
-            totalDeliveries,
-            totalEarnings,
-            averagePerDelivery:
-              totalDeliveries > 0 ? totalEarnings / totalDeliveries : 0,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          .doc(weekKey);
+
+        const existing = await reportRef.get();
+        await reportRef.set({
+          weekEnding: admin.firestore.FieldValue.serverTimestamp(),
+          totalDeliveries,
+          totalEarnings,
+          averagePerDelivery:
+            totalDeliveries > 0 ? totalEarnings / totalDeliveries : 0,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Only notify the first time this week's report is generated.
+        if (existing.exists) continue;
 
         // Send notification
         if (driverData.fcmToken && totalDeliveries > 0) {

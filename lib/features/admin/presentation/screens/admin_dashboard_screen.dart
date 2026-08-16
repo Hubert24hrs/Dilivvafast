@@ -16,8 +16,10 @@ class AdminDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Admin Dashboard',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -62,75 +64,91 @@ class AdminDashboardScreen extends ConsumerWidget {
             const SizedBox(height: 28),
 
             // Recent orders
-            const Text('Recent Orders',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              'Recent Orders',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
 
             ordersAsync.when(
               loading: () => const Center(
-                  child:
-                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
-              error: (e, _) => Text('Error: $e',
-                  style: const TextStyle(color: Colors.redAccent)),
+                child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+              ),
+              error: (e, _) => Text(
+                'Error: $e',
+                style: const TextStyle(color: Colors.redAccent),
+              ),
               data: (orders) {
                 if (orders.isEmpty) {
                   return const Center(
-                      child: Text('No orders yet',
-                          style: TextStyle(color: Colors.white54)));
+                    child: Text(
+                      'No orders yet',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  );
                 }
                 return Column(
                   children: orders
                       .take(10)
-                      .map((order) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1D1E33),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white10),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _statusColor(order.status.name),
-                                  ),
+                      .map(
+                        (order) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1D1E33),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _statusColor(order.status.name),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(order.trackingCode,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w500)),
-                                      Text(
-                                          '${order.pickupAddress} → ${order.dropoffAddress}',
-                                          style: const TextStyle(
-                                              color: Colors.white54,
-                                              fontSize: 11),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      order.trackingCode,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${order.pickupAddress} → ${order.dropoffAddress}',
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                    '₦${order.totalFare.toStringAsFixed(0)}',
-                                    style: const TextStyle(
-                                        color: Color(0xFFFF6B00),
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ))
+                              ),
+                              Text(
+                                '₦${order.totalFare.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  color: Color(0xFFFF6B00),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                       .toList(),
                 );
               },
@@ -157,13 +175,18 @@ class AdminDashboardScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value,
-                  style: TextStyle(
-                      color: color,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
-              Text(label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
             ],
           ),
         ],
@@ -174,14 +197,19 @@ class AdminDashboardScreen extends ConsumerWidget {
   double _totalRevenue(AsyncValue<dynamic> ordersAsync) {
     final orders = ordersAsync.value;
     if (orders == null) return 0;
-    return (orders as List).fold(0.0, (sum, o) => sum + (o.totalFare as double));
+    return (orders as List).fold(
+      0.0,
+      (sum, o) => sum + (o.totalFare as double),
+    );
   }
 
   double _totalCommission(AsyncValue<dynamic> ordersAsync) {
     final orders = ordersAsync.value;
     if (orders == null) return 0;
-    return (orders as List)
-        .fold(0.0, (sum, o) => sum + (o.platformCommission as double));
+    return (orders as List).fold(
+      0.0,
+      (sum, o) => sum + (o.platformCommission as double),
+    );
   }
 
   Color _statusColor(String status) {

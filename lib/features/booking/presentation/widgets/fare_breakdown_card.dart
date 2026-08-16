@@ -34,7 +34,9 @@ class FareBreakdownCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFF6B00).withValues(alpha: 0.2)),
+        border: Border.all(
+          color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +60,10 @@ class FareBreakdownCard extends StatelessWidget {
           _fareRow('Base fare', '₦${b.baseFare.toStringAsFixed(0)}'),
           _fareRow('Distance', '₦${b.distanceFare.toStringAsFixed(0)}'),
           if (b.weightSurcharge > 0)
-            _fareRow('Weight surcharge', '₦${b.weightSurcharge.toStringAsFixed(0)}'),
+            _fareRow(
+              'Weight surcharge',
+              '₦${b.weightSurcharge.toStringAsFixed(0)}',
+            ),
           if (b.surgeMultiplier > 1.0)
             _fareRow(
               'Surge (${b.surgeMultiplier.toStringAsFixed(1)}x)',
@@ -119,8 +124,12 @@ class FareBreakdownCard extends StatelessWidget {
     );
   }
 
-  Widget _fareRow(String label, String value,
-      {bool highlight = false, bool isDiscount = false}) {
+  Widget _fareRow(
+    String label,
+    String value, {
+    bool highlight = false,
+    bool isDiscount = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -141,8 +150,8 @@ class FareBreakdownCard extends StatelessWidget {
               color: isDiscount
                   ? const Color(0xFF4CAF50)
                   : highlight
-                      ? const Color(0xFFFF9800)
-                      : Colors.white,
+                  ? const Color(0xFFFF9800)
+                  : Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),

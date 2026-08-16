@@ -82,8 +82,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 _step == 0
                     ? 'Create Account'
                     : _step == 1
-                        ? 'Choose Your Role'
-                        : 'Almost Done!',
+                    ? 'Choose Your Role'
+                    : 'Almost Done!',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -95,8 +95,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 _step == 0
                     ? 'Fill in your details to get started'
                     : _step == 1
-                        ? 'How will you use Dilivvafast?'
-                        : 'Got a referral code? Enter it below',
+                    ? 'How will you use Dilivvafast?'
+                    : 'Got a referral code? Enter it below',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 14,
@@ -129,8 +129,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: _step == 0
                     ? _buildPersonalInfoStep()
                     : _step == 1
-                        ? _buildRoleStep()
-                        : _buildReferralStep(),
+                    ? _buildRoleStep()
+                    : _buildReferralStep(),
               ),
               const SizedBox(height: 24),
 
@@ -143,7 +143,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: const Color(0xFF0A0E21),
-                    disabledBackgroundColor: AppTheme.primaryColor.withValues(alpha: 0.4),
+                    disabledBackgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.4,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -177,8 +179,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     text: TextSpan(
                       text: 'Already have an account? ',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 14),
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
                       children: const [
                         TextSpan(
                           text: 'Sign In',
@@ -207,23 +210,45 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              _buildTextField(_nameController, 'Full Name', Icons.person_outline),
+              _buildTextField(
+                _nameController,
+                'Full Name',
+                Icons.person_outline,
+              ),
               const SizedBox(height: 14),
-              _buildTextField(_emailController, 'Email Address', Icons.email_outlined,
-                  keyboard: TextInputType.emailAddress),
+              _buildTextField(
+                _emailController,
+                'Email Address',
+                Icons.email_outlined,
+                keyboard: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 14),
-              _buildTextField(_phoneController, 'Phone Number', Icons.phone_outlined,
-                  keyboard: TextInputType.phone),
+              _buildTextField(
+                _phoneController,
+                'Phone Number',
+                Icons.phone_outlined,
+                keyboard: TextInputType.phone,
+              ),
               const SizedBox(height: 14),
-              _buildPasswordField(_passwordController, 'Password',
-                  _obscurePassword, () => setState(() => _obscurePassword = !_obscurePassword)),
+              _buildPasswordField(
+                _passwordController,
+                'Password',
+                _obscurePassword,
+                () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
               const SizedBox(height: 14),
-              _buildPasswordField(_confirmPasswordController, 'Confirm Password',
-                  _obscureConfirm, () => setState(() => _obscureConfirm = !_obscureConfirm),
-                  validator: (v) {
-                    if (v != _passwordController.text) return 'Passwords do not match';
-                    return null;
-                  }),
+              _buildPasswordField(
+                _confirmPasswordController,
+                'Confirm Password',
+                _obscureConfirm,
+                () => setState(() => _obscureConfirm = !_obscureConfirm),
+                validator: (v) {
+                  if (v != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
             ],
           ),
         ),
@@ -232,8 +257,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildTextField(
-      TextEditingController c, String label, IconData icon,
-      {TextInputType keyboard = TextInputType.text}) {
+    TextEditingController c,
+    String label,
+    IconData icon, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
     return TextFormField(
       controller: c,
       keyboardType: keyboard,
@@ -242,7 +270,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.white38, size: 20),
       ),
-      validator: (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null,
+      validator: (v) =>
+          (v == null || v.trim().isEmpty) ? '$label is required' : null,
     );
   }
 
@@ -259,7 +288,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white38, size: 20),
+        prefixIcon: const Icon(
+          Icons.lock_outline,
+          color: Colors.white38,
+          size: 20,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,
@@ -278,70 +311,76 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: UserRole.values
           .where((r) => r != UserRole.admin) // Admin is internal only
           .map((role) {
-        final isSelected = _selectedRole == role;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedRole = role),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppTheme.primaryColor.withValues(alpha: 0.12)
-                  : const Color(0xFF1D1E33),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color:
-                    isSelected ? AppTheme.primaryColor : Colors.white12,
-                width: isSelected ? 2 : 1,
+            final isSelected = _selectedRole == role;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedRole = role),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppTheme.primaryColor.withValues(alpha: 0.12)
+                      : const Color(0xFF1D1E33),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected ? AppTheme.primaryColor : Colors.white12,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _roleColor(role).withValues(alpha: 0.15),
+                      ),
+                      child: Icon(
+                        _roleIcon(role),
+                        color: _roleColor(role),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _roleLabel(role),
+                            style: TextStyle(
+                              color: isSelected
+                                  ? AppTheme.primaryColor
+                                  : Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _roleDescription(role),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFFFF6B00),
+                        size: 24,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _roleColor(role).withValues(alpha: 0.15),
-                  ),
-                  child: Icon(_roleIcon(role),
-                      color: _roleColor(role), size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _roleLabel(role),
-                        style: TextStyle(
-                          color: isSelected
-                              ? AppTheme.primaryColor
-                              : Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _roleDescription(role),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  const Icon(Icons.check_circle,
-                      color: Color(0xFFFF6B00), size: 24),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+            );
+          })
+          .toList(),
     );
   }
 
@@ -359,22 +398,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 shape: BoxShape.circle,
                 color: AppTheme.primaryColor.withValues(alpha: 0.15),
               ),
-              child: const Icon(Icons.card_giftcard,
-                  color: Color(0xFFFF6B00), size: 36),
+              child: const Icon(
+                Icons.card_giftcard,
+                color: Color(0xFFFF6B00),
+                size: 36,
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
               'Referral Code (Optional)',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600),
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Enter a referral code to earn bonus credits',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 20),
             TextFormField(
@@ -383,8 +428,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Referral Code',
-                prefixIcon:
-                    Icon(Icons.qr_code, color: Colors.white38, size: 20),
+                prefixIcon: Icon(
+                  Icons.qr_code,
+                  color: Colors.white38,
+                  size: 20,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -395,13 +443,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 text: TextSpan(
                   text: 'By creating an account you agree to our\n',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      fontSize: 12),
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 12,
+                  ),
                   children: [
                     WidgetSpan(
                       child: GestureDetector(
                         onTap: () => _openLegalUrl(
-                            'https://hubert24hrs.github.io/Dilivvafast/terms.html'),
+                          'https://hubert24hrs.github.io/Dilivvafast/terms.html',
+                        ),
                         child: const Text(
                           'Terms of Service',
                           style: TextStyle(
@@ -416,13 +466,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextSpan(
                       text: ' and ',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 12),
+                        color: Colors.white.withValues(alpha: 0.45),
+                        fontSize: 12,
+                      ),
                     ),
                     WidgetSpan(
                       child: GestureDetector(
                         onTap: () => _openLegalUrl(
-                            'https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
+                          'https://hubert24hrs.github.io/Dilivvafast/privacy.html',
+                        ),
                         child: const Text(
                           'Privacy Policy',
                           style: TextStyle(
@@ -452,7 +504,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else if (_step == 1) {
       setState(() => _step = 2);
     } else {
-      ref.read(authControllerProvider.notifier).signUp(
+      ref
+          .read(authControllerProvider.notifier)
+          .signUp(
             fullName: _nameController.text.trim(),
             email: _emailController.text.trim(),
             phone: _phoneController.text.trim(),

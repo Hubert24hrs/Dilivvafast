@@ -14,7 +14,8 @@ class DefaultPaymentMethodNotifier extends Notifier<String> {
 
 final defaultPaymentMethodProvider =
     NotifierProvider<DefaultPaymentMethodNotifier, String>(
-        DefaultPaymentMethodNotifier.new);
+      DefaultPaymentMethodNotifier.new,
+    );
 
 class PaymentMethodsScreen extends ConsumerWidget {
   const PaymentMethodsScreen({super.key});
@@ -59,9 +60,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
             ),
             child: ListTile(
               onTap: () {
-                ref
-                    .read(defaultPaymentMethodProvider.notifier)
-                    .set('wallet');
+                ref.read(defaultPaymentMethodProvider.notifier).set('wallet');
               },
               leading: const Icon(
                 Icons.account_balance_wallet,
@@ -81,7 +80,10 @@ class PaymentMethodsScreen extends ConsumerWidget {
               ),
               trailing: selectedMethod == 'wallet'
                   ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
-                  : const Icon(Icons.radio_button_unchecked, color: Colors.white38),
+                  : const Icon(
+                      Icons.radio_button_unchecked,
+                      color: Colors.white38,
+                    ),
             ),
           ),
 
@@ -184,10 +186,14 @@ class PaymentMethodsScreen extends ConsumerWidget {
                               style: const TextStyle(color: Colors.white),
                             ),
                             trailing: isSelected
-                                ? const Icon(Icons.check_circle,
-                                    color: AppTheme.primaryColor)
-                                : const Icon(Icons.radio_button_unchecked,
-                                    color: Colors.white38),
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppTheme.primaryColor,
+                                  )
+                                : const Icon(
+                                    Icons.radio_button_unchecked,
+                                    color: Colors.white38,
+                                  ),
                           ),
                         );
                       }).toList(),

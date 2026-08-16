@@ -28,70 +28,66 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Wrap entire app in error zone.
-  runZonedGuarded(() async {
-    MapboxInit.init();
+  runZonedGuarded(
+    () async {
+      MapboxInit.init();
 
-    // Initialise Hive for local storage.
-    await Hive.initFlutter();
+      // Initialise Hive for local storage.
+      await Hive.initFlutter();
 
-    // Set up global error handlers (Crashlytics wired in later after Firebase init).
-    _setupPreFirebaseErrorHandlers();
+      // Set up global error handlers (Crashlytics wired in later after Firebase init).
+      _setupPreFirebaseErrorHandlers();
 
-    // Load environment variables.
-    try {
-      await dotenv.load(fileName: '.env');
-    } catch (e) {
-      debugPrint('Could not load .env file: $e');
-    }
-
-    // -----------------------------------------------------------------------
-    // Firebase initialisation — MUST NOT be silent on failure.
-    // If this fails the app has no auth, Firestore, or FCM backend.
-    // We show a blocking error screen instead of proceeding silently.
-    // -----------------------------------------------------------------------
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      _firebaseReady = true;
-
-      // REMOVE AFTER VERIFYING iOS AUTH — temporary diagnostic log
-      // ignore: avoid_print
-      if (kDebugMode) {
-        debugPrint(
-          '[Dilivvafast] Firebase ready — iOS options: '
-          '${DefaultFirebaseOptions.currentPlatform.appId}',
-        );
+      // Load environment variables.
+      try {
+        await dotenv.load(fileName: '.env');
+      } catch (e) {
+        debugPrint('Could not load .env file: $e');
       }
 
-      // Register FCM background message handler AFTER Firebase is ready.
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      // -----------------------------------------------------------------------
+      // Firebase initialisation — MUST NOT be silent on failure.
+      // If this fails the app has no auth, Firestore, or FCM backend.
+      // We show a blocking error screen instead of proceeding silently.
+      // -----------------------------------------------------------------------
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        _firebaseReady = true;
 
-      // Request FCM notification permissions.
-      final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
+        // Register FCM background message handler AFTER Firebase is ready.
+        FirebaseMessaging.onBackgroundMessage(
+          firebaseMessagingBackgroundHandler,
+        );
+
+        // Request FCM notification permissions.
+        final messaging = FirebaseMessaging.instance;
+        await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+      } catch (e, stack) {
+        // Firebase init failed — do NOT proceed with a broken backend.
+        // Log the error then show a non-dismissable error screen.
+        debugPrint('[Dilivvafast] Firebase initialization FAILED: $e\n$stack');
+        _firebaseReady = false;
+      }
+
+      runApp(
+        ProviderScope(
+          child: _firebaseReady
+              ? const DilivvafastApp()
+              : const _FirebaseInitErrorApp(),
+        ),
       );
-    } catch (e, stack) {
-      // Firebase init failed — do NOT proceed with a broken backend.
-      // Log the error then show a non-dismissable error screen.
-      debugPrint('[Dilivvafast] Firebase initialization FAILED: $e\n$stack');
-      _firebaseReady = false;
-    }
-
-    runApp(
-      ProviderScope(
-        child: _firebaseReady
-            ? const DilivvafastApp()
-            : const _FirebaseInitErrorApp(),
-      ),
-    );
-  }, (error, stackTrace) {
-    debugPrint('[Dilivvafast] Uncaught async error: $error');
-  });
+    },
+    (error, stackTrace) {
+      debugPrint('[Dilivvafast] Uncaught async error: $error');
+    },
+  );
 }
 
 /// Set up Flutter and platform error handlers before Firebase is available.
@@ -164,9 +160,7 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         return ErrorBoundary(
-          child: ConnectivityWrapper(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          child: ConnectivityWrapper(child: child ?? const SizedBox.shrink()),
         );
       },
     );
@@ -190,8 +184,57 @@ class _FirebaseInitErrorApp extends StatelessWidget {
   }
 }
 
-class _FirebaseInitErrorScreen extends StatelessWidget {
+class _FirebaseInitErrorScreen extends StatefulWidget {
   const _FirebaseInitErrorScreen();
+
+  @override
+  State<_FirebaseInitErrorScreen> createState() =>
+      _FirebaseInitErrorScreenState();
+}
+
+class _FirebaseInitErrorScreenState extends State<_FirebaseInitErrorScreen> {
+  bool _retrying = false;
+
+  /// Retry only the Firebase initialisation, then swap in the real app.
+  ///
+  /// This used to call `main()` again, which re-ran the whole bootstrap:
+  /// another error zone, another Hive init, and a second FCM background
+  /// handler registration — so a user who tapped Retry twice ended up with
+  /// duplicate handlers and duplicate notifications.
+  Future<void> _retry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      _firebaseReady = true;
+
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      runApp(const ProviderScope(child: DilivvafastApp()));
+      return;
+    } catch (e) {
+      debugPrint('[Dilivvafast] Firebase retry failed: $e');
+    }
+
+    if (mounted) {
+      setState(() => _retrying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Still cannot reach Firebase. Check your connection.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,14 +275,18 @@ class _FirebaseInitErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: () {
-                  // Restart the app by re-running main.
-                  // On mobile this triggers a hot restart equivalent through
-                  // the platform channel — simplest UX for the user.
-                  main();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                onPressed: _retrying ? null : _retry,
+                icon: _retrying
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+                label: Text(_retrying ? 'Retrying…' : 'Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B00),
                   foregroundColor: Colors.white,

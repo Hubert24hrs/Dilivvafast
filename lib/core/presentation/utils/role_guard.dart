@@ -16,7 +16,7 @@ class RoleGuard {
     if (attemptedPath.startsWith('/admin')) {
       return isAdmin(userRole) ? null : '/';
     }
-    
+
     // Driver routes
     if (attemptedPath.startsWith('/driver')) {
       if (attemptedPath == '/driver-earnings' && !isAdmin(userRole)) {

@@ -30,8 +30,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Settings',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Settings',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -55,16 +57,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFFFF6B00)
-                            .withValues(alpha: 0.15),
+                        backgroundColor: const Color(
+                          0xFFFF6B00,
+                        ).withValues(alpha: 0.15),
                         child: Text(
                           user.fullName.isNotEmpty
                               ? user.fullName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                              color: Color(0xFFFF6B00),
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold),
+                            color: Color(0xFFFF6B00),
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -72,32 +76,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(user.fullName,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600)),
-                            Text(user.email,
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.4),
-                                    fontSize: 12)),
+                            Text(
+                              user.fullName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              user.email,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50)
-                              .withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFF4CAF50,
+                          ).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           user.role.name.toUpperCase(),
                           style: const TextStyle(
-                              color: Color(0xFF4CAF50),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700),
+                            color: Color(0xFF4CAF50),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -142,17 +156,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _linkTile(
               icon: Icons.description,
               title: 'Terms of Service',
-              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/terms.html'),
+              onTap: () => _openUrl(
+                'https://hubert24hrs.github.io/Dilivvafast/terms.html',
+              ),
             ),
             _linkTile(
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
-              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
+              onTap: () => _openUrl(
+                'https://hubert24hrs.github.io/Dilivvafast/privacy.html',
+              ),
             ),
             _linkTile(
               icon: Icons.help_outline,
               title: 'Help & Support',
-              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/support.html'),
+              onTap: () => _openUrl(
+                'https://hubert24hrs.github.io/Dilivvafast/support.html',
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -169,14 +189,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Version',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 14)),
-                  Text('1.0.0',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          fontSize: 14)),
+                  Text(
+                    'Version',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    '1.0.0',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -194,7 +220,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   foregroundColor: const Color(0xFFFF5252),
                   side: const BorderSide(color: Color(0xFFFF5252)),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -204,10 +231,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Center(
               child: TextButton(
                 onPressed: () => _confirmDeleteAccount(context, ref),
-                child: Text('Delete Account',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        fontSize: 12)),
+                child: Text(
+                  'Delete Account',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ),
           ],
@@ -217,12 +247,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _sectionHeader(String title) {
-    return Text(title,
-        style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2));
+    return Text(
+      title,
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.4),
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
+      ),
+    );
   }
 
   Widget _switchTile({
@@ -257,15 +290,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500)),
-                Text(subtitle,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontSize: 11)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
@@ -293,8 +332,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         tileColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         leading: Icon(icon, color: Colors.white38, size: 20),
-        title: Text(title,
-            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        title: Text(
+          title,
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+        ),
         trailing: const Icon(Icons.chevron_right, color: Colors.white24),
         onTap: onTap,
       ),
@@ -314,16 +355,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to log out?',
-            style: TextStyle(color: Colors.white70)),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5))),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -331,8 +377,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               await ref.read(authRepositoryProvider).logout();
               if (context.mounted) context.go('/login');
             },
-            child: const Text('Log Out',
-                style: TextStyle(color: Color(0xFFFF5252))),
+            child: const Text(
+              'Log Out',
+              style: TextStyle(color: Color(0xFFFF5252)),
+            ),
           ),
         ],
       ),
@@ -345,17 +393,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Account',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Delete Account',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         content: const Text(
-            'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be permanently wiped.',
-            style: TextStyle(color: Colors.white70)),
+          'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be permanently wiped.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5))),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -369,8 +421,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               );
 
-              final result = await ref.read(authRepositoryProvider).deleteAccount();
-              
+              final result = await ref
+                  .read(authRepositoryProvider)
+                  .deleteAccount();
+
               if (!context.mounted) return;
               Navigator.pop(context); // Dismiss loading dialog
 
@@ -386,7 +440,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Your account has been deleted successfully.'),
+                      content: Text(
+                        'Your account has been deleted successfully.',
+                      ),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -394,8 +450,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 },
               );
             },
-            child: const Text('Delete permanently',
-                style: TextStyle(color: Color(0xFFFF5252))),
+            child: const Text(
+              'Delete permanently',
+              style: TextStyle(color: Color(0xFFFF5252)),
+            ),
           ),
         ],
       ),

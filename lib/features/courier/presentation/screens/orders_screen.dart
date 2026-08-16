@@ -20,34 +20,44 @@ class OrdersScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: Text(isDriver ? 'Delivery History' : 'My Orders',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text(
+          isDriver ? 'Delivery History' : 'My Orders',
+          style: const TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long,
-                      size: 64,
-                      color: Colors.white.withValues(alpha: 0.2)),
+                  Icon(
+                    Icons.receipt_long,
+                    size: 64,
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
                   const SizedBox(height: 16),
-                  const Text('No orders yet',
-                      style: TextStyle(color: Colors.white54, fontSize: 16)),
+                  const Text(
+                    'No orders yet',
+                    style: TextStyle(color: Colors.white54, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                      isDriver
-                          ? 'Accept deliveries to see them here'
-                          : 'Book a delivery to get started',
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 13)),
+                    isDriver
+                        ? 'Accept deliveries to see them here'
+                        : 'Book a delivery to get started',
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                  ),
                 ],
               ),
             );
@@ -83,11 +93,14 @@ class OrdersScreen extends ConsumerWidget {
               children: [
                 _statusChip(order.status),
                 const Spacer(),
-                Text('₦${order.totalFare.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        color: Color(0xFFFF6B00),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
+                Text(
+                  '₦${order.totalFare.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    color: Color(0xFFFF6B00),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -95,15 +108,20 @@ class OrdersScreen extends ConsumerWidget {
             // Route
             Row(
               children: [
-                const Icon(Icons.location_on,
-                    color: Color(0xFFFF6B00), size: 16),
+                const Icon(
+                  Icons.location_on,
+                  color: Color(0xFFFF6B00),
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: Text(order.pickupAddress,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                  child: Text(
+                    order.pickupAddress,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -112,11 +130,13 @@ class OrdersScreen extends ConsumerWidget {
                 const Icon(Icons.flag, color: Color(0xFFFF9500), size: 16),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: Text(order.dropoffAddress,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                  child: Text(
+                    order.dropoffAddress,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -124,19 +144,25 @@ class OrdersScreen extends ConsumerWidget {
             // Bottom row
             Row(
               children: [
-                Icon(Icons.access_time,
-                    color: Colors.white.withValues(alpha: 0.4), size: 14),
+                Icon(
+                  Icons.access_time,
+                  color: Colors.white.withValues(alpha: 0.4),
+                  size: 14,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(order.createdAt),
                   style: const TextStyle(color: Colors.white38, fontSize: 12),
                 ),
                 const Spacer(),
-                Text(order.trackingCode,
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 11,
-                        letterSpacing: 1)),
+                Text(
+                  order.trackingCode,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 11,
+                    letterSpacing: 1,
+                  ),
+                ),
               ],
             ),
           ],
@@ -163,9 +189,14 @@ class OrdersScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(label,
-          style:
-              TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 

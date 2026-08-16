@@ -107,8 +107,9 @@ class LocationHelper {
         final url =
             'https://api.mapbox.com/geocoding/v5/mapbox.places/$lng,$lat.json'
             '?access_token=$token&limit=1&language=en';
-        final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        final response = await http
+            .get(Uri.parse(url))
+            .timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final features = data['features'] as List?;
@@ -141,8 +142,9 @@ class LocationHelper {
             'https://api.mapbox.com/geocoding/v5/mapbox.places/$encoded.json'
             '?access_token=$token&limit=8&language=en'
             '&country=NG&types=address,poi,place,locality,neighborhood';
-        final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+        final response = await http
+            .get(Uri.parse(url))
+            .timeout(const Duration(seconds: 8));
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final features = data['features'] as List?;
@@ -191,34 +193,28 @@ class LocationHelper {
 
   /// Popular Nigerian locations for quick selection / offline fallback
   static final List<GeocodedAddress> _defaultLocations = [
+    GeocodedAddress(address: 'Lekki Phase 1, Lagos', lat: 6.4479, lng: 3.4737),
     GeocodedAddress(
-        address: 'Lekki Phase 1, Lagos', lat: 6.4479, lng: 3.4737),
-    GeocodedAddress(
-        address: 'Victoria Island, Lagos', lat: 6.4281, lng: 3.4219),
+      address: 'Victoria Island, Lagos',
+      lat: 6.4281,
+      lng: 3.4219,
+    ),
     GeocodedAddress(address: 'Ikeja, Lagos', lat: 6.6018, lng: 3.3515),
     GeocodedAddress(address: 'Surulere, Lagos', lat: 6.5059, lng: 3.3598),
     GeocodedAddress(address: 'Yaba, Lagos', lat: 6.5158, lng: 3.3817),
     GeocodedAddress(address: 'Ajah, Lagos', lat: 6.4670, lng: 3.5860),
     GeocodedAddress(address: 'Ikoyi, Lagos', lat: 6.4490, lng: 3.4310),
-    GeocodedAddress(
-        address: 'Marina, Lagos Island', lat: 6.4474, lng: 3.3903),
+    GeocodedAddress(address: 'Marina, Lagos Island', lat: 6.4474, lng: 3.3903),
     GeocodedAddress(address: 'Wuse 2, Abuja', lat: 9.0643, lng: 7.4892),
     GeocodedAddress(address: 'Garki, Abuja', lat: 9.0388, lng: 7.4918),
     GeocodedAddress(address: 'Maitama, Abuja', lat: 9.0826, lng: 7.4953),
-    GeocodedAddress(
-        address: 'GRA, Port Harcourt', lat: 4.8156, lng: 7.0498),
-    GeocodedAddress(
-        address: 'Sabon Gari, Kano', lat: 12.0022, lng: 8.5127),
-    GeocodedAddress(
-        address: 'Gbagada, Lagos', lat: 6.5538, lng: 3.3847),
-    GeocodedAddress(
-        address: 'Ogba, Lagos', lat: 6.6260, lng: 3.3408),
-    GeocodedAddress(
-        address: 'Festac Town, Lagos', lat: 6.4676, lng: 3.2850),
-    GeocodedAddress(
-        address: 'Maryland, Lagos', lat: 6.5731, lng: 3.3640),
-    GeocodedAddress(
-        address: 'Oshodi, Lagos', lat: 6.5568, lng: 3.3418),
+    GeocodedAddress(address: 'GRA, Port Harcourt', lat: 4.8156, lng: 7.0498),
+    GeocodedAddress(address: 'Sabon Gari, Kano', lat: 12.0022, lng: 8.5127),
+    GeocodedAddress(address: 'Gbagada, Lagos', lat: 6.5538, lng: 3.3847),
+    GeocodedAddress(address: 'Ogba, Lagos', lat: 6.6260, lng: 3.3408),
+    GeocodedAddress(address: 'Festac Town, Lagos', lat: 6.4676, lng: 3.2850),
+    GeocodedAddress(address: 'Maryland, Lagos', lat: 6.5731, lng: 3.3640),
+    GeocodedAddress(address: 'Oshodi, Lagos', lat: 6.5568, lng: 3.3418),
   ];
 
   /// Show a dialog prompting the user to enable location services.
@@ -228,8 +224,10 @@ class LocationHelper {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Location Services Disabled',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Location Services Disabled',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'Please enable location services in your device settings '
           'to use automatic location detection.',
@@ -238,8 +236,10 @@ class LocationHelper {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -249,10 +249,13 @@ class LocationHelper {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF6B00),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Open Settings',
-                style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Open Settings',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -266,8 +269,10 @@ class LocationHelper {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1D1E33),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Location Permission Required',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Location Permission Required',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'We need access to your location to show your pickup address. '
           'Please grant location permission in your app settings.',
@@ -276,8 +281,10 @@ class LocationHelper {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -287,10 +294,13 @@ class LocationHelper {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF6B00),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Open Settings',
-                style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Open Settings',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

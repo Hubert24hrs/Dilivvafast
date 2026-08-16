@@ -16,8 +16,7 @@ class DriverEarningsScreen extends ConsumerStatefulWidget {
       _DriverEarningsScreenState();
 }
 
-class _DriverEarningsScreenState
-    extends ConsumerState<DriverEarningsScreen> {
+class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
   int _selectedPeriod = 0; // 0=week, 1=month, 2=all
   final _currencyFormat = NumberFormat.currency(
     locale: 'en_NG',
@@ -39,22 +38,30 @@ class _DriverEarningsScreenState
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Earnings',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Earnings',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined,
-                color: AppTheme.primaryColor),
+            icon: const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: AppTheme.primaryColor,
+            ),
             onPressed: () => context.push('/wallet/top-up'),
           ),
         ],
       ),
       body: ordersAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primaryColor)),
+          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (orders) {
           final walletBalance = walletAsync.value ?? 0.0;
           final deliveredOrders = orders
@@ -67,25 +74,32 @@ class _DriverEarningsScreenState
     );
   }
 
-  Widget _buildBody(List<CourierOrderModel> deliveredOrders, double walletBalance) {
+  Widget _buildBody(
+    List<CourierOrderModel> deliveredOrders,
+    double walletBalance,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final weekStart = today.subtract(Duration(days: now.weekday - 1));
 
     // Today's earnings
-    final todayOrders = deliveredOrders.where((o) =>
-        o.deliveredAt != null &&
-        o.deliveredAt!.isAfter(today));
-    final todayEarnings =
-        todayOrders.fold(0.0, (sum, o) => sum + o.driverEarnings);
+    final todayOrders = deliveredOrders.where(
+      (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(today),
+    );
+    final todayEarnings = todayOrders.fold(
+      0.0,
+      (sum, o) => sum + o.driverEarnings,
+    );
     final todayTrips = todayOrders.length;
 
     // Weekly earnings
-    final weekOrders = deliveredOrders.where((o) =>
-        o.deliveredAt != null &&
-        o.deliveredAt!.isAfter(weekStart));
-    final weeklyEarnings =
-        weekOrders.fold(0.0, (sum, o) => sum + o.driverEarnings);
+    final weekOrders = deliveredOrders.where(
+      (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(weekStart),
+    );
+    final weeklyEarnings = weekOrders.fold(
+      0.0,
+      (sum, o) => sum + o.driverEarnings,
+    );
     final weeklyTrips = weekOrders.length;
 
     // Build per-day data for chart
@@ -93,17 +107,22 @@ class _DriverEarningsScreenState
       final day = weekStart.add(Duration(days: dayIndex));
       final nextDay = day.add(const Duration(days: 1));
       return deliveredOrders
-          .where((o) =>
-              o.deliveredAt != null &&
-              o.deliveredAt!.isAfter(day) &&
-              o.deliveredAt!.isBefore(nextDay))
+          .where(
+            (o) =>
+                o.deliveredAt != null &&
+                o.deliveredAt!.isAfter(day) &&
+                o.deliveredAt!.isBefore(nextDay),
+          )
           .fold(0.0, (sum, o) => sum + o.driverEarnings);
     });
 
     // Recent trips (last 10)
     final recentTrips = deliveredOrders.toList()
-      ..sort((a, b) => (b.deliveredAt ?? DateTime(2000))
-          .compareTo(a.deliveredAt ?? DateTime(2000)));
+      ..sort(
+        (a, b) => (b.deliveredAt ?? DateTime(2000)).compareTo(
+          a.deliveredAt ?? DateTime(2000),
+        ),
+      );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -111,10 +130,10 @@ class _DriverEarningsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Wallet balance card
-          _buildWalletCard(walletBalance, todayEarnings)
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.1, end: 0),
+          _buildWalletCard(
+            walletBalance,
+            todayEarnings,
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
 
           const SizedBox(height: 20),
 
@@ -139,9 +158,7 @@ class _DriverEarningsScreenState
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
@@ -151,18 +168,21 @@ class _DriverEarningsScreenState
           const SizedBox(height: 16),
 
           // Bar chart
-          _buildEarningsChart(weeklyData)
-              .animate()
-              .fadeIn(delay: 400.ms, duration: 400.ms),
+          _buildEarningsChart(
+            weeklyData,
+          ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
           // Recent trips
-          const Text('Recent Trips',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+          const Text(
+            'Recent Trips',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
 
           if (recentTrips.isEmpty)
@@ -173,8 +193,10 @@ class _DriverEarningsScreenState
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Center(
-                child: Text('No completed deliveries yet',
-                    style: TextStyle(color: Colors.white54)),
+                child: Text(
+                  'No completed deliveries yet',
+                  style: TextStyle(color: Colors.white54),
+                ),
               ),
             )
           else
@@ -182,8 +204,9 @@ class _DriverEarningsScreenState
               return _buildTripItem(recentTrips[index])
                   .animate()
                   .fadeIn(
-                      delay: Duration(milliseconds: 500 + (index * 100)),
-                      duration: 300.ms)
+                    delay: Duration(milliseconds: 500 + (index * 100)),
+                    duration: 300.ms,
+                  )
                   .slideX(begin: 0.05, end: 0);
             }),
         ],
@@ -213,23 +236,31 @@ class _DriverEarningsScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Wallet Balance',
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
+              const Text(
+                'Wallet Balance',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('Withdraw',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Withdraw',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -260,7 +291,11 @@ class _DriverEarningsScreenState
   }
 
   Widget _buildStatCard(
-      String label, String value, String subtitle, IconData icon) {
+    String label,
+    String value,
+    String subtitle,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -275,19 +310,26 @@ class _DriverEarningsScreenState
             children: [
               Icon(icon, color: AppTheme.primaryColor, size: 18),
               const SizedBox(width: 8),
-              Text(label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle,
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white38, fontSize: 11),
+          ),
         ],
       ),
     );
@@ -350,9 +392,10 @@ class _DriverEarningsScreenState
                 return BarTooltipItem(
                   _currencyFormat.format(rod.toY),
                   const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 );
               },
             ),
@@ -367,9 +410,13 @@ class _DriverEarningsScreenState
                   if (idx >= 0 && idx < weekDays.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text(weekDays[idx],
-                          style: const TextStyle(
-                              color: Colors.white38, fontSize: 10)),
+                      child: Text(
+                        weekDays[idx],
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 10,
+                        ),
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -377,11 +424,14 @@ class _DriverEarningsScreenState
               ),
             ),
             leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
@@ -406,7 +456,8 @@ class _DriverEarningsScreenState
                       : AppTheme.primaryColor.withValues(alpha: 0.4),
                   width: 24,
                   borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(6)),
+                    top: Radius.circular(6),
+                  ),
                 ),
               ],
             );
@@ -438,25 +489,32 @@ class _DriverEarningsScreenState
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.local_shipping_outlined,
-                color: AppTheme.primaryColor, size: 20),
+            child: const Icon(
+              Icons.local_shipping_outlined,
+              color: AppTheme.primaryColor,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(route,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  route,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
-                Text(timeFormat.format(time),
-                    style:
-                        const TextStyle(color: Colors.white38, fontSize: 11)),
+                Text(
+                  timeFormat.format(time),
+                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                ),
               ],
             ),
           ),

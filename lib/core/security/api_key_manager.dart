@@ -52,7 +52,7 @@ class ApiKeyManager {
     final paystackKey = getPaystackPublicKey();
 
     if (mapboxToken == null || paystackKey == null) {
-      debugPrint('Missing required API keys in .env file');
+      debugPrint('Missing required API keys — pass them with --dart-define');
       return false;
     }
 
@@ -62,13 +62,5 @@ class ApiKeyManager {
     }
 
     return true;
-  }
-
-  /// Get all configured keys (for debugging - remove in production)
-  Map<String, bool> getKeyStatus() {
-    return {
-      'mapbox': getMapboxToken() != null,
-      'paystack': getPaystackPublicKey() != null,
-    };
   }
 }

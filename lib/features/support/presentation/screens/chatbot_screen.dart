@@ -38,11 +38,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
-    _messages.add(_ChatMessage(
-      text:
-          'Hey there! 👋 I\'m **Maya**, your Dilivvafast assistant.\n\nHow can I help you today? You can ask me about tracking, pricing, payments, or anything else!',
-      isUser: false,
-    ));
+    _messages.add(
+      _ChatMessage(
+        text:
+            'Hey there! 👋 I\'m **Maya**, your Dilivvafast assistant.\n\nHow can I help you today? You can ask me about tracking, pricing, payments, or anything else!',
+        isUser: false,
+      ),
+    );
   }
 
   @override
@@ -79,11 +81,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     } catch (e) {
       setState(() {
         _messages.removeWhere((m) => m.isTyping);
-        _messages.add(_ChatMessage(
-          text:
-              'Oops! Something went wrong. Please try again or contact support@dilivvafast.ng 📧',
-          isUser: false,
-        ));
+        _messages.add(
+          _ChatMessage(
+            text:
+                'Oops! Something went wrong. Please try again or contact support@dilivvafast.ng 📧',
+            isUser: false,
+          ),
+        );
         _isLoading = false;
       });
     }
@@ -162,18 +166,24 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 ),
               ],
             ),
-            child:
-                const Icon(Icons.support_agent, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.support_agent,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Maya',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600)),
+              const Text(
+                'Maya',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               Row(
                 children: [
                   Container(
@@ -185,9 +195,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text('AI Assistant • Online',
-                      style: TextStyle(
-                          color: AppTheme.successColor, fontSize: 10)),
+                  const Text(
+                    'AI Assistant • Online',
+                    style: TextStyle(
+                      color: AppTheme.successColor,
+                      fontSize: 10,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -196,16 +210,22 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white54, size: 20),
+          icon: const Icon(
+            Icons.refresh_rounded,
+            color: Colors.white54,
+            size: 20,
+          ),
           tooltip: 'Clear chat',
           onPressed: () {
             _mayaService.clearHistory();
             setState(() {
               _messages.clear();
-              _messages.add(_ChatMessage(
-                text: 'Chat cleared! 🧹 How can I help you?',
-                isUser: false,
-              ));
+              _messages.add(
+                _ChatMessage(
+                  text: 'Chat cleared! 🧹 How can I help you?',
+                  isUser: false,
+                ),
+              );
             });
           },
         ),
@@ -217,14 +237,20 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 backgroundColor: AppTheme.primaryColor,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             );
           },
-          icon: const Icon(Icons.headset_mic,
-              color: AppTheme.primaryColor, size: 16),
-          label: const Text('Escalate',
-              style: TextStyle(color: AppTheme.primaryColor, fontSize: 11)),
+          icon: const Icon(
+            Icons.headset_mic,
+            color: AppTheme.primaryColor,
+            size: 16,
+          ),
+          label: const Text(
+            'Escalate',
+            style: TextStyle(color: AppTheme.primaryColor, fontSize: 11),
+          ),
         ),
       ],
     );
@@ -265,8 +291,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
         decoration: BoxDecoration(
           color: isUser
               ? AppTheme.primaryColor.withValues(alpha: 0.12)
@@ -297,11 +324,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Widget _buildTypingDot(int index) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 3),
-      child: const Icon(Icons.circle, size: 6, color: Colors.white38),
-    )
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          child: const Icon(Icons.circle, size: 6, color: Colors.white38),
+        )
         .animate(onPlay: (c) => c.repeat(reverse: true))
-        .fadeIn(delay: Duration(milliseconds: index * 200), duration: 400.ms)
+        .fadeIn(
+          delay: Duration(milliseconds: index * 200),
+          duration: 400.ms,
+        )
         .slideY(begin: 0, end: -0.3, duration: 400.ms);
   }
 
@@ -315,14 +345,18 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         itemCount: quickReplies.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) => ActionChip(
-          label: Text(quickReplies[index],
-              style: const TextStyle(
-                  color: AppTheme.primaryColor, fontSize: 11.5)),
+          label: Text(
+            quickReplies[index],
+            style: const TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 11.5,
+            ),
+          ),
           backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.08),
-          side: BorderSide(
-              color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+          side: BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
+            borderRadius: BorderRadius.circular(20),
+          ),
           onPressed: () => _sendMessage(quickReplies[index]),
         ),
       ),
@@ -332,12 +366,16 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   Widget _buildInputBar() {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, 12, 10, MediaQuery.of(context).padding.bottom + 12),
+        16,
+        12,
+        10,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         border: Border(
-            top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.06))),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+        ),
       ),
       child: Row(
         children: [
@@ -349,8 +387,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               decoration: InputDecoration(
                 hintText: 'Ask Maya anything...',
                 hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    fontSize: 14),
+                  color: Colors.white.withValues(alpha: 0.25),
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -373,8 +412,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   ? null
                   : [
                       BoxShadow(
-                        color:
-                            AppTheme.primaryColor.withValues(alpha: 0.3),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.3),
                         blurRadius: 10,
                         spreadRadius: -2,
                       ),
@@ -390,10 +428,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                         color: Colors.white54,
                       ),
                     )
-                  : const Icon(Icons.send_rounded,
-                      color: Colors.white, size: 18),
-              onPressed:
-                  _isLoading ? null : () => _sendMessage(_controller.text),
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+              onPressed: _isLoading
+                  ? null
+                  : () => _sendMessage(_controller.text),
             ),
           ),
         ],

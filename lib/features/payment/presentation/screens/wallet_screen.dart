@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 
@@ -19,8 +18,10 @@ class WalletScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Wallet',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Wallet',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -34,32 +35,49 @@ class WalletScreen extends ConsumerWidget {
             // Action buttons
             Row(
               children: [
-              _actionButton('Fund Wallet', Icons.add_circle_outline,
-                    const Color(0xFF4CAF50), () => context.push('/wallet/top-up')),
+                _actionButton(
+                  'Fund Wallet',
+                  Icons.add_circle_outline,
+                  const Color(0xFF4CAF50),
+                  () => context.push('/wallet/top-up'),
+                ),
                 const SizedBox(width: 12),
-                _actionButton('Withdraw', Icons.arrow_downward,
-                    const Color(0xFFFF9800), () => _showWithdrawDialog(context, ref)),
+                _actionButton(
+                  'Withdraw',
+                  Icons.arrow_downward,
+                  const Color(0xFFFF9800),
+                  () => _showWithdrawDialog(context, ref),
+                ),
                 const SizedBox(width: 12),
-                _actionButton('Transfer', Icons.swap_horiz,
-                    const Color(0xFF2196F3), () {}),
+                _actionButton(
+                  'Transfer',
+                  Icons.swap_horiz,
+                  const Color(0xFF2196F3),
+                  () {},
+                ),
               ],
             ),
             const SizedBox(height: 28),
 
             // Transactions list
-            const Text('Recent Transactions',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              'Recent Transactions',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
 
             transactionsAsync.when(
               loading: () => const Center(
-                  child:
-                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
-              error: (e, _) => Text('Error: $e',
-                  style: const TextStyle(color: Colors.redAccent)),
+                child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+              ),
+              error: (e, _) => Text(
+                'Error: $e',
+                style: const TextStyle(color: Colors.redAccent),
+              ),
               data: (txns) {
                 if (txns.isEmpty) {
                   return Container(
@@ -71,21 +89,28 @@ class WalletScreen extends ConsumerWidget {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.receipt_long,
-                              size: 48,
-                              color: Colors.white.withValues(alpha: 0.2)),
+                          Icon(
+                            Icons.receipt_long,
+                            size: 48,
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
                           const SizedBox(height: 8),
-                          const Text('No transactions yet',
-                              style: TextStyle(
-                                  color: Colors.white54, fontSize: 14)),
+                          const Text(
+                            'No transactions yet',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   );
                 }
                 return Column(
-                  children:
-                      txns.map((tx) => _buildTransactionTile(tx)).toList(),
+                  children: txns
+                      .map((tx) => _buildTransactionTile(tx))
+                      .toList(),
                 );
               },
             ),
@@ -117,13 +142,23 @@ class WalletScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Available Balance',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7), fontSize: 13)),
+          Text(
+            'Available Balance',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(height: 8),
           balanceAsync.when(
-            loading: () => const Text('...', style: TextStyle(color: Colors.white, fontSize: 32)),
-            error: (_, _) => const Text('₦0.00', style: TextStyle(color: Colors.white, fontSize: 32)),
+            loading: () => const Text(
+              '...',
+              style: TextStyle(color: Colors.white, fontSize: 32),
+            ),
+            error: (_, _) => const Text(
+              '₦0.00',
+              style: TextStyle(color: Colors.white, fontSize: 32),
+            ),
             data: (balance) => Text(
               '₦${balance.toStringAsFixed(2)}',
               style: const TextStyle(
@@ -146,8 +181,10 @@ class WalletScreen extends ConsumerWidget {
               children: [
                 Icon(Icons.verified, color: Color(0xFF4CAF50), size: 14),
                 SizedBox(width: 4),
-                Text('Secured by Paystack',
-                    style: TextStyle(color: Colors.white70, fontSize: 11)),
+                Text(
+                  'Secured by Paystack',
+                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                ),
               ],
             ),
           ),
@@ -157,7 +194,11 @@ class WalletScreen extends ConsumerWidget {
   }
 
   Widget _actionButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -172,9 +213,11 @@ class WalletScreen extends ConsumerWidget {
             children: [
               Icon(icon, color: color, size: 24),
               const SizedBox(height: 6),
-              Text(label,
-                  style: TextStyle(color: color, fontSize: 11),
-                  textAlign: TextAlign.center),
+              Text(
+                label,
+                style: TextStyle(color: color, fontSize: 11),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -183,7 +226,8 @@ class WalletScreen extends ConsumerWidget {
   }
 
   Widget _buildTransactionTile(TransactionModel tx) {
-    final isCredit = tx.type == TransactionType.deliveryEarning ||
+    final isCredit =
+        tx.type == TransactionType.deliveryEarning ||
         tx.type == TransactionType.topUp ||
         tx.type == TransactionType.promoCredit ||
         tx.type == TransactionType.referralBonus ||
@@ -227,10 +271,12 @@ class WalletScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tx.description,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  tx.description,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 Text(
                   _formatDate(tx.createdAt),
                   style: const TextStyle(color: Colors.white38, fontSize: 11),
@@ -275,11 +321,14 @@ class WalletScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Withdraw Funds',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              const Text(
+                'Withdraw Funds',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 20),
               TextField(
                 controller: bankController,
@@ -287,12 +336,14 @@ class WalletScreen extends ConsumerWidget {
                 decoration: InputDecoration(
                   labelText: 'Bank Name',
                   labelStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5)),
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFF0A0E21),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -303,12 +354,14 @@ class WalletScreen extends ConsumerWidget {
                 decoration: InputDecoration(
                   labelText: 'Account Number',
                   labelStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5)),
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFF0A0E21),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -319,12 +372,14 @@ class WalletScreen extends ConsumerWidget {
                 decoration: InputDecoration(
                   labelText: 'Amount (₦)',
                   labelStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5)),
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFF0A0E21),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -332,13 +387,15 @@ class WalletScreen extends ConsumerWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    final amount =
-                        double.tryParse(amountController.text.trim());
+                    final amount = double.tryParse(
+                      amountController.text.trim(),
+                    );
                     if (amount == null || amount < 500) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content: Text('Minimum withdrawal is ₦500'),
-                            backgroundColor: Colors.redAccent),
+                          content: Text('Minimum withdrawal is ₦500'),
+                          backgroundColor: Colors.redAccent,
+                        ),
                       );
                       return;
                     }
@@ -346,28 +403,33 @@ class WalletScreen extends ConsumerWidget {
                     try {
                       final user = ref.read(currentUserProvider).value;
                       if (user == null) return;
-                      await ref.read(firestoreProvider).collection('withdrawal_requests').add({
-                        'userId': user.uid,
-                        'amount': amount,
-                        'bankName': bankController.text.trim(),
-                        'accountNumber': accountController.text.trim(),
-                        'status': 'pending',
-                        'createdAt': DateTime.now().toIso8601String(),
-                      });
+                      await ref
+                          .read(firestoreProvider)
+                          .collection('withdrawal_requests')
+                          .add({
+                            'userId': user.uid,
+                            'amount': amount,
+                            'bankName': bankController.text.trim(),
+                            'accountNumber': accountController.text.trim(),
+                            'status': 'pending',
+                            'createdAt': DateTime.now().toIso8601String(),
+                          });
                       if (context.mounted) {
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Withdrawal request submitted'),
-                              backgroundColor: Color(0xFF4CAF50)),
+                            content: Text('Withdrawal request submitted'),
+                            backgroundColor: Color(0xFF4CAF50),
+                          ),
                         );
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text('Error: $e'),
-                              backgroundColor: Colors.redAccent),
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.redAccent,
+                          ),
                         );
                       }
                     }
@@ -377,10 +439,13 @@ class WalletScreen extends ConsumerWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: const Text('Request Withdrawal',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Request Withdrawal',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

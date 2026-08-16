@@ -8,7 +8,7 @@ class EarningsService {
   final FirebaseFirestore _firestore;
 
   EarningsService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Returns the total lifetime earnings for a driver.
   Future<double> getTotalEarnings(String driverId) async {
@@ -20,7 +20,8 @@ class EarningsService {
           .get();
 
       return snapshot.docs.fold<double>(0.0, (total, doc) {
-        return total + ((doc.data()['driverEarnings'] as num?)?.toDouble() ?? 0);
+        return total +
+            ((doc.data()['driverEarnings'] as num?)?.toDouble() ?? 0);
       });
     } catch (e) {
       debugPrint('EarningsService.getTotalEarnings error: $e');
@@ -59,17 +60,25 @@ class EarningsService {
 
   /// Returns daily earnings for the past N days, useful for charts.
   Future<Map<DateTime, double>> getDailyEarnings(
-      String driverId, int days) async {
+    String driverId,
+    int days,
+  ) async {
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: days - 1));
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: days - 1));
 
     try {
       final snapshot = await _firestore
           .collection('couriers')
           .where('driverId', isEqualTo: driverId)
           .where('status', isEqualTo: 'delivered')
-          .where('deliveredAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+          .where(
+            'deliveredAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+          )
           .get();
 
       final data = <DateTime, double>{};
@@ -79,13 +88,15 @@ class EarningsService {
       }
 
       for (final doc in snapshot.docs) {
-        final deliveredAt =
-            (doc.data()['deliveredAt'] as Timestamp?)?.toDate();
+        final deliveredAt = (doc.data()['deliveredAt'] as Timestamp?)?.toDate();
         final earnings =
             (doc.data()['driverEarnings'] as num?)?.toDouble() ?? 0;
         if (deliveredAt != null) {
           final key = DateTime(
-              deliveredAt.year, deliveredAt.month, deliveredAt.day);
+            deliveredAt.year,
+            deliveredAt.month,
+            deliveredAt.day,
+          );
           data[key] = (data[key] ?? 0) + earnings;
         }
       }

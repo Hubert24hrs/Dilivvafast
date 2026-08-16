@@ -14,10 +14,14 @@ final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final usersSnap = await firestore.collection('users').get();
 
   int totalOrders = ordersSnap.docs.length;
-  int deliveredOrders =
-      ordersSnap.docs.where((d) => d.data()['status'] == 'delivered').length;
-  int activeDrivers =
-      usersSnap.docs.where((d) => d.data()['role'] == 'driver' && d.data()['isOnline'] == true).length;
+  int deliveredOrders = ordersSnap.docs
+      .where((d) => d.data()['status'] == 'delivered')
+      .length;
+  int activeDrivers = usersSnap.docs
+      .where(
+        (d) => d.data()['role'] == 'driver' && d.data()['isOnline'] == true,
+      )
+      .length;
   int totalUsers = usersSnap.docs.length;
   double totalRevenue = ordersSnap.docs.fold<double>(0.0, (total, doc) {
     return total + ((doc.data()['totalFare'] as num?)?.toDouble() ?? 0);
@@ -25,8 +29,11 @@ final _adminStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 
   // Aggregate daily revenue for the last 7 days from delivered orders
   final now = DateTime.now();
-  final sevenDaysAgo = DateTime(now.year, now.month, now.day)
-      .subtract(const Duration(days: 6));
+  final sevenDaysAgo = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).subtract(const Duration(days: 6));
   final dailyRevenue = <int, double>{};
   for (var i = 0; i < 7; i++) {
     dailyRevenue[i] = 0;
@@ -70,8 +77,10 @@ class AdminAnalyticsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Analytics',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Analytics',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFFFF6B00)),
@@ -81,10 +90,14 @@ class AdminAnalyticsScreen extends ConsumerWidget {
       ),
       body: statsAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (stats) => _buildBody(stats),
       ),
     );
@@ -99,46 +112,70 @@ class AdminAnalyticsScreen extends ConsumerWidget {
           // KPI cards
           Row(
             children: [
-              _kpiCard('Revenue', '₦${_formatNum(stats['totalRevenue'])}',
-                  Icons.attach_money, const Color(0xFF4CAF50)),
+              _kpiCard(
+                'Revenue',
+                '₦${_formatNum(stats['totalRevenue'])}',
+                Icons.attach_money,
+                const Color(0xFF4CAF50),
+              ),
               const SizedBox(width: 10),
-              _kpiCard('Orders', '${stats['totalOrders']}',
-                  Icons.receipt_long, const Color(0xFFFF6B00)),
+              _kpiCard(
+                'Orders',
+                '${stats['totalOrders']}',
+                Icons.receipt_long,
+                const Color(0xFFFF6B00),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              _kpiCard('Users', '${stats['totalUsers']}',
-                  Icons.people, const Color(0xFFFF9800)),
+              _kpiCard(
+                'Users',
+                '${stats['totalUsers']}',
+                Icons.people,
+                const Color(0xFFFF9800),
+              ),
               const SizedBox(width: 10),
-              _kpiCard('Active Drivers', '${stats['activeDrivers']}',
-                  Icons.directions_bike, const Color(0xFFE040FB)),
+              _kpiCard(
+                'Active Drivers',
+                '${stats['activeDrivers']}',
+                Icons.directions_bike,
+                const Color(0xFFE040FB),
+              ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Delivery rate
           _deliveryRateCard(
-              stats['deliveredOrders'] as int, stats['totalOrders'] as int),
+            stats['deliveredOrders'] as int,
+            stats['totalOrders'] as int,
+          ),
           const SizedBox(height: 24),
 
           // Revenue chart (live data)
-          const Text('Revenue Trend (Last 7 Days)',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600)),
+          const Text(
+            'Revenue Trend (Last 7 Days)',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 12),
           _revenueChart(stats),
           const SizedBox(height: 24),
 
           // Order distribution
-          const Text('Order Status Distribution',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600)),
+          const Text(
+            'Order Status Distribution',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 12),
           _statusBreakdown(stats),
         ],
@@ -173,16 +210,22 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(height: 12),
-            Text(value,
-                style: TextStyle(
-                    color: color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    fontSize: 11)),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 11,
+              ),
+            ),
           ],
         ),
       ),
@@ -204,16 +247,22 @@ class AdminAnalyticsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Delivery Success Rate',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
-              Text('${(rate * 100).toStringAsFixed(1)}%',
-                  style: const TextStyle(
-                      color: Color(0xFF4CAF50),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              const Text(
+                'Delivery Success Rate',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${(rate * 100).toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: Color(0xFF4CAF50),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -223,14 +272,19 @@ class AdminAnalyticsScreen extends ConsumerWidget {
               value: rate,
               minHeight: 10,
               backgroundColor: const Color(0xFF0A0E21),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF4CAF50),
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Text('$delivered of $total orders delivered',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3), fontSize: 11)),
+          Text(
+            '$delivered of $total orders delivered',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 11,
+            ),
+          ),
         ],
       ),
     );
@@ -270,8 +324,9 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                 getTitlesWidget: (v, _) => Text(
                   '${(v / 1000).toStringAsFixed(0)}K',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      fontSize: 9),
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 9,
+                  ),
                 ),
               ),
             ),
@@ -281,18 +336,29 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                 getTitlesWidget: (v, _) {
                   final date = now.subtract(Duration(days: 6 - v.toInt()));
                   return Text(
-                    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1],
+                    [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun',
+                    ][date.weekday - 1],
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontSize: 9),
+                      color: Colors.white.withValues(alpha: 0.3),
+                      fontSize: 9,
+                    ),
                   );
                 },
               ),
             ),
             topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
@@ -352,12 +418,19 @@ class AdminAnalyticsScreen extends ConsumerWidget {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(label,
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
         ),
-        Text('$count',
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.w600, fontSize: 14)),
+        Text(
+          '$count',
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }

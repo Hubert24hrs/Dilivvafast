@@ -103,20 +103,29 @@ class TrackingScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Track Delivery',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Track Delivery',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: orderAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
         data: (order) {
           if (order == null) {
             return const Center(
-                child: Text('Order not found',
-                    style: TextStyle(color: Colors.white54)));
+              child: Text(
+                'Order not found',
+                style: TextStyle(color: Colors.white54),
+              ),
+            );
           }
           return _buildTrackingBody(context, ref, order);
         },
@@ -157,7 +166,9 @@ class TrackingScreen extends ConsumerWidget {
                 right: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(12),
@@ -168,19 +179,25 @@ class TrackingScreen extends ConsumerWidget {
                       Text(
                         '${order.estimatedDistanceKm.toStringAsFixed(1)} km',
                         style: const TextStyle(
-                            color: Color(0xFFFF6B00),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
+                          color: Color(0xFFFF6B00),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       if (order.estimatedDurationMin > 0) ...[
-                        Text(' · ',
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 12)),
+                        Text(
+                          ' · ',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 12,
+                          ),
+                        ),
                         Text(
                           '~${order.estimatedDurationMin} min',
                           style: const TextStyle(
-                              color: Colors.white54, fontSize: 12),
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ],
@@ -199,7 +216,8 @@ class TrackingScreen extends ConsumerWidget {
                 color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: const Color(0xFFFF6B00).withValues(alpha: 0.3)),
+                  color: const Color(0xFFFF6B00).withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 '📦 ${order.trackingCode}',
@@ -228,23 +246,32 @@ class TrackingScreen extends ConsumerWidget {
             ),
             child: Column(
               children: [
-                _routeRow(Icons.location_on, 'Pickup', order.pickupAddress,
-                    const Color(0xFFFF6B00)),
+                _routeRow(
+                  Icons.location_on,
+                  'Pickup',
+                  order.pickupAddress,
+                  const Color(0xFFFF6B00),
+                ),
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: Column(
                     children: List.generate(
-                        3,
-                        (_) => Container(
-                              width: 2,
-                              height: 6,
-                              margin: const EdgeInsets.symmetric(vertical: 1),
-                              color: Colors.white24,
-                            )),
+                      3,
+                      (_) => Container(
+                        width: 2,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(vertical: 1),
+                        color: Colors.white24,
+                      ),
+                    ),
                   ),
                 ),
-                _routeRow(Icons.flag, 'Dropoff', order.dropoffAddress,
-                    const Color(0xFFFF9500)),
+                _routeRow(
+                  Icons.flag,
+                  'Dropoff',
+                  order.dropoffAddress,
+                  const Color(0xFFFF9500),
+                ),
               ],
             ),
           ),
@@ -268,15 +295,21 @@ class TrackingScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total Fare',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold)),
-                    Text('₦${order.totalFare.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            color: Color(0xFFFF6B00),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Total Fare',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₦${order.totalFare.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Color(0xFFFF6B00),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -300,7 +333,8 @@ class TrackingScreen extends ConsumerWidget {
                       foregroundColor: const Color(0xFFFF6B00),
                       side: const BorderSide(color: Color(0xFFFF6B00)),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -311,7 +345,8 @@ class TrackingScreen extends ConsumerWidget {
                     onPressed: () {
                       SharePlus.instance.share(
                         ShareParams(
-                          text: 'Track my Dilivvafast delivery!\n'
+                          text:
+                              'Track my Dilivvafast delivery!\n'
                               'Tracking Code: ${order.trackingCode}\n'
                               'Status: ${order.status.name}',
                         ),
@@ -323,7 +358,8 @@ class TrackingScreen extends ConsumerWidget {
                       foregroundColor: const Color(0xFFFF9500),
                       side: const BorderSide(color: Color(0xFFFF9500)),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -384,11 +420,14 @@ class TrackingScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Delivery Status',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600)),
+          const Text(
+            'Delivery Status',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 16),
           ...steps.asMap().entries.map((entry) {
             final i = entry.key;
@@ -409,8 +448,8 @@ class TrackingScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                         color: isCompleted
                             ? (isCurrent
-                                ? const Color(0xFFFF6B00)
-                                : const Color(0xFF4CAF50))
+                                  ? const Color(0xFFFF6B00)
+                                  : const Color(0xFF4CAF50))
                             : const Color(0xFF1D1E33),
                         border: Border.all(
                           color: isCompleted
@@ -421,10 +460,11 @@ class TrackingScreen extends ConsumerWidget {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFFFF6B00)
-                                      .withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFFFF6B00,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 8,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -455,16 +495,21 @@ class TrackingScreen extends ConsumerWidget {
                         style: TextStyle(
                           color: isCompleted ? Colors.white : Colors.white38,
                           fontSize: 14,
-                          fontWeight:
-                              isCurrent ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isCurrent
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                       if (isCurrent)
                         const Padding(
                           padding: EdgeInsets.only(top: 2),
-                          child: Text('Current status',
-                              style: TextStyle(
-                                  color: Color(0xFFFF6B00), fontSize: 11)),
+                          child: Text(
+                            'Current status',
+                            style: TextStyle(
+                              color: Color(0xFFFF6B00),
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
                       SizedBox(height: isLast ? 0 : 20),
                     ],
@@ -487,14 +532,19 @@ class TrackingScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 11)),
-              Text(addr,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                addr,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -508,13 +558,19 @@ class TrackingScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6), fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+          ),
           Flexible(
-            child: Text(value,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-                textAlign: TextAlign.right),
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

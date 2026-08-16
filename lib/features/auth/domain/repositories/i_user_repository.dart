@@ -15,23 +15,32 @@ abstract class IUserRepository {
 
   /// Update user profile fields
   Future<Either<Failure, Unit>> updateUser(
-      String userId, Map<String, dynamic> data);
+    String userId,
+    Map<String, dynamic> data,
+  );
 
   /// Update FCM token
-  Future<Either<Failure, Unit>> updateFcmToken(
-      String userId, String token);
+  Future<Either<Failure, Unit>> updateFcmToken(String userId, String token);
 
   /// Update user location (GeoPoint)
   Future<Either<Failure, Unit>> updateLocation(
-      String userId, double latitude, double longitude);
+    String userId,
+    double latitude,
+    double longitude,
+  );
 
   /// Update online/available status (for drivers)
   Future<Either<Failure, Unit>> updateOnlineStatus(
-      String userId, bool isOnline, bool isAvailable);
+    String userId,
+    bool isOnline,
+    bool isAvailable,
+  );
 
   /// Upload profile photo and update URL
   Future<Either<Failure, String>> uploadProfilePhoto(
-      String userId, String filePath);
+    String userId,
+    String filePath,
+  );
 
   /// Get all online available drivers
   Stream<List<UserModel>> watchOnlineDrivers();

@@ -29,7 +29,9 @@ class AuthController extends AsyncNotifier<void> {
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final result = await ref.read(authRepositoryProvider).register(
+      final result = await ref
+          .read(authRepositoryProvider)
+          .register(
             fullName: fullName,
             email: email,
             phone: phone,
@@ -47,8 +49,7 @@ class AuthController extends AsyncNotifier<void> {
   Future<void> signInWithGoogle() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final result =
-          await ref.read(authRepositoryProvider).loginWithGoogle();
+      final result = await ref.read(authRepositoryProvider).loginWithGoogle();
       result.fold(
         (failure) => throw Exception(failure.message),
         (user) => null,
@@ -59,8 +60,7 @@ class AuthController extends AsyncNotifier<void> {
   Future<void> signInWithApple() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final result =
-          await ref.read(authRepositoryProvider).loginWithApple();
+      final result = await ref.read(authRepositoryProvider).loginWithApple();
       result.fold(
         (failure) => throw Exception(failure.message),
         (user) => null,
@@ -71,12 +71,10 @@ class AuthController extends AsyncNotifier<void> {
   Future<void> resetPassword(String email) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final result =
-          await ref.read(authRepositoryProvider).resetPassword(email);
-      result.fold(
-        (failure) => throw Exception(failure.message),
-        (_) => null,
-      );
+      final result = await ref
+          .read(authRepositoryProvider)
+          .resetPassword(email);
+      result.fold((failure) => throw Exception(failure.message), (_) => null);
     });
   }
 
@@ -84,13 +82,11 @@ class AuthController extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final result = await ref.read(authRepositoryProvider).logout();
-      result.fold(
-        (failure) => throw Exception(failure.message),
-        (_) => null,
-      );
+      result.fold((failure) => throw Exception(failure.message), (_) => null);
     });
   }
 }
 
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, void>(AuthController.new);
+final authControllerProvider = AsyncNotifierProvider<AuthController, void>(
+  AuthController.new,
+);

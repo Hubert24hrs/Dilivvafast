@@ -42,8 +42,10 @@ class PackageForm extends StatelessWidget {
               onTap: () => onCategoryChanged(category),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
@@ -70,10 +72,13 @@ class PackageForm extends StatelessWidget {
                     Text(
                       _categoryLabel(category),
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFFFF6B00) : Colors.white70,
+                        color: isSelected
+                            ? const Color(0xFFFF6B00)
+                            : Colors.white70,
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -172,8 +177,10 @@ class PackageForm extends StatelessWidget {
           hintText: hint,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,

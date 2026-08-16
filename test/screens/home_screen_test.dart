@@ -7,11 +7,7 @@ import 'package:dilivvafast/features/home/presentation/screens/home_screen.dart'
 void main() {
   group('HomeScreen', () {
     Widget createTestWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      return const ProviderScope(child: MaterialApp(home: HomeScreen()));
     }
 
     testWidgets('renders scaffold with dark theme', (tester) async {
@@ -36,7 +32,8 @@ void main() {
       // Should have interactive elements (buttons, cards, etc.)
       expect(
         find.byWidgetPredicate(
-            (w) => w is GestureDetector || w is InkWell || w is ElevatedButton),
+          (w) => w is GestureDetector || w is InkWell || w is ElevatedButton,
+        ),
         findsAtLeast(1),
       );
     });

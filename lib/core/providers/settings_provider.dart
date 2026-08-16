@@ -5,15 +5,9 @@ class SettingsState {
   final ThemeMode themeMode;
   final String language;
 
-  SettingsState({
-    required this.themeMode,
-    required this.language,
-  });
+  SettingsState({required this.themeMode, required this.language});
 
-  SettingsState copyWith({
-    ThemeMode? themeMode,
-    String? language,
-  }) {
+  SettingsState copyWith({ThemeMode? themeMode, String? language}) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       language: language ?? this.language,
@@ -36,4 +30,6 @@ class SettingsNotifier extends Notifier<SettingsState> {
   }
 }
 
-final settingsProvider = NotifierProvider<SettingsNotifier, SettingsState>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, SettingsState>(
+  SettingsNotifier.new,
+);

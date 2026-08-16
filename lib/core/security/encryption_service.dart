@@ -11,7 +11,7 @@ class EncryptionService {
   EncryptionService._internal();
 
   final _storage = const FlutterSecureStorage();
-  
+
   // Encryption key stored securely
   static const String _keyStorageKey = 'encryption_master_key';
   encrypt.Key? _masterKey;
@@ -22,21 +22,18 @@ class EncryptionService {
     try {
       // Try to get existing key
       final storedKey = await _storage.read(key: _keyStorageKey);
-      
+
       if (storedKey != null) {
         _masterKey = encrypt.Key.fromBase64(storedKey);
       } else {
         // Generate new key on first run
         _masterKey = encrypt.Key.fromSecureRandom(32);
-        await _storage.write(
-          key: _keyStorageKey,
-          value: _masterKey!.base64,
-        );
+        await _storage.write(key: _keyStorageKey, value: _masterKey!.base64);
       }
-      
+
       // Generate IV (initialization vector)
       _iv = encrypt.IV.fromSecureRandom(16);
-      
+
       debugPrint('EncryptionService: Initialized successfully');
     } catch (e) {
       debugPrint('EncryptionService: Error initializing - $e');
@@ -53,7 +50,7 @@ class EncryptionService {
 
       final encrypter = encrypt.Encrypter(encrypt.AES(_masterKey!));
       final encrypted = encrypter.encrypt(plainText, iv: _iv!);
-      
+
       // Return IV + encrypted data combined
       return '${_iv!.base64}:${encrypted.base64}';
     } catch (e) {
@@ -79,7 +76,7 @@ class EncryptionService {
 
       final iv = encrypt.IV.fromBase64(parts[0]);
       final encryptedText = encrypt.Encrypted.fromBase64(parts[1]);
-      
+
       final encrypter = encrypt.Encrypter(encrypt.AES(_masterKey!));
       return encrypter.decrypt(encryptedText, iv: iv);
     } catch (e) {

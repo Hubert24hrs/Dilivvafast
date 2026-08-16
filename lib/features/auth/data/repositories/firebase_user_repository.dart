@@ -12,8 +12,8 @@ class FirebaseUserRepository implements IUserRepository {
   FirebaseUserRepository({
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
@@ -52,7 +52,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateUser(
-      String userId, Map<String, dynamic> data) async {
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       data[FirestoreConstants.fieldUpdatedAt] = FieldValue.serverTimestamp();
       await _usersRef.doc(userId).update(data);
@@ -64,7 +66,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateFcmToken(
-      String userId, String token) async {
+    String userId,
+    String token,
+  ) async {
     try {
       await _usersRef.doc(userId).update({
         'fcmToken': token,
@@ -78,7 +82,10 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateLocation(
-      String userId, double latitude, double longitude) async {
+    String userId,
+    double latitude,
+    double longitude,
+  ) async {
     try {
       await _usersRef.doc(userId).update({
         'location': GeoPoint(latitude, longitude),
@@ -92,7 +99,10 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateOnlineStatus(
-      String userId, bool isOnline, bool isAvailable) async {
+    String userId,
+    bool isOnline,
+    bool isAvailable,
+  ) async {
     try {
       await _usersRef.doc(userId).update({
         FirestoreConstants.fieldIsOnline: isOnline,
@@ -107,7 +117,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, String>> uploadProfilePhoto(
-      String userId, String filePath) async {
+    String userId,
+    String filePath,
+  ) async {
     try {
       final ref = _storage.ref('profile_photos/$userId.jpg');
       await ref.putFile(File(filePath));
@@ -131,13 +143,14 @@ class FirebaseUserRepository implements IUserRepository {
         .where(FirestoreConstants.fieldIsOnline, isEqualTo: true)
         .where(FirestoreConstants.fieldIsAvailable, isEqualTo: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 
   @override
-  Future<Either<Failure, UserModel?>> getUserByReferralCode(
-      String code) async {
+  Future<Either<Failure, UserModel?>> getUserByReferralCode(String code) async {
     try {
       final query = await _usersRef
           .where('referralCode', isEqualTo: code)

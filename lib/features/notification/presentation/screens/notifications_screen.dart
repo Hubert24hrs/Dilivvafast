@@ -16,13 +16,17 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
-        title: const Text('Notifications',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
         actions: [
           TextButton(
             onPressed: () => _markAllRead(ref),
-            child: const Text('Mark all read',
-                style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12)),
+            child: const Text(
+              'Mark all read',
+              style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -33,12 +37,16 @@ class NotificationsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_none,
-                      size: 56,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                  Icon(
+                    Icons.notifications_none,
+                    size: 56,
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
                   const SizedBox(height: 12),
-                  const Text('No notifications yet',
-                      style: TextStyle(color: Colors.white38, fontSize: 15)),
+                  const Text(
+                    'No notifications yet',
+                    style: TextStyle(color: Colors.white38, fontSize: 15),
+                  ),
                 ],
               ),
             );
@@ -55,7 +63,8 @@ class NotificationsScreen extends ConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (i == 0 || grouped[i].dateLabel != grouped[i - 1].dateLabel)
+                  if (i == 0 ||
+                      grouped[i].dateLabel != grouped[i - 1].dateLabel)
                     Padding(
                       padding: const EdgeInsets.only(top: 16, bottom: 8),
                       child: Text(
@@ -77,8 +86,10 @@ class NotificationsScreen extends ConsumerWidget {
           child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
         ),
         error: (e, _) => Center(
-          child:
-              Text('Error: $e', style: const TextStyle(color: Colors.redAccent)),
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: Colors.redAccent),
+          ),
         ),
       ),
     );
@@ -130,8 +141,9 @@ class NotificationsScreen extends ConsumerWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
-                            fontWeight:
-                                n.isRead ? FontWeight.w400 : FontWeight.w600,
+                            fontWeight: n.isRead
+                                ? FontWeight.w400
+                                : FontWeight.w600,
                           ),
                         ),
                       ),

@@ -51,7 +51,7 @@ void main() {
       test('sanitizes HTML characters', () {
         final input = '<script>alert("XSS")</script>';
         final sanitized = InputValidator.sanitizeText(input);
-        
+
         expect(sanitized.contains('<'), isFalse);
         expect(sanitized.contains('>'), isFalse);
       });
@@ -59,14 +59,17 @@ void main() {
       test('removes extra whitespace', () {
         final input = '  test  input  ';
         final sanitized = InputValidator.sanitizeText(input);
-        
+
         expect(sanitized, equals('test  input'));
       });
     });
 
     group('SQL Injection Detection', () {
       test('detects SQL injection patterns', () {
-        expect(InputValidator.containsSqlInjection('SELECT * FROM users'), isTrue);
+        expect(
+          InputValidator.containsSqlInjection('SELECT * FROM users'),
+          isTrue,
+        );
         expect(InputValidator.containsSqlInjection('DROP TABLE users'), isTrue);
         expect(InputValidator.containsSqlInjection("1' OR '1'='1"), isTrue);
       });

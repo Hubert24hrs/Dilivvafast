@@ -11,7 +11,7 @@ import 'package:dilivvafast/features/investor/domain/repositories/i_investor_rep
 
 class FirebaseInvestorRepository implements IInvestorRepository {
   FirebaseInvestorRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -22,9 +22,9 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .doc(userId)
         .snapshots()
         .map((doc) {
-      if (!doc.exists) return null;
-      return InvestorModel.fromFirestore(doc);
-    });
+          if (!doc.exists) return null;
+          return InvestorModel.fromFirestore(doc);
+        });
   }
 
   @override
@@ -33,8 +33,10 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .collection(FirestoreConstants.bikes)
         .where('investorId', isEqualTo: userId)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => BikeModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => BikeModel.fromFirestore(doc)).toList(),
+        );
   }
 
   @override
@@ -43,8 +45,10 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .collection(FirestoreConstants.bikes)
         .where(FirestoreConstants.fieldStatus, isEqualTo: 'pending_funding')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => BikeModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => BikeModel.fromFirestore(doc)).toList(),
+        );
   }
 
   @override
@@ -53,9 +57,11 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .collection(FirestoreConstants.hpAgreements)
         .where('investorId', isEqualTo: userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => HPAgreementModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => HPAgreementModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -65,9 +71,11 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .where('investorId', isEqualTo: userId)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => InvestorEarningsModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => InvestorEarningsModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -77,18 +85,23 @@ class FirebaseInvestorRepository implements IInvestorRepository {
         .where('investorId', isEqualTo: userId)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => InvestorWithdrawalModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => InvestorWithdrawalModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
   Future<Either<Failure, Unit>> fundBike(
-      String bikeId, String investorId) async {
+    String bikeId,
+    String investorId,
+  ) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        final bikeRef =
-            _firestore.collection(FirestoreConstants.bikes).doc(bikeId);
+        final bikeRef = _firestore
+            .collection(FirestoreConstants.bikes)
+            .doc(bikeId);
         final bikeDoc = await transaction.get(bikeRef);
 
         if (!bikeDoc.exists) throw Exception('Bike not found');
@@ -115,13 +128,16 @@ class FirebaseInvestorRepository implements IInvestorRepository {
             'activeBikes': FieldValue.increment(1),
           });
         } else {
-          transaction.set(investorRef, InvestorModel(
-            id: investorId,
-            userId: investorId,
-            totalInvested: bike.purchasePrice,
-            activeBikes: 1,
-            createdAt: DateTime.now(),
-          ).toFirestore());
+          transaction.set(
+            investorRef,
+            InvestorModel(
+              id: investorId,
+              userId: investorId,
+              totalInvested: bike.purchasePrice,
+              activeBikes: 1,
+              createdAt: DateTime.now(),
+            ).toFirestore(),
+          );
         }
       });
 

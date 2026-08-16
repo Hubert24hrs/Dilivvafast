@@ -62,8 +62,10 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Fund Wallet',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Fund Wallet',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -88,12 +90,17 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
               ),
               child: Column(
                 children: [
-                  Text('Current Balance',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 13)),
+                  Text(
+                    'Current Balance',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  ref.watch(walletBalanceProvider).when(
+                  ref
+                      .watch(walletBalanceProvider)
+                      .when(
                         loading: () => const SizedBox(
                           height: 38,
                           width: 38,
@@ -124,11 +131,14 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
             const SizedBox(height: 28),
 
             // Amount input
-            const Text('Enter Amount',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              'Enter Amount',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
@@ -140,20 +150,23 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
                 onChanged: (_) => setState(() => _selectedPreset = null),
                 decoration: InputDecoration(
                   prefixText: '₦ ',
                   prefixStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                   hintText: '0',
                   hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      fontSize: 24),
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 24,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(20),
                 ),
@@ -162,11 +175,14 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
             const SizedBox(height: 20),
 
             // Preset amounts
-            const Text('Quick Select',
-                style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
+            const Text(
+              'Quick Select',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
@@ -183,7 +199,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 12),
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
@@ -229,28 +247,40 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
                       shape: BoxShape.circle,
                       color: const Color(0xFF00C853).withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.credit_card,
-                        color: Color(0xFF00C853), size: 22),
+                    child: const Icon(
+                      Icons.credit_card,
+                      color: Color(0xFF00C853),
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Paystack',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600)),
-                        Text('Card, Bank Transfer, USSD',
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 11)),
+                        const Text(
+                          'Paystack',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Card, Bank Transfer, USSD',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.check_circle,
-                      color: Color(0xFF00C853), size: 22),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF00C853),
+                    size: 22,
+                  ),
                 ],
               ),
             ),
@@ -265,8 +295,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B00),
                   foregroundColor: const Color(0xFF0A0E21),
-                  disabledBackgroundColor:
-                      const Color(0xFFFF6B00).withValues(alpha: 0.4),
+                  disabledBackgroundColor: const Color(
+                    0xFFFF6B00,
+                  ).withValues(alpha: 0.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -297,15 +328,18 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock,
-                      size: 14,
-                      color: Colors.white.withValues(alpha: 0.3)),
+                  Icon(
+                    Icons.lock,
+                    size: 14,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Secured by Paystack',
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontSize: 11),
+                      color: Colors.white.withValues(alpha: 0.3),
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -346,13 +380,10 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
           .read(paymentRepositoryProvider)
           .initializePayment(amount: amount);
 
-      final session = result.fold(
-        (failure) {
-          _showError(failure.message);
-          return null;
-        },
-        (session) => session,
-      );
+      final session = result.fold((failure) {
+        _showError(failure.message);
+        return null;
+      }, (session) => session);
       if (session == null) return;
 
       final uri = Uri.parse(session.authorizationUrl);
@@ -389,23 +420,20 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen>
           .read(paymentRepositoryProvider)
           .verifyPayment(reference);
 
-      result.fold(
-        (failure) => _showError(failure.message),
-        (verification) {
-          _pendingReference = null;
-          if (!mounted) return;
-          if (_isPendingDialogOpen) {
-            _isPendingDialogOpen = false;
-            Navigator.of(context).pop();
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(verification.message),
-              backgroundColor: const Color(0xFF00C853),
-            ),
-          );
-        },
-      );
+      result.fold((failure) => _showError(failure.message), (verification) {
+        _pendingReference = null;
+        if (!mounted) return;
+        if (_isPendingDialogOpen) {
+          _isPendingDialogOpen = false;
+          Navigator.of(context).pop();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(verification.message),
+            backgroundColor: const Color(0xFF00C853),
+          ),
+        );
+      });
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

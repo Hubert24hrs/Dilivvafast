@@ -5,7 +5,6 @@ import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
-
 /// State for the driver route + en-route order discovery.
 class DriverRouteState {
   const DriverRouteState({
@@ -166,8 +165,7 @@ class DriverRouteController extends Notifier<DriverRouteState> {
       );
 
       // Get pending orders from Firestore
-      final pendingOrders =
-          ref.read(pendingOrdersProvider).value ?? [];
+      final pendingOrders = ref.read(pendingOrdersProvider).value ?? [];
 
       // Find en-route matches
       final enRouteOrders = _routeService.findEnRouteOrders(
@@ -222,8 +220,9 @@ class DriverRouteController extends Notifier<DriverRouteState> {
 
   /// Decline an en-route order (just hide from local list)
   void declineOrder(String orderId) {
-    final updated =
-        state.enRouteOrders.where((e) => e.order.id != orderId).toList();
+    final updated = state.enRouteOrders
+        .where((e) => e.order.id != orderId)
+        .toList();
     state = state.copyWith(enRouteOrders: updated);
   }
 
@@ -240,20 +239,20 @@ class DriverRouteController extends Notifier<DriverRouteState> {
 
   /// Build a simple interpolated route between two points
   List<GeoPoint> _buildSimpleRoute(
-    double lat1, double lng1,
-    double lat2, double lng2,
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
   ) {
     const steps = 10;
     return List.generate(steps + 1, (i) {
       final t = i / steps;
-      return GeoPoint(
-        lat1 + (lat2 - lat1) * t,
-        lng1 + (lng2 - lng1) * t,
-      );
+      return GeoPoint(lat1 + (lat2 - lat1) * t, lng1 + (lng2 - lng1) * t);
     });
   }
 }
 
 final driverRouteControllerProvider =
     NotifierProvider<DriverRouteController, DriverRouteState>(
-        DriverRouteController.new);
+      DriverRouteController.new,
+    );

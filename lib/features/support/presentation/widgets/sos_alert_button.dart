@@ -36,11 +36,14 @@ class SosAlertButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.sos, color: Colors.white, size: 24),
-            Text('SOS',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: size > 48 ? 8 : 6,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'SOS',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: size > 48 ? 8 : 6,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -137,8 +140,9 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
             backgroundColor: AppTheme.errorColor,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 5),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -170,12 +174,13 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
               shape: BoxShape.circle,
               color: AppTheme.errorColor.withValues(alpha: 0.15),
             ),
-            child:
-                const Icon(Icons.sos, color: AppTheme.errorColor, size: 20),
+            child: const Icon(Icons.sos, color: AppTheme.errorColor, size: 20),
           ),
           const SizedBox(width: 12),
-          const Text('Emergency SOS',
-              style: TextStyle(color: Colors.white, fontSize: 18)),
+          const Text(
+            'Emergency SOS',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
         ],
       ).animate().fadeIn(duration: 200.ms).shake(hz: 2, duration: 300.ms),
       content: Column(
@@ -187,11 +192,14 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
             style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
           ),
           const SizedBox(height: 16),
-          const Text('Reason:',
-              style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600)),
+          const Text(
+            'Reason:',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           ...List.generate(_reasons.length, (index) {
             final reason = _reasons[index];
@@ -200,8 +208,10 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
               onTap: () => setState(() => _selectedReason = reason),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppTheme.errorColor.withValues(alpha: 0.12)
@@ -223,11 +233,13 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
                       size: 18,
                     ),
                     const SizedBox(width: 10),
-                    Text(reason,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white54,
-                          fontSize: 13,
-                        )),
+                    Text(
+                      reason,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white54,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -238,8 +250,7 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
       actions: [
         TextButton(
           onPressed: _isSending ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel',
-              style: TextStyle(color: Colors.white54)),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
         ),
         ElevatedButton.icon(
           onPressed: _isSending ? null : _triggerSos,
@@ -248,14 +259,18 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.warning_rounded, size: 16),
           label: Text(_isSending ? 'Sending...' : 'Send SOS Alert'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.errorColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ],

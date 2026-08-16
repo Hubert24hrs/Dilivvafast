@@ -30,10 +30,7 @@ class AppTheme {
     ),
     textTheme: GoogleFonts.outfitTextTheme(
       ThemeData.dark().textTheme,
-    ).apply(
-      bodyColor: Colors.white,
-      displayColor: Colors.white,
-    ),
+    ).apply(bodyColor: Colors.white, displayColor: Colors.white),
     appBarTheme: AppBarTheme(
       backgroundColor: backgroundColor,
       foregroundColor: Colors.white,
@@ -52,9 +49,7 @@ class AppTheme {
         elevation: 8,
         shadowColor: const Color(0x80FF6B00),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: GoogleFonts.outfit(
           fontWeight: FontWeight.bold,
           fontSize: 16,
@@ -66,9 +61,7 @@ class AppTheme {
         foregroundColor: primaryColor,
         side: const BorderSide(color: primaryColor, width: 1.5),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: GoogleFonts.outfit(
           fontWeight: FontWeight.w600,
           fontSize: 16,
@@ -94,9 +87,7 @@ class AppTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -113,9 +104,7 @@ class AppTheme {
       color: surfaceColor,
       elevation: 4,
       shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: surfaceColor,
@@ -132,9 +121,7 @@ class AppTheme {
     snackBarTheme: SnackBarThemeData(
       backgroundColor: surfaceColor,
       contentTextStyle: GoogleFonts.outfit(color: Colors.white),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       behavior: SnackBarBehavior.floating,
     ),
     dividerTheme: DividerThemeData(
@@ -145,9 +132,7 @@ class AppTheme {
       backgroundColor: surfaceColor,
       selectedColor: primaryColor,
       labelStyle: GoogleFonts.outfit(color: Colors.white),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ),
   );
 

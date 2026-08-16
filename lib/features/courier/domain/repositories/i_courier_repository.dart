@@ -6,7 +6,8 @@ import 'package:dilivvafast/features/courier/domain/entities/courier_order_model
 abstract class ICourierRepository {
   /// Create a new courier order
   Future<Either<Failure, CourierOrderModel>> createOrder(
-      CourierOrderModel order);
+    CourierOrderModel order,
+  );
 
   /// Get order by ID (one-time)
   Future<Either<Failure, CourierOrderModel>> getOrderById(String orderId);
@@ -31,19 +32,25 @@ abstract class ICourierRepository {
 
   /// Update order status with validation
   Future<Either<Failure, Unit>> updateOrderStatus(
-      String orderId, OrderStatus newStatus);
+    String orderId,
+    OrderStatus newStatus,
+  );
 
   /// Assign driver to order
-  Future<Either<Failure, Unit>> assignDriver(
-      String orderId, String driverId);
+  Future<Either<Failure, Unit>> assignDriver(String orderId, String driverId);
 
   /// Update proof of delivery
   Future<Either<Failure, Unit>> updateProofOfDelivery(
-      String orderId, String imageUrl);
+    String orderId,
+    String imageUrl,
+  );
 
   /// Rate an order
   Future<Either<Failure, Unit>> rateOrder(
-      String orderId, int rating, String? comment);
+    String orderId,
+    int rating,
+    String? comment,
+  );
 
   /// Cancel an order
   /// Cancel an order and refund per policy. Returns the amount refunded, in
@@ -52,7 +59,8 @@ abstract class ICourierRepository {
 
   /// Get order by tracking code
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(
-      String trackingCode);
+    String trackingCode,
+  );
 
   /// Get paginated orders for a user
   Future<Either<Failure, List<CourierOrderModel>>> getPaginatedOrders({

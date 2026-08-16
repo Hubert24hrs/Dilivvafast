@@ -67,19 +67,14 @@ class DeliveryMapWidget extends StatelessWidget {
                 ],
               ),
             ),
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: _MapGridPainter(),
-            ),
+            child: CustomPaint(size: Size.infinite, painter: _MapGridPainter()),
           ),
 
           // Route line
           if (showRoute && _hasPickup && _hasDropoff)
             CustomPaint(
               size: Size.infinite,
-              painter: _RoutePainter(
-                hasDriver: _hasDriver,
-              ),
+              painter: _RoutePainter(hasDriver: _hasDriver),
             ),
 
           // Markers
@@ -139,17 +134,18 @@ class DeliveryMapWidget extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.map,
-                      size: 32,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                  Icon(
+                    Icons.map,
+                    size: 32,
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    interactive
-                        ? 'Tap to select location'
-                        : 'No locations set',
+                    interactive ? 'Tap to select location' : 'No locations set',
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontSize: 12),
+                      color: Colors.white.withValues(alpha: 0.3),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -168,7 +164,9 @@ class DeliveryMapWidget extends StatelessWidget {
               child: Text(
                 '© Mapbox',
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4), fontSize: 8),
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 8,
+                ),
               ),
             ),
           ),
@@ -201,16 +199,20 @@ class DeliveryMapWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 Text(
                   '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      fontSize: 8),
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 8,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -230,7 +232,8 @@ class DeliveryMapWidget extends StatelessWidget {
           color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: const Color(0xFFFF6B00).withValues(alpha: 0.4)),
+            color: const Color(0xFFFF6B00).withValues(alpha: 0.4),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -244,16 +247,21 @@ class DeliveryMapWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Text('Driver Location',
-                style: TextStyle(
-                    color: Color(0xFFFF6B00),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600)),
+            const Text(
+              'Driver Location',
+              style: TextStyle(
+                color: Color(0xFFFF6B00),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(width: 4),
             Text(
               '${driverLat!.toStringAsFixed(3)}, ${driverLng!.toStringAsFixed(3)}',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4), fontSize: 9),
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 9,
+              ),
             ),
           ],
         ),
@@ -316,8 +324,7 @@ class _RoutePainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       while (distance < metric.length) {
         final end = (distance + dashLength).clamp(0.0, metric.length);
-        dashPath.addPath(
-            metric.extractPath(distance, end), Offset.zero);
+        dashPath.addPath(metric.extractPath(distance, end), Offset.zero);
         distance += dashLength + dashGap;
       }
     }

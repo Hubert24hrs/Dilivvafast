@@ -11,8 +11,8 @@ class FirebasePaymentRepository implements IPaymentRepository {
   FirebasePaymentRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
@@ -26,22 +26,28 @@ class FirebasePaymentRepository implements IPaymentRepository {
         .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TransactionModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TransactionModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
   Stream<List<TransactionModel>> watchTransactionsByType(
-      String userId, TransactionType type) {
+    String userId,
+    TransactionType type,
+  ) {
     return _transactionsRef
         .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
         .where('type', isEqualTo: type.name)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TransactionModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TransactionModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -53,8 +59,10 @@ class FirebasePaymentRepository implements IPaymentRepository {
       final snapshot = await _transactionsRef
           .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
           .where('type', isEqualTo: TransactionType.deliveryEarning.name)
-          .where(FirestoreConstants.fieldCreatedAt,
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where(
+            FirestoreConstants.fieldCreatedAt,
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
           .get();
 
       final total = snapshot.docs.fold<double>(0.0, (total, doc) {
@@ -70,15 +78,22 @@ class FirebasePaymentRepository implements IPaymentRepository {
 
   @override
   Future<Either<Failure, double>> getEarningsForRange(
-      String userId, DateTime start, DateTime end) async {
+    String userId,
+    DateTime start,
+    DateTime end,
+  ) async {
     try {
       final snapshot = await _transactionsRef
           .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
           .where('type', isEqualTo: TransactionType.deliveryEarning.name)
-          .where(FirestoreConstants.fieldCreatedAt,
-              isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-          .where(FirestoreConstants.fieldCreatedAt,
-              isLessThanOrEqualTo: Timestamp.fromDate(end))
+          .where(
+            FirestoreConstants.fieldCreatedAt,
+            isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+          )
+          .where(
+            FirestoreConstants.fieldCreatedAt,
+            isLessThanOrEqualTo: Timestamp.fromDate(end),
+          )
           .get();
 
       final total = snapshot.docs.fold<double>(0.0, (total, doc) {
@@ -94,7 +109,9 @@ class FirebasePaymentRepository implements IPaymentRepository {
 
   @override
   Future<Either<Failure, Map<DateTime, double>>> getDailyEarnings(
-      String userId, int days) async {
+    String userId,
+    int days,
+  ) async {
     try {
       final now = DateTime.now();
       final start = DateTime(now.year, now.month, now.day - days);
@@ -102,8 +119,10 @@ class FirebasePaymentRepository implements IPaymentRepository {
       final snapshot = await _transactionsRef
           .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
           .where('type', isEqualTo: TransactionType.deliveryEarning.name)
-          .where(FirestoreConstants.fieldCreatedAt,
-              isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+          .where(
+            FirestoreConstants.fieldCreatedAt,
+            isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+          )
           .orderBy(FirestoreConstants.fieldCreatedAt)
           .get();
 
@@ -115,8 +134,8 @@ class FirebasePaymentRepository implements IPaymentRepository {
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final date =
-            (data[FirestoreConstants.fieldCreatedAt] as Timestamp).toDate();
+        final date = (data[FirestoreConstants.fieldCreatedAt] as Timestamp)
+            .toDate();
         final dayKey = DateTime(date.year, date.month, date.day);
         final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
         dailyMap[dayKey] = (dailyMap[dayKey] ?? 0.0) + amount;
@@ -130,10 +149,10 @@ class FirebasePaymentRepository implements IPaymentRepository {
 
   @override
   Future<Either<Failure, TransactionModel>> createTransaction(
-      TransactionModel transaction) async {
+    TransactionModel transaction,
+  ) async {
     try {
-      final docRef =
-          await _transactionsRef.add(transaction.toFirestore());
+      final docRef = await _transactionsRef.add(transaction.toFirestore());
       final doc = await docRef.get();
       return Right(TransactionModel.fromFirestore(doc));
     } catch (e) {
@@ -154,15 +173,16 @@ class FirebasePaymentRepository implements IPaymentRepository {
       final url = result.data['authorizationUrl'] as String?;
       final reference = result.data['reference'] as String?;
 
-      if (url == null || url.isEmpty || reference == null || reference.isEmpty) {
+      if (url == null ||
+          url.isEmpty ||
+          reference == null ||
+          reference.isEmpty) {
         return const Left(
           PaymentFailure('Paystack did not return a checkout link'),
         );
       }
 
-      return Right(
-        PaymentSession(authorizationUrl: url, reference: reference),
-      );
+      return Right(PaymentSession(authorizationUrl: url, reference: reference));
     } on FirebaseFunctionsException catch (e) {
       return Left(PaymentFailure(e.message ?? 'Could not start payment'));
     } catch (e) {

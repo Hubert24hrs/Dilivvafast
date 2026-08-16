@@ -51,143 +51,143 @@ class AppDrawer extends ConsumerWidget {
   // ── Customer menu items ──────────────────────────────────────────────────
 
   List<Widget> _customerItems(BuildContext context) => [
-        _DrawerSection(title: 'MY ACCOUNT'),
-        _DrawerItem(
-          icon: Icons.person_outline_rounded,
-          label: 'Profile',
-          onTap: () => _navigate(context, '/customer/profile'),
-        ),
-        _DrawerItem(
-          icon: Icons.local_shipping_outlined,
-          label: 'My Orders',
-          onTap: () => _navigate(context, '/customer/orders'),
-        ),
-        _DrawerItem(
-          icon: Icons.location_on_outlined,
-          label: 'Saved Addresses',
-          onTap: () => _navigate(context, '/customer/addresses'),
-        ),
-        _DrawerItem(
-          icon: Icons.account_balance_wallet_outlined,
-          label: 'Wallet & Payments',
-          onTap: () => _navigate(context, '/customer/wallet'),
-        ),
-        _DrawerItem(
-          icon: Icons.credit_card_outlined,
-          label: 'Payment Methods',
-          onTap: () => _navigate(context, '/payment-methods'),
-        ),
+    _DrawerSection(title: 'MY ACCOUNT'),
+    _DrawerItem(
+      icon: Icons.person_outline_rounded,
+      label: 'Profile',
+      onTap: () => _navigate(context, '/customer/profile'),
+    ),
+    _DrawerItem(
+      icon: Icons.local_shipping_outlined,
+      label: 'My Orders',
+      onTap: () => _navigate(context, '/customer/orders'),
+    ),
+    _DrawerItem(
+      icon: Icons.location_on_outlined,
+      label: 'Saved Addresses',
+      onTap: () => _navigate(context, '/customer/addresses'),
+    ),
+    _DrawerItem(
+      icon: Icons.account_balance_wallet_outlined,
+      label: 'Wallet & Payments',
+      onTap: () => _navigate(context, '/customer/wallet'),
+    ),
+    _DrawerItem(
+      icon: Icons.credit_card_outlined,
+      label: 'Payment Methods',
+      onTap: () => _navigate(context, '/payment-methods'),
+    ),
 
-        _DrawerSection(title: 'OFFERS'),
-        _DrawerItem(
-          icon: Icons.local_offer_outlined,
-          label: 'Promotions & Coupons',
-          onTap: () => _navigate(context, '/customer/promotions'),
-        ),
-        _DrawerItem(
-          icon: Icons.card_giftcard_outlined,
-          label: 'Refer & Earn',
-          onTap: () => _navigate(context, '/customer/refer'),
-        ),
+    _DrawerSection(title: 'OFFERS'),
+    _DrawerItem(
+      icon: Icons.local_offer_outlined,
+      label: 'Promotions & Coupons',
+      onTap: () => _navigate(context, '/customer/promotions'),
+    ),
+    _DrawerItem(
+      icon: Icons.card_giftcard_outlined,
+      label: 'Refer & Earn',
+      onTap: () => _navigate(context, '/customer/refer'),
+    ),
 
-        _DrawerSection(title: 'SUPPORT'),
-        _DrawerItem(
-          icon: Icons.notifications_outlined,
-          label: 'Notifications',
-          onTap: () => _navigate(context, '/customer/notifications'),
-        ),
-        _DrawerItem(
-          icon: Icons.help_outline_rounded,
-          label: 'Help Center',
-          onTap: () => _navigate(context, '/help'),
-        ),
-        _DrawerItem(
-          icon: Icons.chat_bubble_outline_rounded,
-          label: 'Chat with Support',
-          onTap: () => _navigate(context, '/support-chat'),
-        ),
+    _DrawerSection(title: 'SUPPORT'),
+    _DrawerItem(
+      icon: Icons.notifications_outlined,
+      label: 'Notifications',
+      onTap: () => _navigate(context, '/customer/notifications'),
+    ),
+    _DrawerItem(
+      icon: Icons.help_outline_rounded,
+      label: 'Help Center',
+      onTap: () => _navigate(context, '/help'),
+    ),
+    _DrawerItem(
+      icon: Icons.chat_bubble_outline_rounded,
+      label: 'Chat with Support',
+      onTap: () => _navigate(context, '/support-chat'),
+    ),
 
-        _DrawerSection(title: 'SETTINGS'),
-        _DrawerItem(
-          icon: Icons.settings_outlined,
-          label: 'Settings',
-          onTap: () => _navigate(context, '/settings'),
-        ),
-        _DrawerItem(
-          icon: Icons.info_outline_rounded,
-          label: 'About Dilivvafast',
-          onTap: () => _navigate(context, '/about'),
-        ),
-        _DrawerItem(
-          icon: Icons.privacy_tip_outlined,
-          label: 'Privacy Policy',
-          onTap: () => _navigate(context, '/legal/privacy'),
-        ),
-        _DrawerItem(
-          icon: Icons.description_outlined,
-          label: 'Terms of Service',
-          onTap: () => _navigate(context, '/legal/terms'),
-        ),
-        _DrawerItem(
-          icon: Icons.delete_outline_rounded,
-          label: 'Delete Account',
-          textColor: AppTheme.errorColor,
-          iconColor: AppTheme.errorColor,
-          onTap: () => _navigate(context, '/settings/delete-account'),
-        ),
-      ];
+    _DrawerSection(title: 'SETTINGS'),
+    _DrawerItem(
+      icon: Icons.settings_outlined,
+      label: 'Settings',
+      onTap: () => _navigate(context, '/settings'),
+    ),
+    _DrawerItem(
+      icon: Icons.info_outline_rounded,
+      label: 'About Dilivvafast',
+      onTap: () => _navigate(context, '/about'),
+    ),
+    _DrawerItem(
+      icon: Icons.privacy_tip_outlined,
+      label: 'Privacy Policy',
+      onTap: () => _navigate(context, '/legal/privacy'),
+    ),
+    _DrawerItem(
+      icon: Icons.description_outlined,
+      label: 'Terms of Service',
+      onTap: () => _navigate(context, '/legal/terms'),
+    ),
+    _DrawerItem(
+      icon: Icons.delete_outline_rounded,
+      label: 'Delete Account',
+      textColor: AppTheme.errorColor,
+      iconColor: AppTheme.errorColor,
+      onTap: () => _navigate(context, '/settings/delete-account'),
+    ),
+  ];
 
   // ── Driver menu items ────────────────────────────────────────────────────
 
   List<Widget> _driverItems(BuildContext context) => [
-        _DrawerSection(title: 'MY ACCOUNT'),
-        _DrawerItem(
-          icon: Icons.person_outline_rounded,
-          label: 'Profile',
-          onTap: () => _navigate(context, '/driver/profile'),
-        ),
-        _DrawerItem(
-          icon: Icons.history_rounded,
-          label: 'Trip History',
-          onTap: () => _navigate(context, '/driver/history'),
-        ),
-        _DrawerItem(
-          icon: Icons.attach_money_rounded,
-          label: 'Earnings & Payouts',
-          onTap: () => _navigate(context, '/driver/earnings'),
-        ),
+    _DrawerSection(title: 'MY ACCOUNT'),
+    _DrawerItem(
+      icon: Icons.person_outline_rounded,
+      label: 'Profile',
+      onTap: () => _navigate(context, '/driver/profile'),
+    ),
+    _DrawerItem(
+      icon: Icons.history_rounded,
+      label: 'Trip History',
+      onTap: () => _navigate(context, '/driver/history'),
+    ),
+    _DrawerItem(
+      icon: Icons.attach_money_rounded,
+      label: 'Earnings & Payouts',
+      onTap: () => _navigate(context, '/driver/earnings'),
+    ),
 
-        _DrawerSection(title: 'DOCUMENTS'),
-        _DrawerItem(
-          icon: Icons.folder_outlined,
-          label: 'Documents & Verification',
-          onTap: () => _navigate(context, '/driver/documents'),
-        ),
-        _DrawerItem(
-          icon: Icons.directions_bike_outlined,
-          label: 'Vehicle Details',
-          onTap: () => _navigate(context, '/driver/vehicle'),
-        ),
+    _DrawerSection(title: 'DOCUMENTS'),
+    _DrawerItem(
+      icon: Icons.folder_outlined,
+      label: 'Documents & Verification',
+      onTap: () => _navigate(context, '/driver/documents'),
+    ),
+    _DrawerItem(
+      icon: Icons.directions_bike_outlined,
+      label: 'Vehicle Details',
+      onTap: () => _navigate(context, '/driver/vehicle'),
+    ),
 
-        _DrawerSection(title: 'SUPPORT'),
-        _DrawerItem(
-          icon: Icons.help_outline_rounded,
-          label: 'Help Center',
-          onTap: () => _navigate(context, '/help'),
-        ),
-        _DrawerItem(
-          icon: Icons.settings_outlined,
-          label: 'Settings',
-          onTap: () => _navigate(context, '/settings'),
-        ),
-        _DrawerItem(
-          icon: Icons.delete_outline_rounded,
-          label: 'Delete Account',
-          textColor: AppTheme.errorColor,
-          iconColor: AppTheme.errorColor,
-          onTap: () => _navigate(context, '/settings/delete-account'),
-        ),
-      ];
+    _DrawerSection(title: 'SUPPORT'),
+    _DrawerItem(
+      icon: Icons.help_outline_rounded,
+      label: 'Help Center',
+      onTap: () => _navigate(context, '/help'),
+    ),
+    _DrawerItem(
+      icon: Icons.settings_outlined,
+      label: 'Settings',
+      onTap: () => _navigate(context, '/settings'),
+    ),
+    _DrawerItem(
+      icon: Icons.delete_outline_rounded,
+      label: 'Delete Account',
+      textColor: AppTheme.errorColor,
+      iconColor: AppTheme.errorColor,
+      onTap: () => _navigate(context, '/settings/delete-account'),
+    ),
+  ];
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -252,8 +252,9 @@ class _DrawerHeader extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-              backgroundImage:
-                  user?.photoUrl != null ? NetworkImage(user!.photoUrl!) : null,
+              backgroundImage: user?.photoUrl != null
+                  ? NetworkImage(user!.photoUrl!)
+                  : null,
               child: user?.photoUrl == null
                   ? Text(
                       (user?.fullName.isNotEmpty == true)
@@ -294,8 +295,10 @@ class _DrawerHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -337,10 +340,7 @@ class _HeaderSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const CircleAvatar(
-          radius: 28,
-          backgroundColor: AppTheme.cardColor,
-        ),
+        const CircleAvatar(radius: 28, backgroundColor: AppTheme.cardColor),
         const SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -24,7 +24,8 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, CourierOrderModel>> createOrder(
-      CourierOrderModel order) async {
+    CourierOrderModel order,
+  ) async {
     try {
       final trackingCode = _generateTrackingCode();
       final now = DateTime.now();
@@ -44,7 +45,8 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, CourierOrderModel>> getOrderById(
-      String orderId) async {
+    String orderId,
+  ) async {
     try {
       final doc = await _couriersRef.doc(orderId).get();
       if (!doc.exists) {
@@ -68,8 +70,10 @@ class FirebaseCourierRepository implements ICourierRepository {
   Stream<CourierOrderModel?> watchActiveOrder(String userId) {
     return _couriersRef
         .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
-        .where(FirestoreConstants.fieldStatus,
-            whereIn: ['pending', 'accepted', 'picked_up', 'in_transit'])
+        .where(
+          FirestoreConstants.fieldStatus,
+          whereIn: ['pending', 'accepted', 'picked_up', 'in_transit'],
+        )
         .limit(1)
         .snapshots()
         .map((snapshot) {
@@ -84,9 +88,11 @@ class FirebaseCourierRepository implements ICourierRepository {
         .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CourierOrderModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -95,9 +101,11 @@ class FirebaseCourierRepository implements ICourierRepository {
         .where(FirestoreConstants.fieldDriverId, isEqualTo: driverId)
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CourierOrderModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -106,9 +114,11 @@ class FirebaseCourierRepository implements ICourierRepository {
         .where(FirestoreConstants.fieldStatus, isEqualTo: 'pending')
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CourierOrderModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
@@ -117,14 +127,18 @@ class FirebaseCourierRepository implements ICourierRepository {
         .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
         .limit(100)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CourierOrderModel.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
   Future<Either<Failure, Unit>> updateOrderStatus(
-      String orderId, OrderStatus newStatus) async {
+    String orderId,
+    OrderStatus newStatus,
+  ) async {
     try {
       final doc = await _couriersRef.doc(orderId).get();
       if (!doc.exists) {
@@ -133,8 +147,11 @@ class FirebaseCourierRepository implements ICourierRepository {
 
       final currentOrder = CourierOrderModel.fromFirestore(doc);
       if (!currentOrder.canTransitionTo(newStatus)) {
-        return Left(ValidationFailure(
-            'Cannot transition from ${currentOrder.status.name} to ${newStatus.name}'));
+        return Left(
+          ValidationFailure(
+            'Cannot transition from ${currentOrder.status.name} to ${newStatus.name}',
+          ),
+        );
       }
 
       final updateData = <String, dynamic>{
@@ -157,7 +174,9 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, Unit>> assignDriver(
-      String orderId, String driverId) async {
+    String orderId,
+    String driverId,
+  ) async {
     try {
       await _couriersRef.doc(orderId).update({
         FirestoreConstants.fieldDriverId: driverId,
@@ -172,7 +191,9 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, Unit>> updateProofOfDelivery(
-      String orderId, String imageUrl) async {
+    String orderId,
+    String imageUrl,
+  ) async {
     try {
       await _couriersRef.doc(orderId).update({
         'proofOfDeliveryUrl': imageUrl,
@@ -186,7 +207,10 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, Unit>> rateOrder(
-      String orderId, int rating, String? comment) async {
+    String orderId,
+    int rating,
+    String? comment,
+  ) async {
     try {
       await _couriersRef.doc(orderId).update({
         'rating': rating,
@@ -220,7 +244,8 @@ class FirebaseCourierRepository implements ICourierRepository {
 
   @override
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(
-      String trackingCode) async {
+    String trackingCode,
+  ) async {
     try {
       final query = await _couriersRef
           .where('trackingCode', isEqualTo: trackingCode)
@@ -247,8 +272,10 @@ class FirebaseCourierRepository implements ICourierRepository {
           .limit(limit);
 
       if (statusFilter != null) {
-        query = query.where(FirestoreConstants.fieldStatus,
-            isEqualTo: statusFilter.name);
+        query = query.where(
+          FirestoreConstants.fieldStatus,
+          isEqualTo: statusFilter.name,
+        );
       }
 
       if (lastDocumentId != null) {
