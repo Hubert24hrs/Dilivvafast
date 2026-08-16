@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -76,12 +77,18 @@
             flutter_background_service's worker, declared as a location-typed
             foreground service. Android 14+ rejects a service that starts with
             a location type it did not declare here.
+
+            The plugin ships this service as exported; nothing outside the app
+            needs to start it, so we narrow that. tools:replace is required
+            because the manifest merger treats a differing value as a conflict
+            rather than an override.
         -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="location"
             android:exported="false"
-            android:stopWithTask="false" />
+            android:stopWithTask="false"
+            tools:replace="android:exported" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
