@@ -123,6 +123,25 @@ Keep `--test-concurrency=1` in the npm script: both test files share one
 emulator, and parallel runs let one file's `clearFirestore()` wipe the other's
 fixtures mid-test, which surfaces as phantom rule failures.
 
+## Local environment
+
+Quirks of this machine that will otherwise cost you a build cycle:
+
+- **No `java` on `PATH`.** The Firestore emulator is a Java process. Use the
+  JDK Android Studio ships: `/c/Program Files/Android/Android Studio/jbr`.
+- **NDK is pinned to `27.1.12297006`.** Do not "fix" it back to
+  `27.0.12077973` — that version exists on disk as a hollow install (one file,
+  no `source.properties`) and fails configuration with `CXX1101`.
+- **A full disk corrupts the Gradle cache.** `Could not read workspace metadata
+  from …metadata.bin` means truncated cache files: delete
+  `~/.gradle/caches/8.12/transforms`, then `./gradlew --stop`. The daemon
+  replays the corruption from memory even after the files are deleted, so
+  stopping it is not optional.
+- **Generated desktop registrants churn.** Files under `linux/`, `macos/`, and
+  `windows/` show as modified after most `flutter` commands with an *empty*
+  content diff — it is CRLF only. `git checkout -- linux macos windows` before
+  committing; never stage them.
+
 ## Conventions
 
 - Comments explain *why*, and are worth writing where a reader would otherwise
