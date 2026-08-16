@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:dilivvafast/core/errors/failures.dart';
@@ -9,10 +10,14 @@ import 'package:dilivvafast/features/courier/domain/entities/courier_order_model
 import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
 
 class FirebaseCourierRepository implements ICourierRepository {
-  FirebaseCourierRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseCourierRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   CollectionReference<Map<String, dynamic>> get _couriersRef =>
       _firestore.collection(FirestoreConstants.couriers);
@@ -195,8 +200,22 @@ class FirebaseCourierRepository implements ICourierRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> cancelOrder(String orderId) async {
-    return updateOrderStatus(orderId, OrderStatus.cancelled);
+  Future<Either<Failure, double>> cancelOrder(String orderId) async {
+    // Goes through the backend rather than writing status directly: the
+    // refund, the transaction record, and the status change have to happen
+    // together, and security rules deliberately do not let a client set
+    // status to cancelled on its own.
+    try {
+      final callable = _functions.httpsCallable('cancelOrder');
+      final result = await callable.call<Map<String, dynamic>>({
+        'orderId': orderId,
+      });
+      return Right((result.data['refundAmount'] as num?)?.toDouble() ?? 0);
+    } on FirebaseFunctionsException catch (e) {
+      return Left(FirestoreFailure(e.message ?? 'Could not cancel the order'));
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
   }
 
   @override

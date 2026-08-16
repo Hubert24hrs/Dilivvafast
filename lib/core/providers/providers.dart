@@ -29,6 +29,7 @@ import 'package:dilivvafast/features/investor/data/repositories/firebase_investo
 // Models
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/driver/domain/entities/driver_application_model.dart';
 import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
@@ -169,6 +170,23 @@ final pendingOrdersProvider = StreamProvider<List<CourierOrderModel>>((ref) {
 final allOrdersProvider = StreamProvider<List<CourierOrderModel>>((ref) {
   return ref.watch(courierRepositoryProvider).watchAllOrders();
 });
+
+/// Driver applications awaiting an admin decision, oldest first so the queue
+/// is worked in the order people applied.
+final pendingDriverApplicationsProvider =
+    StreamProvider<List<DriverApplicationModel>>((ref) {
+      return ref
+          .watch(firestoreProvider)
+          .collection(FirestoreConstants.driverApplications)
+          .where('status', whereIn: ['submitted', 'under_review'])
+          .orderBy('createdAt')
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map(DriverApplicationModel.fromFirestore)
+                .toList(),
+          );
+    });
 
 /// Watch a specific order
 final orderStreamProvider =

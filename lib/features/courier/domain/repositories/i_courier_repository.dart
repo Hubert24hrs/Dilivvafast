@@ -46,7 +46,9 @@ abstract class ICourierRepository {
       String orderId, int rating, String? comment);
 
   /// Cancel an order
-  Future<Either<Failure, Unit>> cancelOrder(String orderId);
+  /// Cancel an order and refund per policy. Returns the amount refunded, in
+  /// Naira (0 when nothing had been paid).
+  Future<Either<Failure, double>> cancelOrder(String orderId);
 
   /// Get order by tracking code
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(

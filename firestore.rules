@@ -135,11 +135,14 @@ service cloud.firestore {
       // commission from zone config and writes the authoritative values, so
       // whatever the client submits for those is overwritten. The order must
       // start unassigned and unpaid.
+      // The order must start unassigned. The app serialises every field, so
+      // driverId is present-but-null on create rather than absent — both are
+      // accepted, a non-null value is not.
       allow create: if isOwnSupportThread(orderId) || (
         isAuthenticated()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'
-        && !request.resource.data.keys().hasAny(['driverId'])
+        && request.resource.data.get('driverId', null) == null
         && request.resource.data.paymentStatus == 'pending'
       );
 
@@ -151,7 +154,7 @@ service cloud.firestore {
         (
           isVerifiedDriver()
           && resource.data.status == 'pending'
-          && !('driverId' in resource.data)
+          && resource.data.get('driverId', null) == null
           && request.resource.data.driverId == request.auth.uid
           && request.resource.data.status == 'accepted'
           && changed().hasOnly(['driverId', 'status', 'updatedAt'])
@@ -238,16 +241,17 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || isAdmin()
       );
 
-      // Applicants submit for themselves, always as 'pending'. Approving your
+      // Applicants submit for themselves, never pre-approved. Approving your
       // own application would be approving your own role.
+      // ApplicationStatus.submitted is what the app writes.
       allow create: if isAuthenticated()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'submitted';
 
-      // Applicants may amend their own documents while still pending.
+      // Applicants may amend their own documents while still under review.
       allow update: if isAdmin() || (
         isOwner(resource.data.userId)
-        && resource.data.status == 'pending'
+        && resource.data.status in ['submitted', 'under_review']
         && !changed().hasAny(['status', 'userId', 'reviewedBy', 'reviewedAt'])
       );
 

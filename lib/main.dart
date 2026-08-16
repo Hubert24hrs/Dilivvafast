@@ -117,16 +117,14 @@ class DilivvafastApp extends ConsumerStatefulWidget {
 }
 
 class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
+  /// Whether FCM has been registered for the currently signed-in user.
+  String? _fcmRegisteredFor;
+
   @override
   void initState() {
     super.initState();
     // Initialise Analytics and Crashlytics (safe — Firebase is ready here).
     ref.read(analyticsServiceProvider).initialize();
-
-    // Initialise Notification Service.
-    if (!kIsWeb) {
-      ref.read(notificationServiceProvider).initialize();
-    }
 
     // Log app open event.
     ref.read(analyticsServiceProvider).logAppOpen();
@@ -135,6 +133,27 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+
+    // Register for push notifications once we actually have a signed-in user.
+    //
+    // This used to run in initState, where currentUserProvider is still
+    // loading, so it always took the "no authenticated user" branch and no
+    // fcmToken was ever written. Without a token every server-side
+    // notification — new order, driver accepted, delivered — silently went
+    // nowhere. Watching auth state means it fires on sign-in, and again after
+    // a sign-out/sign-in as a different account.
+    if (!kIsWeb) {
+      ref.listen(currentUserProvider, (previous, next) {
+        final user = next.value;
+        if (user == null) {
+          _fcmRegisteredFor = null;
+          return;
+        }
+        if (_fcmRegisteredFor == user.uid) return;
+        _fcmRegisteredFor = user.uid;
+        ref.read(notificationServiceProvider).initialize();
+      });
+    }
 
     return MaterialApp.router(
       title: 'Dilivvafast',

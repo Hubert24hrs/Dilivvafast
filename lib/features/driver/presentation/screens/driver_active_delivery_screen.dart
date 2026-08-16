@@ -4,14 +4,40 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/support/presentation/widgets/sos_alert_button.dart';
 
-class DriverActiveDeliveryScreen extends ConsumerWidget {
+class DriverActiveDeliveryScreen extends ConsumerStatefulWidget {
   const DriverActiveDeliveryScreen({super.key, required this.orderId});
   final String orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final orderAsync = ref.watch(orderStreamProvider(orderId));
+  ConsumerState<DriverActiveDeliveryScreen> createState() =>
+      _DriverActiveDeliveryScreenState();
+}
+
+class _DriverActiveDeliveryScreenState
+    extends ConsumerState<DriverActiveDeliveryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Point location publishing at this delivery, so the customer's tracking
+    // map follows the driver instead of showing static pickup/dropoff pins.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(locationTrackingServiceProvider).setActiveOrder(widget.orderId);
+    });
+  }
+
+  @override
+  void dispose() {
+    // Stop attaching positions to this order once the driver leaves the
+    // screen. Tracking itself keeps running while they are on duty.
+    ref.read(locationTrackingServiceProvider).setActiveOrder(null);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final orderAsync = ref.watch(orderStreamProvider(widget.orderId));
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
@@ -24,6 +50,15 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
         ),
         title: const Text('Active Delivery',
             style: TextStyle(color: Colors.white, fontSize: 18)),
+        actions: [
+          // Emergency alert — long-press raises an SOS to the admin team.
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: SosAlertButton(orderId: widget.orderId, size: 40),
+            ),
+          ),
+        ],
       ),
       body: orderAsync.when(
         loading: () => const Center(

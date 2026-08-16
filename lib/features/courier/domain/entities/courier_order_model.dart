@@ -134,6 +134,12 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     String? ratingComment,
     @Default(0.0) double driverEarnings,
     @Default(0.0) double platformCommission,
+    /// Live position of the assigned driver, written while they are on duty.
+    /// This is the copy the customer's tracking map reads — security rules
+    /// keep one user from reading another's profile, so it cannot come from
+    /// the driver's user document.
+    @NullableGeoPointConverter() GeoPoint? driverLocation,
+    @NullableTimestampConverter() DateTime? driverLocationUpdatedAt,
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
     @NullableTimestampConverter() DateTime? pickedUpAt,

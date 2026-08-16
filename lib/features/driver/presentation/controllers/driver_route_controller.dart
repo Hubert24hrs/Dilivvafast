@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
+import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 
 /// State for the driver route + en-route order discovery.
@@ -80,9 +81,56 @@ class DriverRouteController extends Notifier<DriverRouteState> {
   @override
   DriverRouteState build() => const DriverRouteState();
 
-  void toggleOnline() {
-    state = state.copyWith(isOnline: !state.isOnline);
-    ref.read(driverOnlineProvider.notifier).toggle();
+  /// Go on or off duty.
+  ///
+  /// Going online has to reach Firestore, not just local state: the
+  /// onOrderCreated trigger looks for `isOnline == true` drivers, so a driver
+  /// who only flipped a local flag would never be offered a job. Going online
+  /// also starts location publishing so customers can track them.
+  ///
+  /// Returns an error message when the driver cannot go online, or null on
+  /// success.
+  Future<String?> toggleOnline() async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return 'You are signed out.';
+
+    final goingOnline = !state.isOnline;
+
+    if (goingOnline) {
+      final user = ref.read(currentUserProvider).value;
+      if (user == null) return 'Still loading your profile — try again.';
+
+      // Security rules enforce this too; checking here turns a silent
+      // permission error into an explanation.
+      if (user.role != UserRole.driver) {
+        return 'Your driver application has not been approved yet.';
+      }
+
+      final tracking = ref.read(locationTrackingServiceProvider);
+      final started = await tracking.startTracking(
+        userId,
+        orderId: state.activeOrderId,
+      );
+      if (!started) {
+        return 'Location access is needed to go online.';
+      }
+    } else {
+      await ref.read(locationTrackingServiceProvider).stopTracking(userId);
+    }
+
+    try {
+      await ref.read(firestoreProvider).collection('users').doc(userId).update({
+        'isOnline': goingOnline,
+        'isAvailable': goingOnline,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      return 'Could not update your status: $e';
+    }
+
+    state = state.copyWith(isOnline: goingOnline);
+    ref.read(driverOnlineProvider.notifier).set(goingOnline);
+    return null;
   }
 
   void setOrigin(String address, double lat, double lng) {

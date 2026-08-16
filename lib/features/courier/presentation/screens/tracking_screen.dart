@@ -6,10 +6,89 @@ import 'package:share_plus/share_plus.dart';
 import 'package:dilivvafast/core/presentation/widgets/delivery_map_widget.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/support/presentation/widgets/sos_alert_button.dart';
 
 class TrackingScreen extends ConsumerWidget {
   const TrackingScreen({super.key, required this.orderId});
   final String orderId;
+
+  /// Confirm, then cancel through the backend so the refund is actually paid.
+  ///
+  /// Cancelling used to just flip a status field and move no money. The
+  /// cancelOrder Cloud Function applies the published policy: full refund
+  /// before the driver collects, half afterwards.
+  Future<void> _confirmCancel(
+    BuildContext context,
+    WidgetRef ref,
+    CourierOrderModel order,
+  ) async {
+    final collected =
+        order.status == OrderStatus.pickedUp ||
+        order.status == OrderStatus.inTransit;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1D1E33),
+        title: const Text(
+          'Cancel this delivery?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          collected
+              ? 'Your package has already been picked up, so 50% of the fare '
+                    'is charged. The rest goes back to your wallet.'
+              : 'The driver has not collected your package yet, so you get a '
+                    'full refund to your wallet.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text(
+              'Keep order',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text(
+              'Cancel order',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .cancelOrder(order.id);
+
+    if (!context.mounted) return;
+
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(failure.message),
+          backgroundColor: Colors.redAccent,
+        ),
+      ),
+      (refundAmount) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            refundAmount > 0
+                ? 'Order cancelled. ₦${refundAmount.toStringAsFixed(0)} '
+                      'refunded to your wallet.'
+                : 'Order cancelled.',
+          ),
+          backgroundColor: const Color(0xFF00C853),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,13 +118,17 @@ class TrackingScreen extends ConsumerWidget {
                 child: Text('Order not found',
                     style: TextStyle(color: Colors.white54)));
           }
-          return _buildTrackingBody(context, order);
+          return _buildTrackingBody(context, ref, order);
         },
       ),
     );
   }
 
-  Widget _buildTrackingBody(BuildContext context, CourierOrderModel order) {
+  Widget _buildTrackingBody(
+    BuildContext context,
+    WidgetRef ref,
+    CourierOrderModel order,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -62,6 +145,11 @@ class TrackingScreen extends ConsumerWidget {
                 dropoffLng: order.dropoffGeoPoint.longitude,
                 pickupLabel: 'Pickup',
                 dropoffLabel: 'Dropoff',
+                // The driver's live position, written to the order while they
+                // are on duty. Null until a driver accepts, which the map
+                // widget renders as "no driver yet".
+                driverLat: order.driverLocation?.latitude,
+                driverLng: order.driverLocation?.longitude,
               ),
               // Distance overlay
               Positioned(
@@ -242,6 +330,34 @@ class TrackingScreen extends ConsumerWidget {
                 ),
               ],
             ),
+
+          // Emergency + cancellation. Only while the delivery is live.
+          if (order.status != OrderStatus.delivered &&
+              order.status != OrderStatus.cancelled) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmCancel(context, ref, order),
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text('Cancel order'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Long-press to raise an emergency alert to the admin team.
+                SosAlertButton(orderId: order.id),
+              ],
+            ),
+          ],
         ],
       ),
     );

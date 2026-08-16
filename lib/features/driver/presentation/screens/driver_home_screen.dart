@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
@@ -150,7 +151,24 @@ class DriverHomeScreen extends ConsumerWidget {
 
           // Online toggle
           GestureDetector(
-            onTap: ctrl.toggleOnline,
+            onTap: () async {
+              final error = await ctrl.toggleOnline();
+              if (error != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error),
+                    backgroundColor: Colors.redAccent,
+                    action: error.contains('not been approved')
+                        ? SnackBarAction(
+                            label: 'Apply',
+                            textColor: Colors.white,
+                            onPressed: () => context.push('/driver/apply'),
+                          )
+                        : null,
+                  ),
+                );
+              }
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: 64,

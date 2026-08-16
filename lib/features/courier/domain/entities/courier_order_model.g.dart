@@ -51,6 +51,12 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   ratingComment: json['ratingComment'] as String?,
   driverEarnings: (json['driverEarnings'] as num?)?.toDouble() ?? 0.0,
   platformCommission: (json['platformCommission'] as num?)?.toDouble() ?? 0.0,
+  driverLocation: const NullableGeoPointConverter().fromJson(
+    json['driverLocation'] as Map<String, dynamic>?,
+  ),
+  driverLocationUpdatedAt: const NullableTimestampConverter().fromJson(
+    json['driverLocationUpdatedAt'] as Timestamp?,
+  ),
   createdAt: const TimestampConverter().fromJson(
     json['createdAt'] as Timestamp,
   ),
@@ -104,6 +110,12 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'ratingComment': instance.ratingComment,
   'driverEarnings': instance.driverEarnings,
   'platformCommission': instance.platformCommission,
+  'driverLocation': const NullableGeoPointConverter().toJson(
+    instance.driverLocation,
+  ),
+  'driverLocationUpdatedAt': const NullableTimestampConverter().toJson(
+    instance.driverLocationUpdatedAt,
+  ),
   'createdAt': const TimestampConverter().toJson(instance.createdAt),
   'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
   'pickedUpAt': const NullableTimestampConverter().toJson(instance.pickedUpAt),
