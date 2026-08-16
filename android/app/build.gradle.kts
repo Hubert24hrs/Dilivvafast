@@ -23,7 +23,7 @@ android {
     // by August 31, 2026 (existing apps by Nov 1, 2026).
     // Using flutter.compileSdkVersion would inherit SDK 35 from Flutter 3.24 defaults.
     compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "27.1.12297006"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
