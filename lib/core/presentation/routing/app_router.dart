@@ -8,7 +8,7 @@ import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart
 import 'package:dilivvafast/features/home/presentation/screens/home_screen.dart';
 
 // Phase 2 screens
-import 'package:dilivvafast/features/booking/presentation/screens/booking_screen.dart';
+import 'package:dilivvafast/features/booking/presentation/screens/courier_booking_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/tracking_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/orders_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/chat_screen.dart';
@@ -47,6 +47,20 @@ import 'package:dilivvafast/features/auth/presentation/screens/biometric_setup_s
 import 'package:dilivvafast/features/driver/presentation/screens/driver_earnings_screen.dart';
 import 'package:dilivvafast/features/booking/presentation/screens/matching_screen.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+
+// Phase 2 drawer screens
+import 'package:dilivvafast/features/profile/presentation/screens/saved_addresses_screen.dart';
+import 'package:dilivvafast/features/payment/presentation/screens/promotions_screen.dart';
+import 'package:dilivvafast/features/referral/presentation/screens/refer_earn_screen.dart';
+import 'package:dilivvafast/features/payment/presentation/screens/payment_methods_screen.dart';
+import 'package:dilivvafast/features/support/presentation/screens/help_center_screen.dart';
+import 'package:dilivvafast/features/support/presentation/screens/support_chat_screen.dart';
+import 'package:dilivvafast/features/about/presentation/screens/about_screen.dart';
+import 'package:dilivvafast/features/legal/presentation/screens/privacy_policy_screen.dart';
+import 'package:dilivvafast/features/legal/presentation/screens/terms_screen.dart';
+import 'package:dilivvafast/features/auth/presentation/screens/delete_account_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_documents_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_vehicle_screen.dart';
 
 
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
@@ -152,7 +166,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.add_box), label: 'Book'),
+                  icon: Icon(Icons.local_shipping), label: 'Send'),
               BottomNavigationBarItem(
                   icon: Icon(Icons.receipt_long), label: 'Orders'),
               BottomNavigationBarItem(
@@ -172,7 +186,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/customer/book',
             name: 'customerBook',
-            builder: (context, state) => const BookingScreen(),
+            builder: (context, state) => const CourierBookingScreen(),
           ),
           GoRoute(
             path: '/customer/orders',
@@ -434,6 +448,68 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => MatchingScreen(
           orderId: state.pathParameters['orderId'],
         ),
+      ),
+
+      // ── Phase 2: Drawer-linked screens ─────────────────────────────
+      GoRoute(
+        path: '/customer/addresses',
+        name: 'savedAddresses',
+        builder: (context, state) => const SavedAddressesScreen(),
+      ),
+      GoRoute(
+        path: '/customer/promotions',
+        name: 'promotions',
+        builder: (context, state) => const PromotionsScreen(),
+      ),
+      GoRoute(
+        path: '/customer/refer',
+        name: 'referEarn',
+        builder: (context, state) => const ReferEarnScreen(),
+      ),
+      GoRoute(
+        path: '/payment-methods',
+        name: 'paymentMethods',
+        builder: (context, state) => const PaymentMethodsScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'helpCenter',
+        builder: (context, state) => const HelpCenterScreen(),
+      ),
+      GoRoute(
+        path: '/support-chat',
+        name: 'supportChatDirect',
+        builder: (context, state) => const SupportChatScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        name: 'about',
+        builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        name: 'privacyPolicy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: '/legal/terms',
+        name: 'terms',
+        builder: (context, state) => const TermsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/delete-account',
+        name: 'deleteAccount',
+        builder: (context, state) => const DeleteAccountScreen(),
+      ),
+      GoRoute(
+        path: '/driver/documents',
+        name: 'driverDocuments',
+        builder: (context, state) => const DriverDocumentsScreen(),
+      ),
+      GoRoute(
+        path: '/driver/vehicle',
+        name: 'driverVehicle',
+        builder: (context, state) => const DriverVehicleScreen(),
       ),
     ],
   );

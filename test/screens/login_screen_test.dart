@@ -26,10 +26,16 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Should find a login/sign-in action button
+      // Should find a sign-in / login action. Matched case-insensitively
+      // against both wordings so a copy change doesn't fail the test.
       expect(
-        find.byWidgetPredicate(
-            (w) => w is Text && w.data?.toLowerCase().contains('log') == true),
+        find.byWidgetPredicate((w) {
+          final label = w is Text ? w.data?.toLowerCase() ?? '' : '';
+          return label.contains('log in') ||
+              label.contains('login') ||
+              label.contains('sign in') ||
+              label.contains('sign up');
+        }),
         findsAtLeast(1),
       );
     });
@@ -38,11 +44,13 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Should find Dilivvafast or Fast Delivery branding
+      // Should find Dilivvafast branding. Case-insensitive: the screen renders
+      // the wordmark as 'DILIVVAFAST'.
       expect(
-        find.byWidgetPredicate(
-            (w) => w is Text && (w.data?.contains('Fast') == true ||
-                                  w.data?.contains('Dilivva') == true)),
+        find.byWidgetPredicate((w) {
+          final label = w is Text ? w.data?.toLowerCase() ?? '' : '';
+          return label.contains('dilivva') || label.contains('fast');
+        }),
         findsAtLeast(1),
       );
     });

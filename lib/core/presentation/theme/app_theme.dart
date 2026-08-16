@@ -199,4 +199,8 @@ class AppTheme {
   static const double spacingL = 24;
   static const double spacingXL = 32;
   static const double spacingXXL = 48;
+
+  /// Clean dark theme — alias for [futuristicTheme].
+  /// Used in main.dart and referenced throughout the app.
+  static ThemeData get cleanDarkTheme => futuristicTheme;
 }

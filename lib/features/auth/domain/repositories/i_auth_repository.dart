@@ -50,4 +50,7 @@ abstract class IAuthRepository {
     required String verificationId,
     required String otp,
   });
+
+  /// Delete the current user account
+  Future<Either<Failure, Unit>> deleteAccount();
 }

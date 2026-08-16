@@ -195,6 +195,44 @@ class FirebaseAuthRepository implements IAuthRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, Unit>> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Left(const AuthFailure('No authenticated user found to delete.'));
+    }
+    try {
+      final uid = user.uid;
+
+      // 1. Delete notifications sub-collection
+      final notifsSnap = await _firestore
+          .collection(FirestoreConstants.users)
+          .doc(uid)
+          .collection(FirestoreConstants.notifications)
+          .get();
+      
+      final batch = _firestore.batch();
+      for (final doc in notifsSnap.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      // 2. Delete user doc
+      batch.delete(_firestore.collection(FirestoreConstants.users).doc(uid));
+      await batch.commit();
+
+      // 3. Delete Firebase Auth user
+      await user.delete();
+      return const Right(unit);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        return Left(const AuthFailure('This operation requires recent authentication. Please log in again.'));
+      }
+      return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   // --- Private helpers ---
 
   Future<UserModel> _getOrCreateUserModel(User firebaseUser) async {
@@ -255,26 +293,30 @@ class FirebaseAuthRepository implements IAuthRepository {
 
   String _mapAuthError(String code) {
     switch (code) {
+      // Firebase Auth v10+ consolidates wrong-password + user-not-found
+      // into a single 'invalid-credential' code to prevent user enumeration.
+      case 'invalid-credential':
       case 'user-not-found':
-        return 'No account found with this email address.';
       case 'wrong-password':
-        return 'Incorrect password. Please try again.';
+        return 'Invalid email or password. Please check and try again.';
       case 'email-already-in-use':
         return 'An account already exists with this email.';
       case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
+        return 'Password is too weak. Use at least 8 characters with a number.';
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'user-disabled':
-        return 'This account has been disabled.';
+        return 'This account has been suspended. Contact support.';
       case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
+        return 'Too many failed attempts. Please wait a few minutes and try again.';
       case 'operation-not-allowed':
-        return 'This sign-in method is not enabled.';
-      case 'invalid-credential':
-        return 'Invalid credentials. Please check and try again.';
+        return 'This sign-in method is not currently enabled.';
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network and try again.';
+      case 'requires-recent-login':
+        return 'This action requires you to sign in again for security.';
       default:
-        return 'Authentication error. Please try again.';
+        return 'Authentication error ($code). Please try again.';
     }
   }
 }

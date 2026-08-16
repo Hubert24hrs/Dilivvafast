@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        PrivacyInfo.xcprivacy — Required by Apple since Spring 2024.
+        Failure to include this (or including an incomplete version) triggers
+        ITMS-91053 and related hard-block errors when uploading to App Store Connect.
+        
+        This file declares:
+        1. Required Reason APIs used directly by this app or by bundled SDKs
+           (Firebase, Google Sign-In, Flutter engine, Mapbox, Paystack)
+        2. Types of data collected
+        
+        After bundling, verify via: Xcode → Product → Archive → Distribute App → Privacy Report
+        All third-party SDKs (Firebase 10+, Google Sign-In 7+) ship their own
+        PrivacyInfo.xcprivacy manifests — Xcode aggregates them automatically.
+    -->
+
+    <!-- ===================== REQUIRED REASON APIs ===================== -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+
+        <!-- NSUserDefaults: Used by Flutter engine, Firebase, and Hive for local persistence -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>  <!-- App's own defaults -->
+            </array>
+        </dict>
+
+        <!-- File timestamp APIs: Used by Flutter engine and Hive for cache validation -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>C617.1</string>  <!-- App's own files -->
+                <string>DDA9.1</string>  <!-- Third-party SDK own files -->
+            </array>
+        </dict>
+
+        <!-- Disk space APIs: Used by Flutter engine for storage checks -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>E174.1</string>  <!-- Determine space before large operations -->
+            </array>
+        </dict>
+
+        <!-- System boot time: Used by Firebase Performance for timing measurements -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>35F9.1</string>  <!-- Measure performance within the app -->
+            </array>
+        </dict>
+
+    </array>
+
+    <!-- ===================== DATA COLLECTED ===================== -->
+    <!--
+        NOTE: The data types below are declared in App Store Connect's
+        App Privacy section (the "Nutrition Label"). This xcprivacy file
+        is for Apple's technical review automation — the App Store Connect
+        declarations are a separate manual step (see STORE_READINESS.md).
+    -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+
+        <!-- Precise location — required for real-time delivery tracking & driver GPS -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePreciseLocation</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Email address — account creation and auth -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Phone number — account registration -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePhoneNumber</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Name — account profile -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeName</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Payment info — Paystack card processing -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypePaymentInfo</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- User ID — Firebase UID, FCM token -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeUserID</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <true/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+            </array>
+        </dict>
+
+        <!-- Crash data — Firebase Crashlytics -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeCrashData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
+
+        <!-- App usage data — Firebase Analytics -->
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherUsageData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
+
+    </array>
+
+    <!-- This app does NOT use data for tracking (as defined by ATT) -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- No tracking domains -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+</dict>
+</plist>

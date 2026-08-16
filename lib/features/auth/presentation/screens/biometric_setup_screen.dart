@@ -73,7 +73,7 @@ class _BiometricSetupScreenState
                   borderRadius: BorderRadius.circular(10)),
             ),
           );
-          context.go('/home');
+          context.go('/customer/home');
         }
       }
     } catch (e) {
@@ -251,7 +251,7 @@ class _BiometricSetupScreenState
 
               // Skip button
               TextButton(
-                onPressed: () => context.go('/home'),
+                onPressed: () => context.go('/customer/home'),
                 child: Text(
                   'Skip for now',
                   style: TextStyle(

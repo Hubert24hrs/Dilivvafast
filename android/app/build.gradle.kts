@@ -19,7 +19,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.dilivvafast.app"
-    compileSdk = flutter.compileSdkVersion
+    // Hardcoded to 36: Google Play requires targetSdk >= 36 for new submissions
+    // by August 31, 2026 (existing apps by Nov 1, 2026).
+    // Using flutter.compileSdkVersion would inherit SDK 35 from Flutter 3.24 defaults.
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -35,7 +38,7 @@ android {
     defaultConfig {
         applicationId = "com.dilivvafast.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36  // Required: Google Play mandates API 36 for new submissions by Aug 31 2026
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 

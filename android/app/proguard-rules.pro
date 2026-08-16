@@ -20,7 +20,7 @@
 -dontwarn com.google.firebase.crashlytics.**
 
 # Flutter Play Core / Deferred Components fix
--dontwarn com.google.android.play.core.tasks.**
+-dontwarn com.google.android.play.core.**
 -keep class com.google.android.play.core.tasks.** { *; }
 -dontwarn io.flutter.embedding.engine.deferredcomponents.**
 

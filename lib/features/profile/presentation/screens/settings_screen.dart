@@ -142,17 +142,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _linkTile(
               icon: Icons.description,
               title: 'Terms of Service',
-              onTap: () => _openUrl('https://dilivvafast.com/terms'),
+              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/terms.html'),
             ),
             _linkTile(
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
-              onTap: () => _openUrl('https://dilivvafast.com/privacy'),
+              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
             ),
             _linkTile(
               icon: Icons.help_outline,
               title: 'Help & Support',
-              onTap: () => _openUrl('https://dilivvafast.com/support'),
+              onTap: () => _openUrl('https://hubert24hrs.github.io/Dilivvafast/support.html'),
             ),
             const SizedBox(height: 24),
 
@@ -203,7 +203,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Delete account
             Center(
               child: TextButton(
-                onPressed: () {},
+                onPressed: () => _confirmDeleteAccount(context, ref),
                 child: Text('Delete Account',
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.2),
@@ -332,6 +332,69 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               if (context.mounted) context.go('/login');
             },
             child: const Text('Log Out',
+                style: TextStyle(color: Color(0xFFFF5252))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: const Color(0xFF1D1E33),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Account',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text(
+            'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be permanently wiped.',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5))),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              if (!context.mounted) return;
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFFF5252)),
+                ),
+              );
+
+              final result = await ref.read(authRepositoryProvider).deleteAccount();
+              
+              if (!context.mounted) return;
+              Navigator.pop(context); // Dismiss loading dialog
+
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(failure.message),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                },
+                (_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Your account has been deleted successfully.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  context.go('/login');
+                },
+              );
+            },
+            child: const Text('Delete permanently',
                 style: TextStyle(color: Color(0xFFFF5252))),
           ),
         ],

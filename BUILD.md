@@ -95,3 +95,44 @@ Build and typecheck the functions before deploying:
 ```bash
 cd functions && npm install && npm run build
 ```
+
+---
+
+## Prerequisites
+- **Flutter SDK**: 3.24.x or higher
+- **Dart SDK**: 3.5.x or higher
+- **Java Development Kit (JDK)**: 17
+- **Xcode CLI & CocoaPods** (for iOS builds, macOS runner required)
+
+---
+
+## Release artifacts
+
+### Android App Bundle (Play Store)
+
+`android/key.properties` must exist and point at a real keystore:
+
+```properties
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=dilivvafast
+storeFile=/path/to/dilivvafast-release.jks
+```
+
+Then, with the same `--dart-define` flags as above:
+
+```bash
+flutter build appbundle --release --dart-define-from-file=dart_defines.json
+```
+
+Output: `build/app/outputs/bundle/release/app-release.aab`
+
+### iOS (macOS host with Xcode required)
+
+```bash
+cd ios && pod install --repo-update && cd ..
+flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+```
+
+Set your 10-character Apple Team ID in `ios/ExportOptions.plist` first. The
+`.ipa` lands in `build/ios/ipa/`, ready for Transporter or Xcode Organizer.

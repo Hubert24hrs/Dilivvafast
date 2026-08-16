@@ -54,7 +54,7 @@ class SurgePricingService {
     // Count pending orders in the last 30 minutes for this zone
     final thirtyMinAgo = now.subtract(const Duration(minutes: 30));
     final pendingOrders = await FirebaseFirestore.instance
-        .collection('orders')
+        .collection('couriers')
         .where('zoneId', isEqualTo: zoneId)
         .where('status', isEqualTo: 'pending')
         .where('createdAt', isGreaterThan: Timestamp.fromDate(thirtyMinAgo))

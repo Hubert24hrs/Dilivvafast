@@ -3,7 +3,10 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return 'Email is required';
     }
-    final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    // Structured enough to catch typos, open enough for real addresses: the
+    // {2,4} TLD limit this replaces rejected .info, .online, .agency, and the
+    // rest of the long TLDs.
+    final regex = RegExp(r'^[\w.+-]+@([\w-]+\.)+[\w-]{2,}$');
     if (!regex.hasMatch(value.trim())) {
       return 'Please enter a valid email address';
     }

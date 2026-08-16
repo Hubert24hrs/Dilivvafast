@@ -52,6 +52,7 @@ analyze_log.txt
 build_log.txt
 build_log_2.txt
 web_build_log.txt
+fresh_analyze.txt
 dart_files.txt
 
 # Generated files
@@ -59,10 +60,15 @@ dart_files.txt
 *.freezed.dart
 *.gr.dart
 
-# Keystore files
+# Keystore files — NEVER commit signing credentials!
 key.properties
 *.jks
+*.keystore
 
+# iOS signing — NEVER commit certificates or provisioning profiles
+*.p12
+*.mobileprovision
+*.cer
 # Node / Cloud Functions
 node_modules/
 functions/lib/

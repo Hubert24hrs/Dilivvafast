@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:dilivvafast/core/presentation/widgets/delivery_map_widget.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
@@ -203,7 +204,7 @@ class TrackingScreen extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // Open chat
+                      context.push('/chat/${order.id}');
                     },
                     icon: const Icon(Icons.chat_bubble_outline, size: 18),
                     label: const Text('Chat'),
@@ -220,7 +221,13 @@ class TrackingScreen extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // Share tracking link
+                      SharePlus.instance.share(
+                        ShareParams(
+                          text: 'Track my Dilivvafast delivery!\n'
+                              'Tracking Code: ${order.trackingCode}\n'
+                              'Status: ${order.status.name}',
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Share'),

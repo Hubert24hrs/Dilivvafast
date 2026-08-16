@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        ExportOptions.plist — used by:
+        flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+        IMPORTANT: Fill in your real teamID before running the build.
+        Find it at: https://developer.apple.com/account → Membership Details → Team ID
+
+        Distribution method: app-store → upload directly to App Store Connect.
+        For TestFlight internal testing, keep method as "app-store".
+    -->
+    <key>method</key>
+    <string>app-store</string>
+
+    <key>teamID</key>
+    <string>XXXXXXXXXX</string>  <!-- TODO: Replace with your 10-character Apple Team ID -->
+
+    <key>uploadBitcode</key>
+    <false/>
+
+    <key>uploadSymbols</key>
+    <true/>
+
+    <key>compileBitcode</key>
+    <false/>
+
+    <key>destination</key>
+    <string>upload</string>
+
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <key>provisioningProfiles</key>
+    <dict>
+        <!-- Bundle ID must match com.dilivvafast.app registered in Firebase Console -->
+        <key>com.dilivvafast.app</key>
+        <string>Dilivvafast App Store</string>  <!-- Name of your App Store provisioning profile -->
+    </dict>
+</dict>
+</plist>
