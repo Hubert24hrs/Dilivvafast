@@ -60,6 +60,10 @@ This document outlines all required manual actions, console configurations, and 
 
 ## 4. Google Play Console Setup
 
+> **See [PLAY_STORE.md](PLAY_STORE.md)** for the full Play submission guide:
+> the two upload blockers, a pre-filled Data Safety table, content-rating
+> answers, required test accounts, and the pre-submission checklist.
+
 1. **Target API Level**:
    - `android/app/build.gradle.kts` has been updated to `compileSdk = 36` and `targetSdk = 36` as mandated by Google Play policies.
 2. **Data Safety Form**:

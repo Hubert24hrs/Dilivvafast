@@ -75,3 +75,6 @@ functions/lib/
 
 # Local build config (never commit real keys)
 dart_defines.json
+
+# Kotlin compiler session files (generated during Gradle builds)
+android/.kotlin/

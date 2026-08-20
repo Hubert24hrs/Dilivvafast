@@ -77,6 +77,7 @@ production. Run it before any rules deploy.
 | [SECURITY.md](SECURITY.md) | The security model, what changed and why, deploy order |
 | [TESTING.md](TESTING.md) | Manual smoke-test script for the three critical journeys |
 | [STORE_READINESS.md](STORE_READINESS.md) | Console setup and manual steps before store submission |
+| [PLAY_STORE.md](PLAY_STORE.md) | Google Play submission: blockers, Data Safety answers, declarations |
 | [rules_test/README.md](rules_test/README.md) | What the rules tests cover and how to run them |
 | [HANDOFF.md](HANDOFF.md) | Current state and what to pick up next |
 
