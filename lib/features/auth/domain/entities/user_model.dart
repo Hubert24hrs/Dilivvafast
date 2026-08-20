@@ -84,7 +84,6 @@ abstract class UserModel with _$UserModel {
     @NullableGeoPointConverter() GeoPoint? location,
     String? address,
     // Driver-only fields
-    String? bvn,
     String? vehicleType,
     String? vehiclePlate,
     String? licenseUrl,
@@ -124,7 +123,6 @@ extension UserModelX on UserModel {
       'updatedAt': Timestamp.fromDate(updatedAt),
       'location': location,
       'address': address,
-      'bvn': bvn,
       'vehicleType': vehicleType,
       'vehiclePlate': vehiclePlate,
       'licenseUrl': licenseUrl,

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$UserModel {
 
  String get uid; String get fullName; String get email; String get phone; String? get photoUrl; UserRole get role; bool get isVerified; bool get isOnline; double get walletBalance; String get referralCode; String? get referredBy; String? get fcmToken; double get rating; int get totalDeliveries;@TimestampConverter() DateTime get createdAt;@TimestampConverter() DateTime get updatedAt;@NullableGeoPointConverter() GeoPoint? get location; String? get address;// Driver-only fields
- String? get bvn; String? get vehicleType; String? get vehiclePlate; String? get licenseUrl; bool get isAvailable;
+ String? get vehicleType; String? get vehiclePlate; String? get licenseUrl; bool get isAvailable;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.role, role) || other.role == role)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.walletBalance, walletBalance) || other.walletBalance == walletBalance)&&(identical(other.referralCode, referralCode) || other.referralCode == referralCode)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy)&&(identical(other.fcmToken, fcmToken) || other.fcmToken == fcmToken)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalDeliveries, totalDeliveries) || other.totalDeliveries == totalDeliveries)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.location, location) || other.location == location)&&(identical(other.address, address) || other.address == address)&&(identical(other.bvn, bvn) || other.bvn == bvn)&&(identical(other.vehicleType, vehicleType) || other.vehicleType == vehicleType)&&(identical(other.vehiclePlate, vehiclePlate) || other.vehiclePlate == vehiclePlate)&&(identical(other.licenseUrl, licenseUrl) || other.licenseUrl == licenseUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.role, role) || other.role == role)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.walletBalance, walletBalance) || other.walletBalance == walletBalance)&&(identical(other.referralCode, referralCode) || other.referralCode == referralCode)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy)&&(identical(other.fcmToken, fcmToken) || other.fcmToken == fcmToken)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalDeliveries, totalDeliveries) || other.totalDeliveries == totalDeliveries)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.location, location) || other.location == location)&&(identical(other.address, address) || other.address == address)&&(identical(other.vehicleType, vehicleType) || other.vehicleType == vehicleType)&&(identical(other.vehiclePlate, vehiclePlate) || other.vehiclePlate == vehiclePlate)&&(identical(other.licenseUrl, licenseUrl) || other.licenseUrl == licenseUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,uid,fullName,email,phone,photoUrl,role,isVerified,isOnline,walletBalance,referralCode,referredBy,fcmToken,rating,totalDeliveries,createdAt,updatedAt,location,address,bvn,vehicleType,vehiclePlate,licenseUrl,isAvailable]);
+int get hashCode => Object.hashAll([runtimeType,uid,fullName,email,phone,photoUrl,role,isVerified,isOnline,walletBalance,referralCode,referredBy,fcmToken,rating,totalDeliveries,createdAt,updatedAt,location,address,vehicleType,vehiclePlate,licenseUrl,isAvailable]);
 
 @override
 String toString() {
-  return 'UserModel(uid: $uid, fullName: $fullName, email: $email, phone: $phone, photoUrl: $photoUrl, role: $role, isVerified: $isVerified, isOnline: $isOnline, walletBalance: $walletBalance, referralCode: $referralCode, referredBy: $referredBy, fcmToken: $fcmToken, rating: $rating, totalDeliveries: $totalDeliveries, createdAt: $createdAt, updatedAt: $updatedAt, location: $location, address: $address, bvn: $bvn, vehicleType: $vehicleType, vehiclePlate: $vehiclePlate, licenseUrl: $licenseUrl, isAvailable: $isAvailable)';
+  return 'UserModel(uid: $uid, fullName: $fullName, email: $email, phone: $phone, photoUrl: $photoUrl, role: $role, isVerified: $isVerified, isOnline: $isOnline, walletBalance: $walletBalance, referralCode: $referralCode, referredBy: $referredBy, fcmToken: $fcmToken, rating: $rating, totalDeliveries: $totalDeliveries, createdAt: $createdAt, updatedAt: $updatedAt, location: $location, address: $address, vehicleType: $vehicleType, vehiclePlate: $vehiclePlate, licenseUrl: $licenseUrl, isAvailable: $isAvailable)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
- String uid, String fullName, String email, String phone, String? photoUrl, UserRole role, bool isVerified, bool isOnline, double walletBalance, String referralCode, String? referredBy, String? fcmToken, double rating, int totalDeliveries,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@NullableGeoPointConverter() GeoPoint? location, String? address, String? bvn, String? vehicleType, String? vehiclePlate, String? licenseUrl, bool isAvailable
+ String uid, String fullName, String email, String phone, String? photoUrl, UserRole role, bool isVerified, bool isOnline, double walletBalance, String referralCode, String? referredBy, String? fcmToken, double rating, int totalDeliveries,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@NullableGeoPointConverter() GeoPoint? location, String? address, String? vehicleType, String? vehiclePlate, String? licenseUrl, bool isAvailable
 });
 
 
@@ -66,7 +66,7 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? fullName = null,Object? email = null,Object? phone = null,Object? photoUrl = freezed,Object? role = null,Object? isVerified = null,Object? isOnline = null,Object? walletBalance = null,Object? referralCode = null,Object? referredBy = freezed,Object? fcmToken = freezed,Object? rating = null,Object? totalDeliveries = null,Object? createdAt = null,Object? updatedAt = null,Object? location = freezed,Object? address = freezed,Object? bvn = freezed,Object? vehicleType = freezed,Object? vehiclePlate = freezed,Object? licenseUrl = freezed,Object? isAvailable = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? fullName = null,Object? email = null,Object? phone = null,Object? photoUrl = freezed,Object? role = null,Object? isVerified = null,Object? isOnline = null,Object? walletBalance = null,Object? referralCode = null,Object? referredBy = freezed,Object? fcmToken = freezed,Object? rating = null,Object? totalDeliveries = null,Object? createdAt = null,Object? updatedAt = null,Object? location = freezed,Object? address = freezed,Object? vehicleType = freezed,Object? vehiclePlate = freezed,Object? licenseUrl = freezed,Object? isAvailable = null,}) {
   return _then(_self.copyWith(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
@@ -86,7 +86,6 @@ as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cas
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
 as GeoPoint?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String?,bvn: freezed == bvn ? _self.bvn : bvn // ignore: cast_nullable_to_non_nullable
 as String?,vehicleType: freezed == vehicleType ? _self.vehicleType : vehicleType // ignore: cast_nullable_to_non_nullable
 as String?,vehiclePlate: freezed == vehiclePlate ? _self.vehiclePlate : vehiclePlate // ignore: cast_nullable_to_non_nullable
 as String?,licenseUrl: freezed == licenseUrl ? _self.licenseUrl : licenseUrl // ignore: cast_nullable_to_non_nullable
@@ -176,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? bvn,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.bvn,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
+return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
   return orElse();
 
 }
@@ -197,10 +196,10 @@ return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? bvn,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.bvn,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
+return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -217,10 +216,10 @@ return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? bvn,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String fullName,  String email,  String phone,  String? photoUrl,  UserRole role,  bool isVerified,  bool isOnline,  double walletBalance,  String referralCode,  String? referredBy,  String? fcmToken,  double rating,  int totalDeliveries, @TimestampConverter()  DateTime createdAt, @TimestampConverter()  DateTime updatedAt, @NullableGeoPointConverter()  GeoPoint? location,  String? address,  String? vehicleType,  String? vehiclePlate,  String? licenseUrl,  bool isAvailable)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.bvn,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
+return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,_that.role,_that.isVerified,_that.isOnline,_that.walletBalance,_that.referralCode,_that.referredBy,_that.fcmToken,_that.rating,_that.totalDeliveries,_that.createdAt,_that.updatedAt,_that.location,_that.address,_that.vehicleType,_that.vehiclePlate,_that.licenseUrl,_that.isAvailable);case _:
   return null;
 
 }
@@ -232,7 +231,7 @@ return $default(_that.uid,_that.fullName,_that.email,_that.phone,_that.photoUrl,
 @JsonSerializable()
 
 class _UserModel extends UserModel {
-  const _UserModel({required this.uid, required this.fullName, required this.email, required this.phone, this.photoUrl, this.role = UserRole.customer, this.isVerified = false, this.isOnline = false, this.walletBalance = 0.0, required this.referralCode, this.referredBy, this.fcmToken, this.rating = 0.0, this.totalDeliveries = 0, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @NullableGeoPointConverter() this.location, this.address, this.bvn, this.vehicleType, this.vehiclePlate, this.licenseUrl, this.isAvailable = true}): super._();
+  const _UserModel({required this.uid, required this.fullName, required this.email, required this.phone, this.photoUrl, this.role = UserRole.customer, this.isVerified = false, this.isOnline = false, this.walletBalance = 0.0, required this.referralCode, this.referredBy, this.fcmToken, this.rating = 0.0, this.totalDeliveries = 0, @TimestampConverter() required this.createdAt, @TimestampConverter() required this.updatedAt, @NullableGeoPointConverter() this.location, this.address, this.vehicleType, this.vehiclePlate, this.licenseUrl, this.isAvailable = true}): super._();
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override final  String uid;
@@ -254,7 +253,6 @@ class _UserModel extends UserModel {
 @override@NullableGeoPointConverter() final  GeoPoint? location;
 @override final  String? address;
 // Driver-only fields
-@override final  String? bvn;
 @override final  String? vehicleType;
 @override final  String? vehiclePlate;
 @override final  String? licenseUrl;
@@ -273,16 +271,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.role, role) || other.role == role)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.walletBalance, walletBalance) || other.walletBalance == walletBalance)&&(identical(other.referralCode, referralCode) || other.referralCode == referralCode)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy)&&(identical(other.fcmToken, fcmToken) || other.fcmToken == fcmToken)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalDeliveries, totalDeliveries) || other.totalDeliveries == totalDeliveries)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.location, location) || other.location == location)&&(identical(other.address, address) || other.address == address)&&(identical(other.bvn, bvn) || other.bvn == bvn)&&(identical(other.vehicleType, vehicleType) || other.vehicleType == vehicleType)&&(identical(other.vehiclePlate, vehiclePlate) || other.vehiclePlate == vehiclePlate)&&(identical(other.licenseUrl, licenseUrl) || other.licenseUrl == licenseUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.role, role) || other.role == role)&&(identical(other.isVerified, isVerified) || other.isVerified == isVerified)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.walletBalance, walletBalance) || other.walletBalance == walletBalance)&&(identical(other.referralCode, referralCode) || other.referralCode == referralCode)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy)&&(identical(other.fcmToken, fcmToken) || other.fcmToken == fcmToken)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.totalDeliveries, totalDeliveries) || other.totalDeliveries == totalDeliveries)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.location, location) || other.location == location)&&(identical(other.address, address) || other.address == address)&&(identical(other.vehicleType, vehicleType) || other.vehicleType == vehicleType)&&(identical(other.vehiclePlate, vehiclePlate) || other.vehiclePlate == vehiclePlate)&&(identical(other.licenseUrl, licenseUrl) || other.licenseUrl == licenseUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,uid,fullName,email,phone,photoUrl,role,isVerified,isOnline,walletBalance,referralCode,referredBy,fcmToken,rating,totalDeliveries,createdAt,updatedAt,location,address,bvn,vehicleType,vehiclePlate,licenseUrl,isAvailable]);
+int get hashCode => Object.hashAll([runtimeType,uid,fullName,email,phone,photoUrl,role,isVerified,isOnline,walletBalance,referralCode,referredBy,fcmToken,rating,totalDeliveries,createdAt,updatedAt,location,address,vehicleType,vehiclePlate,licenseUrl,isAvailable]);
 
 @override
 String toString() {
-  return 'UserModel(uid: $uid, fullName: $fullName, email: $email, phone: $phone, photoUrl: $photoUrl, role: $role, isVerified: $isVerified, isOnline: $isOnline, walletBalance: $walletBalance, referralCode: $referralCode, referredBy: $referredBy, fcmToken: $fcmToken, rating: $rating, totalDeliveries: $totalDeliveries, createdAt: $createdAt, updatedAt: $updatedAt, location: $location, address: $address, bvn: $bvn, vehicleType: $vehicleType, vehiclePlate: $vehiclePlate, licenseUrl: $licenseUrl, isAvailable: $isAvailable)';
+  return 'UserModel(uid: $uid, fullName: $fullName, email: $email, phone: $phone, photoUrl: $photoUrl, role: $role, isVerified: $isVerified, isOnline: $isOnline, walletBalance: $walletBalance, referralCode: $referralCode, referredBy: $referredBy, fcmToken: $fcmToken, rating: $rating, totalDeliveries: $totalDeliveries, createdAt: $createdAt, updatedAt: $updatedAt, location: $location, address: $address, vehicleType: $vehicleType, vehiclePlate: $vehiclePlate, licenseUrl: $licenseUrl, isAvailable: $isAvailable)';
 }
 
 
@@ -293,7 +291,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
- String uid, String fullName, String email, String phone, String? photoUrl, UserRole role, bool isVerified, bool isOnline, double walletBalance, String referralCode, String? referredBy, String? fcmToken, double rating, int totalDeliveries,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@NullableGeoPointConverter() GeoPoint? location, String? address, String? bvn, String? vehicleType, String? vehiclePlate, String? licenseUrl, bool isAvailable
+ String uid, String fullName, String email, String phone, String? photoUrl, UserRole role, bool isVerified, bool isOnline, double walletBalance, String referralCode, String? referredBy, String? fcmToken, double rating, int totalDeliveries,@TimestampConverter() DateTime createdAt,@TimestampConverter() DateTime updatedAt,@NullableGeoPointConverter() GeoPoint? location, String? address, String? vehicleType, String? vehiclePlate, String? licenseUrl, bool isAvailable
 });
 
 
@@ -310,7 +308,7 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? fullName = null,Object? email = null,Object? phone = null,Object? photoUrl = freezed,Object? role = null,Object? isVerified = null,Object? isOnline = null,Object? walletBalance = null,Object? referralCode = null,Object? referredBy = freezed,Object? fcmToken = freezed,Object? rating = null,Object? totalDeliveries = null,Object? createdAt = null,Object? updatedAt = null,Object? location = freezed,Object? address = freezed,Object? bvn = freezed,Object? vehicleType = freezed,Object? vehiclePlate = freezed,Object? licenseUrl = freezed,Object? isAvailable = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? fullName = null,Object? email = null,Object? phone = null,Object? photoUrl = freezed,Object? role = null,Object? isVerified = null,Object? isOnline = null,Object? walletBalance = null,Object? referralCode = null,Object? referredBy = freezed,Object? fcmToken = freezed,Object? rating = null,Object? totalDeliveries = null,Object? createdAt = null,Object? updatedAt = null,Object? location = freezed,Object? address = freezed,Object? vehicleType = freezed,Object? vehiclePlate = freezed,Object? licenseUrl = freezed,Object? isAvailable = null,}) {
   return _then(_UserModel(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
@@ -330,7 +328,6 @@ as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cas
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
 as GeoPoint?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String?,bvn: freezed == bvn ? _self.bvn : bvn // ignore: cast_nullable_to_non_nullable
 as String?,vehicleType: freezed == vehicleType ? _self.vehicleType : vehicleType // ignore: cast_nullable_to_non_nullable
 as String?,vehiclePlate: freezed == vehiclePlate ? _self.vehiclePlate : vehiclePlate // ignore: cast_nullable_to_non_nullable
 as String?,licenseUrl: freezed == licenseUrl ? _self.licenseUrl : licenseUrl // ignore: cast_nullable_to_non_nullable

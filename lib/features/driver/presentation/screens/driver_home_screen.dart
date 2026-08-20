@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/driver/presentation/widgets/background_location_disclosure.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/driver/presentation/controllers/driver_route_controller.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
@@ -34,6 +35,7 @@ class DriverHomeScreen extends ConsumerWidget {
             // Top bar with greeting + online toggle
             _buildTopBar(
               context,
+              ref,
               user?.fullName ?? 'Driver',
               routeState,
               routeCtrl,
@@ -95,6 +97,7 @@ class DriverHomeScreen extends ConsumerWidget {
 
   Widget _buildTopBar(
     BuildContext context,
+    WidgetRef ref,
     String name,
     DriverRouteState state,
     DriverRouteController ctrl,
@@ -171,6 +174,19 @@ class DriverHomeScreen extends ConsumerWidget {
           // Online toggle
           GestureDetector(
             onTap: () async {
+              // Google Play requires the prominent disclosure before the
+              // background-location prompt, which toggleOnline triggers.
+              // Skipped once the driver has already granted it.
+              if (!state.isOnline) {
+                final tracking = ref.read(locationTrackingServiceProvider);
+                if (!await tracking.hasBackgroundPermission()) {
+                  if (!context.mounted) return;
+                  final agreed =
+                      await showBackgroundLocationDisclosure(context);
+                  if (!agreed) return;
+                }
+              }
+
               final error = await ctrl.toggleOnline();
               if (error != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(

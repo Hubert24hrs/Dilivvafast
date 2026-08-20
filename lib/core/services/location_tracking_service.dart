@@ -144,6 +144,14 @@ class LocationTrackingService {
     }
   }
 
+  /// Whether background ("Allow all the time") access is already granted.
+  ///
+  /// Used to decide if the prominent disclosure still needs showing: Google
+  /// requires it before the background permission is *requested*, so once the
+  /// driver has already granted it there is nothing left to disclose.
+  Future<bool> hasBackgroundPermission() async =>
+      await Geolocator.checkPermission() == LocationPermission.always;
+
   /// Ensure location permission, escalating to background access.
   ///
   /// Android 10+ only grants background ("Allow all the time") access on a
