@@ -70,6 +70,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     try {
       final response = await _mayaService.sendMessage(userText);
 
+      // A network round-trip to the assistant takes seconds; the user may well
+      // have left the screen before it returns.
+      if (!mounted) return;
       setState(() {
         // Remove typing indicator
         _messages.removeWhere((m) => m.isTyping);
@@ -77,6 +80,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Chatbot send failed: $e');
+      if (!mounted) return;
       setState(() {
         _messages.removeWhere((m) => m.isTyping);
         _messages.add(_ChatMessage(
@@ -93,6 +98,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 150), () {
+      // The delay outlives the screen if the user backs out immediately;
+      // touching the controller after dispose throws.
+      if (!mounted) return;
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -108,7 +116,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final quickReplies = _mayaService.getQuickReplies();
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -140,10 +148,10 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
         onPressed: () => context.pop(),
       ),
       title: Row(
@@ -156,22 +164,22 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               gradient: AppTheme.primaryGradient,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                  color: context.palette.brand.withValues(alpha: 0.3),
                   blurRadius: 12,
                   spreadRadius: -2,
                 ),
               ],
             ),
             child:
-                const Icon(Icons.support_agent, color: Colors.white, size: 20),
+                Icon(Icons.support_agent, color: context.palette.onBrand, size: 20),
           ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Maya',
+              Text('Maya',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: context.palette.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600)),
               Row(
@@ -179,15 +187,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.successColor,
+                      color: context.palette.success,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text('AI Assistant • Online',
+                  Text('AI Assistant • Online',
                       style: TextStyle(
-                          color: AppTheme.successColor, fontSize: 10)),
+                          color: context.palette.success, fontSize: 10)),
                 ],
               ),
             ],
@@ -196,7 +204,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white54, size: 20),
+          icon: Icon(Icons.refresh_rounded, color: context.palette.textSecondary, size: 20),
           tooltip: 'Clear chat',
           onPressed: () {
             _mayaService.clearHistory();
@@ -214,17 +222,17 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text('Connecting to human agent...'),
-                backgroundColor: AppTheme.primaryColor,
+                backgroundColor: context.palette.brand,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
             );
           },
-          icon: const Icon(Icons.headset_mic,
-              color: AppTheme.primaryColor, size: 16),
-          label: const Text('Escalate',
-              style: TextStyle(color: AppTheme.primaryColor, fontSize: 11)),
+          icon: Icon(Icons.headset_mic,
+              color: context.palette.brand, size: 16),
+          label: Text('Escalate',
+              style: TextStyle(color: context.palette.brand, fontSize: 11)),
         ),
       ],
     );
@@ -238,14 +246,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
+            color: context.palette.surfaceRaised,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(18),
               topRight: Radius.circular(18),
               bottomLeft: Radius.circular(4),
               bottomRight: Radius.circular(18),
             ),
-            border: Border.all(color: Colors.white10),
+            border: Border.all(color: context.palette.border),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -269,8 +277,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         decoration: BoxDecoration(
           color: isUser
-              ? AppTheme.primaryColor.withValues(alpha: 0.12)
-              : AppTheme.surfaceColor,
+              ? context.palette.brand.withValues(alpha: 0.12)
+              : context.palette.surfaceRaised,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -279,14 +287,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           ),
           border: Border.all(
             color: isUser
-                ? AppTheme.primaryColor.withValues(alpha: 0.25)
-                : Colors.white10,
+                ? context.palette.brand.withValues(alpha: 0.25)
+                : context.palette.border,
           ),
         ),
         child: Text(
           message.text,
           style: TextStyle(
-            color: isUser ? AppTheme.primaryColor : Colors.white70,
+            color: isUser ? context.palette.brand : context.palette.textSecondary,
             fontSize: 13.5,
             height: 1.5,
           ),
@@ -298,7 +306,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   Widget _buildTypingDot(int index) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3),
-      child: const Icon(Icons.circle, size: 6, color: Colors.white38),
+      child: Icon(Icons.circle, size: 6, color: context.palette.textMuted),
     )
         .animate(onPlay: (c) => c.repeat(reverse: true))
         .fadeIn(delay: Duration(milliseconds: index * 200), duration: 400.ms)
@@ -316,11 +324,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, index) => ActionChip(
           label: Text(quickReplies[index],
-              style: const TextStyle(
-                  color: AppTheme.primaryColor, fontSize: 11.5)),
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.08),
+              style: TextStyle(
+                  color: context.palette.brand, fontSize: 11.5)),
+          backgroundColor: context.palette.brand.withValues(alpha: 0.08),
           side: BorderSide(
-              color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+              color: context.palette.brand.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20)),
           onPressed: () => _sendMessage(quickReplies[index]),
@@ -334,10 +342,10 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       padding: EdgeInsets.fromLTRB(
           16, 12, 10, MediaQuery.of(context).padding.bottom + 12),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: context.palette.surfaceRaised,
         border: Border(
             top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.06))),
+                color: context.palette.border)),
       ),
       child: Row(
         children: [
@@ -345,11 +353,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             child: TextField(
               controller: _controller,
               focusNode: _focusNode,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Ask Maya anything...',
                 hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: context.palette.textMuted,
                     fontSize: 14),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -368,13 +376,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: _isLoading ? null : AppTheme.primaryGradient,
-              color: _isLoading ? Colors.white12 : null,
+              color: _isLoading ? context.palette.border : null,
               boxShadow: _isLoading
                   ? null
                   : [
                       BoxShadow(
                         color:
-                            AppTheme.primaryColor.withValues(alpha: 0.3),
+                            context.palette.brand.withValues(alpha: 0.3),
                         blurRadius: 10,
                         spreadRadius: -2,
                       ),
@@ -382,16 +390,16 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             ),
             child: IconButton(
               icon: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white54,
+                        color: context.palette.textSecondary,
                       ),
                     )
-                  : const Icon(Icons.send_rounded,
-                      color: Colors.white, size: 18),
+                  : Icon(Icons.send_rounded,
+                      color: context.palette.textPrimary, size: 18),
               onPressed:
                   _isLoading ? null : () => _sendMessage(_controller.text),
             ),

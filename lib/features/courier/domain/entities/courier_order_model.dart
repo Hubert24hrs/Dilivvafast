@@ -55,25 +55,39 @@ enum PaymentStatus {
   refunded,
 }
 
-/// JSON converter for Firestore GeoPoint
-class GeoPointConverter implements JsonConverter<GeoPoint, Map<String, dynamic>> {
+/// JSON converter for Firestore GeoPoint.
+///
+/// Accepts BOTH a native [GeoPoint] and a `{latitude, longitude}` map.
+/// This converter was declared as `JsonConverter<GeoPoint, Map<String,
+/// dynamic>>`, so the generated decoder cast `json['pickupGeoPoint']` to a Map
+/// — but `toFirestore()` stores a native GeoPoint (correctly, so the field
+/// stays geo-queryable), and Firestore hands one back on read. Every attempt
+/// to decode a courier order therefore threw
+/// `type 'GeoPoint' is not a subtype of type 'Map<String, dynamic>'`,
+/// taking out order history, active-order tracking and the driver job list.
+///
+/// Mirrors NullableGeoPointConverter in user_model.dart, which already had it
+/// right. Writes stay native so existing documents and queries are unaffected.
+class GeoPointConverter implements JsonConverter<GeoPoint, Object?> {
   const GeoPointConverter();
 
   @override
-  GeoPoint fromJson(Map<String, dynamic> json) {
-    return GeoPoint(
-      (json['latitude'] as num).toDouble(),
-      (json['longitude'] as num).toDouble(),
-    );
+  GeoPoint fromJson(Object? json) {
+    if (json is GeoPoint) return json;
+    if (json is Map) {
+      final lat = json['latitude'] as num?;
+      final lng = json['longitude'] as num?;
+      if (lat != null && lng != null) {
+        return GeoPoint(lat.toDouble(), lng.toDouble());
+      }
+    }
+    // Null Island: a lossy but non-fatal fallback. Throwing here would fail
+    // the whole order list because of one malformed document.
+    return const GeoPoint(0, 0);
   }
 
   @override
-  Map<String, dynamic> toJson(GeoPoint geoPoint) {
-    return {
-      'latitude': geoPoint.latitude,
-      'longitude': geoPoint.longitude,
-    };
-  }
+  Object? toJson(GeoPoint geoPoint) => geoPoint;
 }
 
 /// JSON converter for `List<GeoPoint>`
@@ -81,23 +95,28 @@ class GeoPointListConverter
     implements JsonConverter<List<GeoPoint>, List<dynamic>> {
   const GeoPointListConverter();
 
+  /// Same dual-format handling as [GeoPointConverter]: route polylines are
+  /// stored as native GeoPoints, so decoding must accept them.
   @override
   List<GeoPoint> fromJson(List<dynamic> jsonList) {
-    return jsonList.map((item) {
-      final map = item as Map<String, dynamic>;
-      return GeoPoint(
-        (map['latitude'] as num).toDouble(),
-        (map['longitude'] as num).toDouble(),
-      );
-    }).toList();
+    return jsonList
+        .map((item) {
+          if (item is GeoPoint) return item;
+          if (item is Map) {
+            final lat = item['latitude'] as num?;
+            final lng = item['longitude'] as num?;
+            if (lat != null && lng != null) {
+              return GeoPoint(lat.toDouble(), lng.toDouble());
+            }
+          }
+          return null;
+        })
+        .whereType<GeoPoint>()
+        .toList();
   }
 
   @override
-  List<dynamic> toJson(List<GeoPoint> geoPoints) {
-    return geoPoints
-        .map((gp) => {'latitude': gp.latitude, 'longitude': gp.longitude})
-        .toList();
-  }
+  List<dynamic> toJson(List<GeoPoint> geoPoints) => geoPoints;
 }
 
 @freezed
@@ -148,8 +167,44 @@ abstract class CourierOrderModel with _$CourierOrderModel {
   factory CourierOrderModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     data['id'] = doc.id;
+    // Older builds wrote `pickedUp` / `inTransit` (from `.name`) where the
+    // schema declares `picked_up` / `in_transit`. Normalise before decoding so
+    // documents written by those builds still load.
+    data['status'] =
+        orderStatusFromWire(data['status'] as String?).wireValue;
     return CourierOrderModel.fromJson(data);
   }
+}
+
+/// Canonical Firestore representation of an [OrderStatus].
+///
+/// Use this, never `.name`. The enum declares `@JsonValue('picked_up')` and
+/// `@JsonValue('in_transit')`, so `fromJson` expects snake_case — but writes
+/// used `.name`, which produces `pickedUp` / `inTransit`. Reads and writes
+/// therefore disagreed on exactly the two mid-delivery states, and an order
+/// that reached either one could not be deserialised again.
+///
+/// `_$OrderStatusEnumMap` is generated into the `part` file below, so it is
+/// visible here and stays in step with the annotations automatically.
+extension OrderStatusWire on OrderStatus {
+  String get wireValue => _$OrderStatusEnumMap[this]!;
+}
+
+/// Parse a status written by any app version.
+///
+/// Accepts the canonical snake_case form and also tolerates the legacy
+/// camelCase values that older builds wrote, so historical documents keep
+/// loading. Unknown values fall back to [OrderStatus.pending] rather than
+/// throwing and taking the whole order list down.
+OrderStatus orderStatusFromWire(String? value) {
+  if (value == null) return OrderStatus.pending;
+  for (final entry in _$OrderStatusEnumMap.entries) {
+    if (entry.value == value) return entry.key;
+  }
+  for (final status in OrderStatus.values) {
+    if (status.name == value) return status; // legacy camelCase
+  }
+  return OrderStatus.pending;
 }
 
 extension CourierOrderModelX on CourierOrderModel {
@@ -157,7 +212,7 @@ extension CourierOrderModelX on CourierOrderModel {
     return {
       'userId': userId,
       'driverId': driverId,
-      'status': status.name,
+      'status': status.wireValue,
       'pickupAddress': pickupAddress,
       'pickupGeoPoint': pickupGeoPoint,
       'dropoffAddress': dropoffAddress,

@@ -31,30 +31,30 @@ class _DriverEarningsScreenState
     final walletAsync = ref.watch(walletBalanceProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Earnings',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Earnings',
+            style: TextStyle(color: context.palette.textPrimary, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined,
-                color: AppTheme.primaryColor),
+            icon: Icon(Icons.account_balance_wallet_outlined,
+                color: context.palette.brand),
             onPressed: () => context.push('/wallet/top-up'),
           ),
         ],
       ),
       body: ordersAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primaryColor)),
+        loading: () => Center(
+            child: CircularProgressIndicator(color: context.palette.brand)),
         error: (e, _) => Center(
             child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+                style: TextStyle(color: context.palette.danger))),
         data: (orders) {
           final walletBalance = walletAsync.value ?? 0.0;
           final deliveredOrders = orders
@@ -158,9 +158,9 @@ class _DriverEarningsScreenState
           const SizedBox(height: 24),
 
           // Recent trips
-          const Text('Recent Trips',
+          Text('Recent Trips',
               style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
@@ -169,12 +169,12 @@ class _DriverEarningsScreenState
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
+              child: Center(
                 child: Text('No completed deliveries yet',
-                    style: TextStyle(color: Colors.white54)),
+                    style: TextStyle(color: context.palette.textSecondary)),
               ),
             )
           else
@@ -200,7 +200,7 @@ class _DriverEarningsScreenState
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+            color: context.palette.brand.withValues(alpha: 0.3),
             blurRadius: 24,
             spreadRadius: -8,
             offset: const Offset(0, 8),
@@ -213,21 +213,21 @@ class _DriverEarningsScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Wallet Balance',
+              Text('Wallet Balance',
                   style: TextStyle(
-                      color: Colors.white70,
+                      color: context.palette.textSecondary,
                       fontSize: 14,
                       fontWeight: FontWeight.w500)),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: context.palette.textMuted,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('Withdraw',
+                child: Text('Withdraw',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
               ),
@@ -236,8 +236,8 @@ class _DriverEarningsScreenState
           const SizedBox(height: 12),
           Text(
             _currencyFormat.format(walletBalance),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.palette.textPrimary,
               fontSize: 36,
               fontWeight: FontWeight.bold,
               letterSpacing: -1,
@@ -246,11 +246,11 @@ class _DriverEarningsScreenState
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.trending_up, color: Colors.white70, size: 16),
+              Icon(Icons.trending_up, color: context.palette.textSecondary, size: 16),
               const SizedBox(width: 4),
               Text(
                 '+${_currencyFormat.format(todayEarnings)} today',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
               ),
             ],
           ),
@@ -264,30 +264,30 @@ class _DriverEarningsScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: AppTheme.primaryColor, size: 18),
+              Icon(icon, color: context.palette.brand, size: 18),
               const SizedBox(width: 8),
               Text(label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 10),
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: context.palette.onBrand,
                   fontSize: 20,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(subtitle,
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: TextStyle(color: context.palette.textMuted, fontSize: 11)),
         ],
       ),
     );
@@ -303,10 +303,10 @@ class _DriverEarningsScreenState
           child: ChoiceChip(
             label: Text(periods[index]),
             selected: isSelected,
-            selectedColor: AppTheme.primaryColor,
-            backgroundColor: AppTheme.surfaceColor,
+            selectedColor: context.palette.brand,
+            backgroundColor: context.palette.surfaceRaised,
             labelStyle: TextStyle(
-              color: isSelected ? Colors.white : Colors.white54,
+              color: isSelected ? context.palette.onBrand : context.palette.textSecondary,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -315,8 +315,8 @@ class _DriverEarningsScreenState
             ),
             side: BorderSide(
               color: isSelected
-                  ? AppTheme.primaryColor
-                  : Colors.white.withValues(alpha: 0.1),
+                  ? context.palette.brand
+                  : context.palette.border,
             ),
             onSelected: (selected) {
               if (selected) setState(() => _selectedPeriod = index);
@@ -337,9 +337,9 @@ class _DriverEarningsScreenState
       height: 200,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.palette.border),
       ),
       child: BarChart(
         BarChartData(
@@ -349,8 +349,8 @@ class _DriverEarningsScreenState
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   _currencyFormat.format(rod.toY),
-                  const TextStyle(
-                      color: Colors.white,
+                  TextStyle(
+                      color: context.palette.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 12),
                 );
@@ -368,8 +368,8 @@ class _DriverEarningsScreenState
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(weekDays[idx],
-                          style: const TextStyle(
-                              color: Colors.white38, fontSize: 10)),
+                          style: TextStyle(
+                              color: context.palette.textMuted, fontSize: 10)),
                     );
                   }
                   return const SizedBox.shrink();
@@ -388,7 +388,7 @@ class _DriverEarningsScreenState
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: context.palette.border,
                 strokeWidth: 1,
               );
             },
@@ -402,8 +402,8 @@ class _DriverEarningsScreenState
                 BarChartRodData(
                   toY: weeklyData[index],
                   color: isToday
-                      ? AppTheme.primaryColor
-                      : AppTheme.primaryColor.withValues(alpha: 0.4),
+                      ? context.palette.brand
+                      : context.palette.brand.withValues(alpha: 0.4),
                   width: 24,
                   borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6)),
@@ -425,9 +425,9 @@ class _DriverEarningsScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.palette.border),
       ),
       child: Row(
         children: [
@@ -435,11 +435,11 @@ class _DriverEarningsScreenState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              color: context.palette.brand.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.local_shipping_outlined,
-                color: AppTheme.primaryColor, size: 20),
+            child: Icon(Icons.local_shipping_outlined,
+                color: context.palette.brand, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -447,8 +447,8 @@ class _DriverEarningsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(route,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: context.palette.onBrand,
                         fontSize: 13,
                         fontWeight: FontWeight.w500),
                     maxLines: 1,
@@ -456,14 +456,14 @@ class _DriverEarningsScreenState
                 const SizedBox(height: 2),
                 Text(timeFormat.format(time),
                     style:
-                        const TextStyle(color: Colors.white38, fontSize: 11)),
+                        TextStyle(color: context.palette.textMuted, fontSize: 11)),
               ],
             ),
           ),
           Text(
             '+${_currencyFormat.format(order.driverEarnings)}',
-            style: const TextStyle(
-              color: AppTheme.successColor,
+            style: TextStyle(
+              color: context.palette.success,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),

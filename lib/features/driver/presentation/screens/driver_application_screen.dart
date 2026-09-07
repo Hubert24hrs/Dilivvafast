@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/driver/domain/entities/driver_application_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class DriverApplicationScreen extends ConsumerStatefulWidget {
   const DriverApplicationScreen({super.key});
@@ -78,12 +81,12 @@ class _DriverApplicationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () {
             if (_step > 0) {
               setState(() => _step--);
@@ -92,20 +95,20 @@ class _DriverApplicationScreenState
             }
           },
         ),
-        title: const Text('Become a Rider',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Become a Rider',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
+              color: context.palette.brand.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               'Step ${_step + 1}/3',
-              style: const TextStyle(
-                  color: Color(0xFFFF6B00),
+              style: TextStyle(
+                  color: context.palette.brand,
                   fontSize: 12,
                   fontWeight: FontWeight.w600),
             ),
@@ -127,7 +130,7 @@ class _DriverApplicationScreenState
                       borderRadius: BorderRadius.circular(2),
                       color: i <= _step
                           ? const Color(0xFF4CAF50)
-                          : const Color(0xFF1D1E33),
+                          : context.palette.surfaceRaised,
                     ),
                   ),
                 );
@@ -164,18 +167,18 @@ class _DriverApplicationScreenState
                   onPressed: _isSubmitting ? null : _handleNext,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
+                    foregroundColor: context.palette.textPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 4,
                   ),
                   child: _isSubmitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: context.palette.textPrimary,
                             strokeWidth: 2.5,
                           ),
                         )
@@ -238,12 +241,12 @@ class _DriverApplicationScreenState
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFF4CAF50).withValues(alpha: 0.12)
-                      : const Color(0xFF1D1E33),
+                      : context.palette.surfaceRaised,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFF4CAF50)
-                        : Colors.white12,
+                        : context.palette.border,
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -252,14 +255,14 @@ class _DriverApplicationScreenState
                     Icon(v.$2,
                         color: isSelected
                             ? const Color(0xFF4CAF50)
-                            : Colors.white54,
+                            : context.palette.textSecondary,
                         size: 32),
                     const SizedBox(height: 8),
                     Text(v.$3,
                         style: TextStyle(
                           color: isSelected
                               ? const Color(0xFF4CAF50)
-                              : Colors.white54,
+                              : context.palette.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         )),
@@ -278,16 +281,16 @@ class _DriverApplicationScreenState
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1D1E33),
+            color: context.palette.surfaceRaised,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: context.palette.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Required Documents',
+              Text('Required Documents',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: context.palette.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
@@ -329,7 +332,7 @@ class _DriverApplicationScreenState
         gradient: LinearGradient(
           colors: [
             const Color(0xFF4CAF50).withValues(alpha: 0.08),
-            const Color(0xFFFF6B00).withValues(alpha: 0.05),
+            context.palette.brand.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -353,14 +356,14 @@ class _DriverApplicationScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: context.palette.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.palette.textSecondary,
                         fontSize: 12)),
               ],
             ),
@@ -379,19 +382,19 @@ class _DriverApplicationScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.palette.border),
       ),
       child: TextFormField(
         controller: c,
         keyboardType: keyboard,
         textCapitalization: capitalize,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
+        style: TextStyle(color: context.palette.textPrimary, fontSize: 15),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.white38, size: 20),
+          prefixIcon: Icon(icon, color: context.palette.textMuted, size: 20),
           hintText: label,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+          hintStyle: TextStyle(color: context.palette.textMuted),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -412,7 +415,7 @@ class _DriverApplicationScreenState
       child: Row(
         children: [
           Icon(icon,
-              color: isUploaded ? const Color(0xFF4CAF50) : Colors.white38,
+              color: isUploaded ? const Color(0xFF4CAF50) : context.palette.textMuted,
               size: 20),
           const SizedBox(width: 12),
           Expanded(
@@ -420,7 +423,7 @@ class _DriverApplicationScreenState
                 style: TextStyle(
                     color: isUploaded
                         ? const Color(0xFF4CAF50)
-                        : Colors.white54,
+                        : context.palette.textSecondary,
                     fontSize: 13)),
           ),
           if (isUploaded)
@@ -433,14 +436,14 @@ class _DriverApplicationScreenState
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
+                  color: context.palette.brand.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: const Color(0xFFFF6B00).withValues(alpha: 0.3)),
+                      color: context.palette.brand.withValues(alpha: 0.3)),
                 ),
-                child: const Text('Upload',
+                child: Text('Upload',
                     style: TextStyle(
-                        color: Color(0xFFFF6B00),
+                        color: context.palette.brand,
                         fontSize: 11,
                         fontWeight: FontWeight.w600)),
               ),
@@ -497,7 +500,7 @@ class _DriverApplicationScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Upload failed: $e'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: context.palette.danger,
           ),
         );
       }
@@ -539,8 +542,14 @@ class _DriverApplicationScreenState
 
       await ref
           .read(firestoreProvider)
-          .collection('driver_applications')
+          .collection(FirestoreConstants.driverApplications)
           .add(application.toFirestore());
+
+      // Move the account to "under review" so the drawer's mode switcher
+      // reflects the application. Only an admin can take it to approved.
+      await ref
+          .read(userRepositoryProvider)
+          .updateUser(userId, {'driverStatus': ModeAccess.pending.name});
 
       if (mounted) {
         _showSuccessDialog();
@@ -550,7 +559,7 @@ class _DriverApplicationScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Error: $e'),
-              backgroundColor: Colors.redAccent),
+              backgroundColor: context.palette.danger),
         );
       }
     } finally {
@@ -563,7 +572,7 @@ class _DriverApplicationScreenState
       context: context,
       barrierDismissible: false,
       builder: (_) => Dialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -581,9 +590,9 @@ class _DriverApplicationScreenState
                     color: Color(0xFF4CAF50), size: 40),
               ),
               const SizedBox(height: 20),
-              const Text('Application Submitted!',
+              Text('Application Submitted!',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: context.palette.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
@@ -591,7 +600,7 @@ class _DriverApplicationScreenState
                 'We\'ll review your application and get back to you within 24-48 hours.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
+                    color: context.palette.textPrimary, fontSize: 14),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -603,7 +612,7 @@ class _DriverApplicationScreenState
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
+                    foregroundColor: context.palette.textPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),

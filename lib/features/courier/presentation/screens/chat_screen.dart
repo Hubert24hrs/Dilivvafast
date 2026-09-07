@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/chat_message_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Streams chat messages for a specific order
 final chatMessagesProvider =
@@ -87,16 +88,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId = ref.watch(currentUserIdProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Chat',
-                style: TextStyle(color: Colors.white, fontSize: 16)),
+            Text('Chat',
+                style: TextStyle(color: context.palette.textPrimary, fontSize: 16)),
             Text('Order: ${widget.orderId.substring(0, 8)}...',
-                style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                style: TextStyle(color: context.palette.textMuted, fontSize: 11)),
           ],
         ),
       ),
@@ -113,14 +114,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       children: [
                         Icon(Icons.chat_bubble_outline,
                             size: 48,
-                            color: Colors.white.withValues(alpha: 0.15)),
+                            color: context.palette.textMuted),
                         const SizedBox(height: 12),
-                        const Text('No messages yet',
-                            style: TextStyle(color: Colors.white38)),
+                        Text('No messages yet',
+                            style: TextStyle(color: context.palette.textMuted)),
                         const SizedBox(height: 4),
-                        const Text('Start the conversation!',
+                        Text('Start the conversation!',
                             style:
-                                TextStyle(color: Colors.white24, fontSize: 12)),
+                                TextStyle(color: context.palette.textMuted, fontSize: 12)),
                       ],
                     ),
                   );
@@ -137,13 +138,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       _buildBubble(messages[i], currentUserId),
                 );
               },
-              loading: () => const Center(
+              loading: () => Center(
                 child:
-                    CircularProgressIndicator(color: Color(0xFFFF6B00)),
+                    CircularProgressIndicator(color: context.palette.brand),
               ),
               error: (e, _) => Center(
                 child: Text('Error: $e',
-                    style: const TextStyle(color: Colors.redAccent)),
+                    style: TextStyle(color: context.palette.danger)),
               ),
             ),
           ),
@@ -152,10 +153,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1D1E33),
+              color: context.palette.surfaceRaised,
               border: Border(
                   top: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1))),
+                      color: context.palette.border)),
             ),
             child: SafeArea(
               child: Row(
@@ -164,17 +165,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A0E21),
+                        color: context.palette.surfaceBase,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: TextField(
                         controller: _controller,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 14),
+                        style: TextStyle(
+                            color: context.palette.textPrimary, fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Type a message...',
                           hintStyle: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3)),
+                              color: context.palette.textMuted),
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) => _sendMessage(),
@@ -186,13 +187,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Container(
                     width: 44,
                     height: 44,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFFF6B00),
+                      color: context.palette.brand,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send,
-                          color: Color(0xFF0A0E21), size: 20),
+                      icon: Icon(Icons.send,
+                          color: context.palette.surfaceBase, size: 20),
                       onPressed: _sendMessage,
                     ),
                   ),
@@ -218,8 +219,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMine
-              ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
-              : const Color(0xFF1D1E33),
+              ? context.palette.brand.withValues(alpha: 0.15)
+              : context.palette.surfaceRaised,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -228,8 +229,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           border: Border.all(
             color: isMine
-                ? const Color(0xFFFF6B00).withValues(alpha: 0.3)
-                : Colors.white12,
+                ? context.palette.brand.withValues(alpha: 0.3)
+                : context.palette.border,
           ),
         ),
         child: Column(
@@ -240,20 +241,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Text(
                 msg.senderRole.toUpperCase(),
                 style: TextStyle(
-                  color: const Color(0xFFFF9500).withValues(alpha: 0.7),
+                  color: context.palette.brand.withValues(alpha: 0.7),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             Text(
               msg.text,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.palette.onBrand, fontSize: 14),
             ),
             const SizedBox(height: 2),
             Text(
               time,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.3),
+                color: context.palette.textMuted,
                 fontSize: 10,
               ),
             ),

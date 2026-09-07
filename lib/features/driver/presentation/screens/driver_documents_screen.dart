@@ -27,11 +27,43 @@ class _DriverDocumentsScreenState
       source: ImageSource.gallery,
       imageQuality: 80,
     );
-    if (image == null) return;
+    // The gallery picker suspends this screen; it may be disposed by the time
+    // the user finishes choosing (or cancelling).
+    if (image == null || !mounted) return;
+
+    // Reject anything that is not an image we are prepared to store. The
+    // storage rules enforce this too, but failing here gives the driver a
+    // clear message instead of an opaque permission error.
+    final name = image.name.toLowerCase();
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    if (!allowed.any(name.endsWith)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please choose a JPG, PNG or WebP image.'),
+          backgroundColor: context.palette.danger,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isUploading = true);
     try {
       final bytes = await image.readAsBytes();
+
+      // Matches the 8 MB ceiling in storage.rules, checked here so an
+      // oversized file fails fast instead of after a long upload.
+      const maxBytes = 8 * 1024 * 1024;
+      if (bytes.lengthInBytes > maxBytes) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('That image is too large (8 MB maximum).'),
+            backgroundColor: context.palette.danger,
+          ),
+        );
+        return;
+      }
+
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('drivers/$uid/$docType.jpg');
@@ -51,7 +83,7 @@ class _DriverDocumentsScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$docType uploaded successfully for review.'),
-            backgroundColor: AppTheme.successColor,
+            backgroundColor: context.palette.success,
           ),
         );
       }
@@ -60,7 +92,7 @@ class _DriverDocumentsScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to upload document: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: context.palette.danger,
           ),
         );
       }
@@ -74,10 +106,10 @@ class _DriverDocumentsScreenState
     final user = ref.watch(currentUserProvider).value;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Documents & Verification'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -85,14 +117,14 @@ class _DriverDocumentsScreenState
           // Status banner
           Card(
             color: user?.isVerified == true
-                ? AppTheme.successColor.withValues(alpha: 0.15)
-                : AppTheme.warningColor.withValues(alpha: 0.15),
+                ? context.palette.success.withValues(alpha: 0.15)
+                : context.palette.warning.withValues(alpha: 0.15),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
                 color: user?.isVerified == true
-                    ? AppTheme.successColor
-                    : AppTheme.warningColor,
+                    ? context.palette.success
+                    : context.palette.warning,
               ),
             ),
             child: ListTile(
@@ -101,16 +133,16 @@ class _DriverDocumentsScreenState
                     ? Icons.verified
                     : Icons.hourglass_top,
                 color: user?.isVerified == true
-                    ? AppTheme.successColor
-                    : AppTheme.warningColor,
+                    ? context.palette.success
+                    : context.palette.warning,
                 size: 32,
               ),
               title: Text(
                 user?.isVerified == true
                     ? 'Account Verified'
                     : 'Verification Pending',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.palette.onBrand,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -118,16 +150,16 @@ class _DriverDocumentsScreenState
                 user?.isVerified == true
                     ? 'You are authorized to accept delivery requests.'
                     : 'Upload your required documents below for compliance audit.',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
             ),
           ),
 
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'REQUIRED DOCUMENTS',
             style: TextStyle(
-              color: Colors.white54,
+              color: context.palette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -167,33 +199,33 @@ class _DriverDocumentsScreenState
     final hasUploaded = url != null && url.isNotEmpty;
 
     return Card(
-      color: AppTheme.surfaceColor,
+      color: context.palette.surfaceRaised,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(
           hasUploaded ? Icons.task_alt : Icons.upload_file,
-          color: hasUploaded ? AppTheme.successColor : AppTheme.primaryColor,
+          color: hasUploaded ? context.palette.success : context.palette.brand,
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.palette.onBrand,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           hasUploaded ? 'Document Uploaded' : subtitle,
           style: TextStyle(
-            color: hasUploaded ? AppTheme.successColor : Colors.white70,
+            color: hasUploaded ? context.palette.success : context.palette.textSecondary,
           ),
         ),
         trailing: ElevatedButton(
           onPressed: _isUploading ? null : onUpload,
           style: ElevatedButton.styleFrom(
             backgroundColor: hasUploaded
-                ? AppTheme.surfaceColor
-                : AppTheme.primaryColor,
+                ? context.palette.surfaceRaised
+                : context.palette.brand,
           ),
           child: Text(hasUploaded ? 'Re-upload' : 'Upload'),
         ),

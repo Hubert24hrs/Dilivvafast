@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dilivvafast/core/presentation/theme/theme_controller.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -22,16 +24,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final userAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Settings',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Settings',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -47,22 +49,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1D1E33),
+                    color: context.palette.surfaceRaised,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: context.palette.border),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFFFF6B00)
+                        backgroundColor: context.palette.brand
                             .withValues(alpha: 0.15),
                         child: Text(
                           user.fullName.isNotEmpty
                               ? user.fullName[0].toUpperCase()
                               : '?',
-                          style: const TextStyle(
-                              color: Color(0xFFFF6B00),
+                          style: TextStyle(
+                              color: context.palette.brand,
                               fontSize: 22,
                               fontWeight: FontWeight.bold),
                         ),
@@ -73,13 +75,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(user.fullName,
-                                style: const TextStyle(
-                                    color: Colors.white,
+                                style: TextStyle(
+                                    color: context.palette.onBrand,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600)),
                             Text(user.email,
                                 style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.4),
+                                    color: context.palette.textSecondary,
                                     fontSize: 12)),
                           ],
                         ),
@@ -107,6 +109,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: 28),
 
+            // Appearance section
+            _sectionHeader('Appearance'),
+            const SizedBox(height: 8),
+            const _AppearancePicker(),
+            const SizedBox(height: 28),
+
             // Notifications section
             _sectionHeader('Notifications'),
             const SizedBox(height: 8),
@@ -116,7 +124,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: 'Receive push notifications',
               value: _notificationsEnabled,
               onChanged: (v) => setState(() => _notificationsEnabled = v),
-              color: const Color(0xFFFF6B00),
+              color: context.palette.brand,
             ),
             _switchTile(
               icon: Icons.local_shipping,
@@ -162,20 +170,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1D1E33),
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: context.palette.border),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Version',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: context.palette.textPrimary,
                           fontSize: 14)),
                   Text('1.0.0',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: context.palette.textMuted,
                           fontSize: 14)),
                 ],
               ),
@@ -206,7 +214,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onPressed: () => _confirmDeleteAccount(context, ref),
                 child: Text('Delete Account',
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: context.palette.textMuted,
                         fontSize: 12)),
               ),
             ),
@@ -219,7 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _sectionHeader(String title) {
     return Text(title,
         style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: context.palette.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.2));
@@ -237,9 +245,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: context.palette.border),
       ),
       child: Row(
         children: [
@@ -258,13 +266,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: context.palette.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500)),
                 Text(subtitle,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: context.palette.textMuted,
                         fontSize: 11)),
               ],
             ),
@@ -274,8 +282,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: onChanged,
             activeThumbColor: color,
             activeTrackColor: color.withValues(alpha: 0.3),
-            inactiveThumbColor: Colors.white24,
-            inactiveTrackColor: Colors.white10,
+            inactiveThumbColor: context.palette.textMuted,
+            inactiveTrackColor: context.palette.border,
           ),
         ],
       ),
@@ -290,12 +298,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       child: ListTile(
-        tileColor: const Color(0xFF1D1E33),
+        tileColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        leading: Icon(icon, color: Colors.white38, size: 20),
+        leading: Icon(icon, color: context.palette.textMuted, size: 20),
         title: Text(title,
-            style: const TextStyle(color: Colors.white, fontSize: 14)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 14)),
+        trailing: Icon(Icons.chevron_right, color: context.palette.textMuted),
         onTap: onTap,
       ),
     );
@@ -312,18 +320,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to log out?',
-            style: TextStyle(color: Colors.white70)),
+        title: Text('Log Out',
+            style: TextStyle(color: context.palette.textPrimary, fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to log out?',
+            style: TextStyle(color: context.palette.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5))),
+                    color: context.palette.textSecondary)),
           ),
           TextButton(
             onPressed: () async {
@@ -343,19 +351,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Account',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text(
+        title: Text('Delete Account',
+            style: TextStyle(color: context.palette.textPrimary, fontWeight: FontWeight.bold)),
+        content: Text(
             'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be permanently wiped.',
-            style: TextStyle(color: Colors.white70)),
+            style: TextStyle(color: context.palette.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
             child: Text('Cancel',
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5))),
+                    color: context.palette.textSecondary)),
           ),
           TextButton(
             onPressed: () async {
@@ -379,7 +387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(failure.message),
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: context.palette.danger,
                     ),
                   );
                 },
@@ -397,6 +405,74 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: const Text('Delete permanently',
                 style: TextStyle(color: Color(0xFFFF5252))),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Light / dark / follow-system selector.
+class _AppearancePicker extends ConsumerWidget {
+  const _AppearancePicker();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.palette;
+    final current = ref.watch(themeModeProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: palette.surfaceSunken,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: Row(
+        children: [
+          for (final mode in ThemeMode.values)
+            Expanded(
+              child: GestureDetector(
+                onTap: () =>
+                    ref.read(themeControllerProvider.notifier).setMode(mode),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: mode == current
+                        ? palette.surfaceRaised
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                    border: Border.all(
+                      color: mode == current
+                          ? palette.border
+                          : Colors.transparent,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        mode.icon,
+                        size: 20,
+                        color: mode == current
+                            ? palette.brand
+                            : palette.textMuted,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        mode.label,
+                        style: context.text.bodySmall?.copyWith(
+                          color: mode == current
+                              ? palette.textPrimary
+                              : palette.textMuted,
+                          fontWeight: mode == current
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

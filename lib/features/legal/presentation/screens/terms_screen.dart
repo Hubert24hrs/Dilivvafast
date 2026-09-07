@@ -50,10 +50,10 @@ For questions regarding these Terms, contact legal@dilivvafast.app.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Terms of Service'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
         actions: [
           IconButton(
             icon: const Icon(Icons.open_in_browser),
@@ -71,18 +71,18 @@ For questions regarding these Terms, contact legal@dilivvafast.app.
       body: Markdown(
         data: termsMarkdown,
         styleSheet: MarkdownStyleSheet(
-          h1: const TextStyle(
-            color: Colors.white,
+          h1: TextStyle(
+            color: context.palette.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
-          h2: const TextStyle(
-            color: AppTheme.primaryColor,
+          h2: TextStyle(
+            color: context.palette.brand,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
-          p: const TextStyle(color: Colors.white70, height: 1.5),
-          listBullet: const TextStyle(color: AppTheme.primaryColor),
+          p: TextStyle(color: context.palette.textSecondary, height: 1.5),
+          listBullet: TextStyle(color: context.palette.brand),
         ),
       ),
     );

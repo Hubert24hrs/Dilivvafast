@@ -19,12 +19,16 @@ class AuthController extends AsyncNotifier<void> {
     });
   }
 
+  /// Registers a new account.
+  ///
+  /// Always creates a customer — driver and investor are gated behind the
+  /// vetting flows reachable from the drawer, so there is no role parameter to
+  /// let the client grant itself a privileged surface at sign-up.
   Future<void> signUp({
     required String fullName,
     required String email,
     required String phone,
     required String password,
-    UserRole role = UserRole.customer,
     String? referralCode,
   }) async {
     state = const AsyncLoading();
@@ -34,7 +38,7 @@ class AuthController extends AsyncNotifier<void> {
             email: email,
             phone: phone,
             password: password,
-            role: role,
+            role: UserRole.customer,
             referralCode: referralCode,
           );
       result.fold(

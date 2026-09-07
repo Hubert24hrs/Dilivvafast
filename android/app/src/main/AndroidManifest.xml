@@ -79,5 +79,16 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="google.navigation" />
         </intent>
+        <!-- Required on Android 11+ (API 30) for url_launcher to see a
+             browser. Without this canLaunchUrl() returns false and the
+             Paystack checkout page silently fails to open. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
     </queries>
 </manifest>

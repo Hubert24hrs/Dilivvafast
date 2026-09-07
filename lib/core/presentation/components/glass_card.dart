@@ -1,14 +1,24 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+
+/// A raised surface panel.
+///
+/// Previously a frosted-glass effect: a translucent white fill behind a
+/// backdrop blur. That renders as white-on-white in light mode and the blur
+/// costs a saveLayer on every frame, so it is now a flat, bordered surface —
+/// which is also what contemporary delivery apps use. The constructor keeps
+/// its original shape so existing call sites are unaffected.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16.0),
-    this.borderRadius = 16.0,
-    this.blur = 10.0,
-    this.opacity = 0.1,
+    this.borderRadius = AppTheme.radiusLarge,
+    @Deprecated('The blur was removed with the frosted-glass treatment.')
+    this.blur = 0.0,
+    @Deprecated('Surface colour now comes from the theme.')
+    this.opacity = 0.0,
     this.onTap,
   });
 
@@ -21,34 +31,27 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+    final palette = context.palette;
+    final radius = BorderRadius.circular(borderRadius);
+
+    return Material(
+      color: palette.surfaceRaised,
+      borderRadius: radius,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        // Keeps the ripple contained when the card is not interactive.
+        canRequestFocus: onTap != null,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1.5,
-            ),
+            borderRadius: radius,
+            border: Border.all(color: palette.border),
           ),
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          padding: padding,
+          child: child,
         ),
       ),
     );
-
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: card,
-      );
-    }
-
-    return card;
   }
 }

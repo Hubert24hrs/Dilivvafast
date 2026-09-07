@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
 import 'package:dilivvafast/features/investor/presentation/widgets/earnings_chart.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Provider for a single bike by ID
 final bikeDetailProvider =
@@ -66,36 +67,36 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
     final bikeAsync = ref.watch(bikeDetailProvider(bikeId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Bike Details',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Bike Details',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: bikeAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+        loading: () => Center(
+            child: CircularProgressIndicator(color: context.palette.brand)),
         error: (e, _) => Center(
             child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+                style: TextStyle(color: context.palette.danger))),
         data: (bike) {
           if (bike == null) {
-            return const Center(
+            return Center(
                 child: Text('Bike not found',
-                    style: TextStyle(color: Colors.white54)));
+                    style: TextStyle(color: context.palette.textSecondary)));
           }
-          return _buildBody(bike);
+          return _buildBody(context, bike);
         },
       ),
     );
   }
 
-  Widget _buildBody(BikeModel bike) {
+  Widget _buildBody(BuildContext context, BikeModel bike) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -109,7 +110,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFFF9800).withValues(alpha: 0.12),
-                  const Color(0xFFFF9500).withValues(alpha: 0.08),
+                  context.palette.brand.withValues(alpha: 0.08),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -125,16 +126,16 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _statusColor(bike.status).withValues(alpha: 0.15),
+                    color: _statusColor(context, bike.status).withValues(alpha: 0.15),
                   ),
                   child: Icon(Icons.two_wheeler,
-                      color: _statusColor(bike.status), size: 40),
+                      color: _statusColor(context, bike.status), size: 40),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   '${bike.make} ${bike.model}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -143,7 +144,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                 Text(
                   '${bike.year} · ${bike.plateNumber}',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: context.palette.textSecondary,
                       fontSize: 14),
                 ),
                 const SizedBox(height: 12),
@@ -153,17 +154,17 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _statusColor(bike.status).withValues(alpha: 0.15),
+                    color: _statusColor(context, bike.status).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color:
-                          _statusColor(bike.status).withValues(alpha: 0.4),
+                          _statusColor(context, bike.status).withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
                     _statusLabel(bike.status),
                     style: TextStyle(
-                      color: _statusColor(bike.status),
+                      color: _statusColor(context, bike.status),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -178,16 +179,16 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1D1E33),
+              color: context.palette.surfaceRaised,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.palette.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Repayment Progress',
+                Text('Repayment Progress',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 16),
@@ -198,7 +199,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                   child: LinearProgressIndicator(
                     value: bike.repaymentProgress.clamp(0.0, 1.0),
                     minHeight: 12,
-                    backgroundColor: const Color(0xFF0A0E21),
+                    backgroundColor: context.palette.surfaceBase,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       bike.repaymentProgress >= 1.0
                           ? const Color(0xFF4CAF50)
@@ -218,7 +219,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                     Text(
                       '₦${bike.remainingRepayment.toStringAsFixed(0)} remaining',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: context.palette.textSecondary,
                           fontSize: 12),
                     ),
                   ],
@@ -228,13 +229,13 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                 // Stats row
                 Row(
                   children: [
-                    _statCard('Purchase',
+                    _statCard(context, 'Purchase',
                         '₦${bike.purchasePrice.toStringAsFixed(0)}'),
                     const SizedBox(width: 10),
-                    _statCard('Monthly',
+                    _statCard(context, 'Monthly',
                         '₦${bike.monthlyInstalment.toStringAsFixed(0)}'),
                     const SizedBox(width: 10),
-                    _statCard('Commission',
+                    _statCard(context, 'Commission',
                         '${(bike.commissionRate * 100).toStringAsFixed(0)}%'),
                   ],
                 ),
@@ -248,9 +249,9 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1D1E33),
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: context.palette.border),
               ),
               child: Row(
                 children: [
@@ -269,12 +270,12 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Assigned Rider',
+                        Text('Assigned Rider',
                             style: TextStyle(
-                                color: Colors.white54, fontSize: 11)),
+                                color: context.palette.textSecondary, fontSize: 11)),
                         Text('Rider ID: ${bike.riderId!.substring(0, 8)}...',
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: context.palette.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500)),
                       ],
@@ -312,7 +313,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
                       child: Center(
                           child: Text('Chart error: $e',
                               style:
-                                  const TextStyle(color: Colors.redAccent))),
+                                  TextStyle(color: context.palette.danger))),
                     ),
                     data: (earningsData) => EarningsChart(
                       title: 'Earnings (Last 30 Days)',
@@ -330,12 +331,12 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _statCard(String label, String value) {
+  Widget _statCard(BuildContext context, String label, String value) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0E21),
+          color: context.palette.surfaceBase,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -348,7 +349,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
             const SizedBox(height: 2),
             Text(label,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: context.palette.textMuted,
                     fontSize: 10)),
           ],
         ),
@@ -356,14 +357,14 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
     );
   }
 
-  Color _statusColor(BikeStatus status) {
+  Color _statusColor(BuildContext context, BikeStatus status) {
     return switch (status) {
       BikeStatus.pendingFunding => const Color(0xFFFF9800),
-      BikeStatus.funded => const Color(0xFFFF6B00),
+      BikeStatus.funded => context.palette.brand,
       BikeStatus.assigned => const Color(0xFF4CAF50),
       BikeStatus.active => const Color(0xFF4CAF50),
       BikeStatus.maintenance => const Color(0xFFFF5252),
-      BikeStatus.decommissioned => Colors.white38,
+      BikeStatus.decommissioned => context.palette.textMuted,
     };
   }
 

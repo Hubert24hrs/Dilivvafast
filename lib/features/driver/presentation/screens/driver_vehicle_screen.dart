@@ -60,7 +60,7 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Vehicle details updated successfully'),
-            backgroundColor: AppTheme.successColor,
+            backgroundColor: context.palette.success,
           ),
         );
       }
@@ -69,7 +69,7 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating vehicle details: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: context.palette.danger,
           ),
         );
       }
@@ -81,38 +81,38 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Vehicle Details'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.directions_bike_outlined,
               size: 64,
-              color: AppTheme.primaryColor,
+              color: context.palette.brand,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Dispatch Vehicle Information',
               style: TextStyle(
-                color: Colors.white,
+                color: context.palette.onBrand,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Ensure your vehicle type and license plate number match your physical delivery vehicle.',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: context.palette.textSecondary),
             ),
             const SizedBox(height: 24),
             Card(
-              color: AppTheme.surfaceColor,
+              color: context.palette.surfaceRaised,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -121,18 +121,18 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Vehicle Category',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedVehicle,
-                      dropdownColor: AppTheme.surfaceColor,
-                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: context.palette.surfaceRaised,
+                      style: TextStyle(color: context.palette.textPrimary),
                       items: _vehicleTypes
                           .map(
                             (v) => DropdownMenuItem(
@@ -148,10 +148,10 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Plate Number / Registration Code',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -159,7 +159,7 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
                     TextField(
                       controller: _plateCtrl,
                       textCapitalization: TextCapitalization.characters,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: context.palette.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g. KJA-123XY',
                       ),
@@ -175,18 +175,18 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveVehicleDetails,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: context.palette.brand,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: context.palette.onBrand,
                         ),
                       )
                     : const Text(

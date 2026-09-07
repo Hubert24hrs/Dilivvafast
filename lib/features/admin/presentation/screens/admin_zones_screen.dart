@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/booking/domain/entities/zone_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Provider for all zones
 final zonesProvider = StreamProvider<List<ZoneModel>>((ref) {
@@ -23,15 +24,15 @@ class AdminZonesScreen extends ConsumerWidget {
     final zonesAsync = ref.watch(zonesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
-        title: const Text('Delivery Zones',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        backgroundColor: context.palette.surfaceBase,
+        title: Text('Delivery Zones',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFFF9500),
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: context.palette.brand,
+        child: Icon(Icons.add, color: context.palette.onBrand),
         onPressed: () => _showCreateDialog(context, ref),
       ),
       body: zonesAsync.when(
@@ -43,10 +44,10 @@ class AdminZonesScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.map,
                       size: 48,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                      color: context.palette.textMuted),
                   const SizedBox(height: 12),
-                  const Text('No delivery zones configured',
-                      style: TextStyle(color: Colors.white38)),
+                  Text('No delivery zones configured',
+                      style: TextStyle(color: context.palette.textMuted)),
                 ],
               ),
             );
@@ -58,11 +59,11 @@ class AdminZonesScreen extends ConsumerWidget {
             itemBuilder: (_, i) => _buildZoneCard(context, ref, zones[i]),
           );
         },
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+        loading: () => Center(
+            child: CircularProgressIndicator(color: context.palette.brand)),
         error: (e, _) => Center(
             child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+                style: TextStyle(color: context.palette.danger))),
       ),
     );
   }
@@ -73,12 +74,12 @@ class AdminZonesScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: zone.isActive
-              ? const Color(0xFFFF6B00).withValues(alpha: 0.2)
-              : Colors.white12,
+              ? context.palette.brand.withValues(alpha: 0.2)
+              : context.palette.border,
         ),
       ),
       child: Column(
@@ -91,10 +92,10 @@ class AdminZonesScreen extends ConsumerWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFF9500).withValues(alpha: 0.15),
+                  color: context.palette.brand.withValues(alpha: 0.15),
                 ),
-                child: const Icon(Icons.place,
-                    color: Color(0xFFFF9500), size: 20),
+                child: Icon(Icons.place,
+                    color: context.palette.brand, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -102,13 +103,13 @@ class AdminZonesScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(zone.name,
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: TextStyle(
+                            color: context.palette.onBrand,
                             fontSize: 15,
                             fontWeight: FontWeight.w600)),
                     Text(zone.city,
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.palette.textSecondary,
                             fontSize: 12)),
                   ],
                 ),
@@ -116,7 +117,7 @@ class AdminZonesScreen extends ConsumerWidget {
               Switch(
                 value: zone.isActive,
                 activeThumbColor: const Color(0xFF4CAF50),
-                inactiveThumbColor: Colors.white24,
+                inactiveThumbColor: context.palette.textMuted,
                 onChanged: (v) {
                   ref
                       .read(firestoreProvider)
@@ -131,16 +132,16 @@ class AdminZonesScreen extends ConsumerWidget {
           // Rate info
           Row(
             children: [
-              _rateBadge('Base Fare',
+              _rateBadge(context, 'Base Fare',
                   '₦${zone.baseFare.toStringAsFixed(0)}'),
               const SizedBox(width: 10),
-              _rateBadge('Per KM',
+              _rateBadge(context, 'Per KM',
                   '₦${zone.perKmRate.toStringAsFixed(0)}'),
               const SizedBox(width: 10),
-              _rateBadge('Surge ×',
+              _rateBadge(context, 'Surge ×',
                   zone.currentSurgeMultiplier.toStringAsFixed(1)),
               const SizedBox(width: 10),
-              _rateBadge('Surge at',
+              _rateBadge(context, 'Surge at',
                   '${zone.surgeThreshold} orders'),
             ],
           ),
@@ -149,25 +150,25 @@ class AdminZonesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _rateBadge(String label, String value) {
+  Widget _rateBadge(BuildContext context, String label, String value) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0E21),
+          color: context.palette.surfaceBase,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           children: [
             Text(value,
-                style: const TextStyle(
-                    color: Color(0xFFFF6B00),
+                style: TextStyle(
+                    color: context.palette.brand,
                     fontSize: 13,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
             Text(label,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: context.palette.textMuted,
                     fontSize: 9)),
           ],
         ),
@@ -188,7 +189,7 @@ class AdminZonesScreen extends ConsumerWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (ctx, setDialogState) => Dialog(
-          backgroundColor: const Color(0xFF1D1E33),
+          backgroundColor: context.palette.surfaceRaised,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: SingleChildScrollView(
@@ -197,27 +198,27 @@ class AdminZonesScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Add Delivery Zone',
+                Text('Add Delivery Zone',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                _dialogField(nameC, 'Zone Name (e.g. Victoria Island)'),
+                _dialogField(context, nameC, 'Zone Name (e.g. Victoria Island)'),
                 const SizedBox(height: 12),
                 // City dropdown
                 Row(
                   children: [
                     Text('City:',
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.palette.textSecondary,
                             fontSize: 13)),
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: selectedCity,
-                      dropdownColor: const Color(0xFF1D1E33),
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 13),
+                      dropdownColor: context.palette.surfaceRaised,
+                      style: TextStyle(
+                          color: context.palette.textPrimary, fontSize: 13),
                       items: cities
                           .map((c) =>
                               DropdownMenuItem(value: c, child: Text(c)))
@@ -228,13 +229,13 @@ class AdminZonesScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _dialogField(baseFareC, 'Base Fare (₦)',
+                _dialogField(context, baseFareC, 'Base Fare (₦)',
                     keyboard: TextInputType.number),
                 const SizedBox(height: 12),
-                _dialogField(perKmC, 'Per KM Rate (₦)',
+                _dialogField(context, perKmC, 'Per KM Rate (₦)',
                     keyboard: TextInputType.number),
                 const SizedBox(height: 12),
-                _dialogField(surgeThresholdC,
+                _dialogField(context, surgeThresholdC,
                     'Surge Threshold (concurrent orders)',
                     keyboard: TextInputType.number),
                 const SizedBox(height: 20),
@@ -266,8 +267,8 @@ class AdminZonesScreen extends ConsumerWidget {
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9500),
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.palette.brand,
+                      foregroundColor: context.palette.onBrand,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -284,21 +285,21 @@ class AdminZonesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _dialogField(TextEditingController c, String hint,
+  Widget _dialogField(BuildContext context, TextEditingController c, String hint,
       {TextInputType keyboard = TextInputType.text}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0A0E21),
+        color: context.palette.surfaceBase,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: c,
         keyboardType: keyboard,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle:
-              TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+              TextStyle(color: context.palette.textMuted),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),

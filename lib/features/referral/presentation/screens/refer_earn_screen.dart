@@ -16,35 +16,35 @@ class ReferEarnScreen extends ConsumerWidget {
     final referralCode = currentUser?.referralCode ?? '---';
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Refer & Earn'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.card_giftcard,
               size: 80,
-              color: AppTheme.primaryColor,
+              color: context.palette.brand,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Earn ₦500 per Friend!',
               style: TextStyle(
-                color: Colors.white,
+                color: context.palette.onBrand,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Invite your friends to Dilivvafast. When they sign up and complete their first delivery, you both get ₦500 added to your wallet!',
               style: TextStyle(
-                color: Colors.white70,
+                color: context.palette.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -56,18 +56,18 @@ class ReferEarnScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                  color: context.palette.brand.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     'YOUR REFERRAL CODE',
                     style: TextStyle(
-                      color: Colors.white54,
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -79,8 +79,8 @@ class ReferEarnScreen extends ConsumerWidget {
                     children: [
                       Text(
                         referralCode,
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
+                        style: TextStyle(
+                          color: context.palette.brand,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 3,
@@ -88,7 +88,7 @@ class ReferEarnScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       IconButton(
-                        icon: const Icon(Icons.copy, color: Colors.white70),
+                        icon: Icon(Icons.copy, color: context.palette.textSecondary),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: referralCode));
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +121,7 @@ class ReferEarnScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: context.palette.brand,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -130,12 +130,12 @@ class ReferEarnScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 36),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'YOUR REFERRALS',
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: context.palette.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -152,23 +152,23 @@ class ReferEarnScreen extends ConsumerWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
+                      color: context.palette.brand,
                     ),
                   );
                 }
 
                 final docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty) {
-                  return const Card(
-                    color: AppTheme.surfaceColor,
+                  return Card(
+                    color: context.palette.surfaceRaised,
                     child: Padding(
                       padding: EdgeInsets.all(20),
                       child: Center(
                         child: Text(
                           'No referrals yet. Start sharing to earn rewards!',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: context.palette.textSecondary),
                         ),
                       ),
                     ),
@@ -182,27 +182,27 @@ class ReferEarnScreen extends ConsumerWidget {
                     final bonusPaid = data['bonusPaid'] ?? false;
 
                     return Card(
-                      color: AppTheme.surfaceColor,
+                      color: context.palette.surfaceRaised,
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: AppTheme.primaryColor,
-                          child: Icon(Icons.person, color: Colors.white),
+                        leading: CircleAvatar(
+                          backgroundColor: context.palette.brand,
+                          child: Icon(Icons.person, color: context.palette.onBrand),
                         ),
                         title: Text(
                           'Referral #${d.id.substring(0, 6)}',
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: context.palette.onBrand),
                         ),
                         subtitle: Text(
                           'Status: $status',
-                          style: const TextStyle(color: Colors.white70),
+                          style: TextStyle(color: context.palette.textSecondary),
                         ),
                         trailing: Text(
                           bonusPaid ? '+₦500' : 'Pending',
                           style: TextStyle(
                             color: bonusPaid
-                                ? AppTheme.successColor
-                                : AppTheme.warningColor,
+                                ? context.palette.success
+                                : context.palette.warning,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

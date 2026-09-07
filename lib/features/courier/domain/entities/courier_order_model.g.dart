@@ -16,13 +16,9 @@ _CourierOrderModel _$CourierOrderModelFromJson(
       $enumDecodeNullable(_$OrderStatusEnumMap, json['status']) ??
       OrderStatus.pending,
   pickupAddress: json['pickupAddress'] as String,
-  pickupGeoPoint: const GeoPointConverter().fromJson(
-    json['pickupGeoPoint'] as Map<String, dynamic>,
-  ),
+  pickupGeoPoint: const GeoPointConverter().fromJson(json['pickupGeoPoint']),
   dropoffAddress: json['dropoffAddress'] as String,
-  dropoffGeoPoint: const GeoPointConverter().fromJson(
-    json['dropoffGeoPoint'] as Map<String, dynamic>,
-  ),
+  dropoffGeoPoint: const GeoPointConverter().fromJson(json['dropoffGeoPoint']),
   packageDescription: json['packageDescription'] as String,
   packageWeight: (json['packageWeight'] as num?)?.toDouble() ?? 0.0,
   packageCategory:

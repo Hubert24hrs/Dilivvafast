@@ -28,15 +28,15 @@ class CustomTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: context.palette.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+        hintStyle: TextStyle(color: context.palette.textMuted),
         prefixIcon: icon != null
             ? Icon(
                 icon,
-                color: AppTheme.primaryColor.withValues(alpha: 0.7),
+                color: context.palette.brand.withValues(alpha: 0.7),
               )
             : null,
       ),

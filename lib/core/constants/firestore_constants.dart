@@ -21,6 +21,11 @@ abstract class FirestoreConstants {
   static const String appConfig = 'app_config';
   static const String zones = 'zones';
 
+  /// Public projection of driver presence and position. Deliberately separate
+  /// from `users` so live tracking does not require exposing a driver's
+  /// personal and financial record to customers.
+  static const String driverLocations = 'driver_locations';
+
   // Subcollection names
   static const String messages = 'messages';
 

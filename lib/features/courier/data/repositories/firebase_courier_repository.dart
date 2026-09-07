@@ -133,7 +133,8 @@ class FirebaseCourierRepository implements ICourierRepository {
       }
 
       final updateData = <String, dynamic>{
-        FirestoreConstants.fieldStatus: newStatus.name,
+        // wireValue, not .name — see OrderStatusWire.
+        FirestoreConstants.fieldStatus: newStatus.wireValue,
         FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
       };
 
@@ -229,7 +230,7 @@ class FirebaseCourierRepository implements ICourierRepository {
 
       if (statusFilter != null) {
         query = query.where(FirestoreConstants.fieldStatus,
-            isEqualTo: statusFilter.name);
+            isEqualTo: statusFilter.wireValue);
       }
 
       if (lastDocumentId != null) {

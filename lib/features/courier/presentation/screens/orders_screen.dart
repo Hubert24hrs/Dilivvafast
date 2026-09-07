@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key, this.isDriver = false});
@@ -16,19 +17,19 @@ class OrdersScreen extends ConsumerWidget {
         : ref.watch(customerOrdersProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         title: Text(isDriver ? 'Delivery History' : 'My Orders',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: ordersAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+        loading: () => Center(
+            child: CircularProgressIndicator(color: context.palette.brand)),
         error: (e, _) => Center(
             child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+                style: TextStyle(color: context.palette.danger))),
         data: (orders) {
           if (orders.isEmpty) {
             return Center(
@@ -37,17 +38,17 @@ class OrdersScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.receipt_long,
                       size: 64,
-                      color: Colors.white.withValues(alpha: 0.2)),
+                      color: context.palette.textMuted),
                   const SizedBox(height: 16),
-                  const Text('No orders yet',
-                      style: TextStyle(color: Colors.white54, fontSize: 16)),
+                  Text('No orders yet',
+                      style: TextStyle(color: context.palette.textSecondary, fontSize: 16)),
                   const SizedBox(height: 8),
                   Text(
                       isDriver
                           ? 'Accept deliveries to see them here'
                           : 'Book a delivery to get started',
-                      style: const TextStyle(
-                          color: Colors.white38, fontSize: 13)),
+                      style: TextStyle(
+                          color: context.palette.textMuted, fontSize: 13)),
                 ],
               ),
             );
@@ -71,9 +72,9 @@ class OrdersScreen extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: context.palette.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,8 +85,8 @@ class OrdersScreen extends ConsumerWidget {
                 _statusChip(order.status),
                 const Spacer(),
                 Text('₦${order.totalFare.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        color: Color(0xFFFF6B00),
+                    style: TextStyle(
+                        color: context.palette.brand,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
               ],
@@ -95,13 +96,13 @@ class OrdersScreen extends ConsumerWidget {
             // Route
             Row(
               children: [
-                const Icon(Icons.location_on,
-                    color: Color(0xFFFF6B00), size: 16),
+                Icon(Icons.location_on,
+                    color: context.palette.brand, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(order.pickupAddress,
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 13),
+                            TextStyle(color: context.palette.onBrand, fontSize: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis)),
               ],
@@ -109,12 +110,12 @@ class OrdersScreen extends ConsumerWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.flag, color: Color(0xFFFF9500), size: 16),
+                Icon(Icons.flag, color: context.palette.brand, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(order.dropoffAddress,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13),
+                        style: TextStyle(
+                            color: context.palette.textSecondary, fontSize: 13),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis)),
               ],
@@ -125,16 +126,16 @@ class OrdersScreen extends ConsumerWidget {
             Row(
               children: [
                 Icon(Icons.access_time,
-                    color: Colors.white.withValues(alpha: 0.4), size: 14),
+                    color: context.palette.textSecondary, size: 14),
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(order.createdAt),
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                  style: TextStyle(color: context.palette.textMuted, fontSize: 12),
                 ),
                 const Spacer(),
                 Text(order.trackingCode,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: context.palette.textSecondary,
                         fontSize: 11,
                         letterSpacing: 1)),
               ],

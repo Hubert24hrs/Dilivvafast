@@ -68,26 +68,26 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     final user = ref.watch(currentUserProvider).value;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Delete Account'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.warning_amber_rounded,
               size: 64,
-              color: AppTheme.errorColor,
+              color: context.palette.danger,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Permanent Account Deletion',
               style: TextStyle(
-                color: Colors.white,
+                color: context.palette.onBrand,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -95,20 +95,20 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             const SizedBox(height: 12),
             Text(
               'Account: ${user?.email ?? "Current User"}\nUID: ${user?.uid ?? ""}',
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: context.palette.textSecondary,
                 fontFamily: 'monospace',
                 fontSize: 13,
               ),
             ),
             const SizedBox(height: 16),
             Card(
-              color: AppTheme.errorColor.withValues(alpha: 0.15),
+              color: context.palette.danger.withValues(alpha: 0.15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: AppTheme.errorColor),
+                side: BorderSide(color: context.palette.danger),
               ),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +116,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     Text(
                       'Warning: This action cannot be undone!',
                       style: TextStyle(
-                        color: AppTheme.errorColor,
+                        color: context.palette.danger,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -126,22 +126,22 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       '• Your order history and saved addresses will be purged.\n'
                       '• Unused wallet balances will be forfeited.\n'
                       '• You will be immediately logged out of all devices.',
-                      style: TextStyle(color: Colors.white70, height: 1.5),
+                      style: TextStyle(color: context.palette.textSecondary, height: 1.5),
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'To confirm deletion, please type "DELETE" below:',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.palette.textPrimary),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _confirmCtrl,
               textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.palette.textPrimary),
               decoration: InputDecoration(
                 hintText: 'DELETE',
                 errorText: _errorMsg,
@@ -154,25 +154,25 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               child: ElevatedButton(
                 onPressed: _isDeleting ? null : _handleDelete,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.errorColor,
+                  backgroundColor: context.palette.danger,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: _isDeleting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: context.palette.onBrand,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'PERMANENTLY DELETE ACCOUNT',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: context.palette.textPrimary,
                         ),
                       ),
               ),

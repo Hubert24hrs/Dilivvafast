@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/theme/theme_controller.dart';
 import 'package:dilivvafast/core/services/analytics_service.dart';
 
 import 'package:dilivvafast/core/presentation/components/connectivity_wrapper.dart';
@@ -29,8 +30,6 @@ void main() async {
 
   // Wrap entire app in error zone.
   runZonedGuarded(() async {
-    MapboxInit.init();
-
     // Initialise Hive for local storage.
     await Hive.initFlutter();
 
@@ -43,6 +42,10 @@ void main() async {
     } catch (e) {
       debugPrint('Could not load .env file: $e');
     }
+
+    // MUST run after dotenv.load() — the Mapbox token is read from .env, and
+    // initialising earlier silently registers an empty token.
+    MapboxInit.init();
 
     // -----------------------------------------------------------------------
     // Firebase initialisation — MUST NOT be silent on failure.
@@ -138,9 +141,9 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
 
     return MaterialApp.router(
       title: 'Dilivvafast',
-      theme: AppTheme.cleanDarkTheme,
-      darkTheme: AppTheme.cleanDarkTheme,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
@@ -177,35 +180,35 @@ class _FirebaseInitErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.cloud_off_rounded,
                 size: 72,
-                color: Color(0xFFFF6B00),
+                color: context.palette.brand,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Service Unavailable',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.onBrand,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Dilivvafast could not connect to its backend services.\n\n'
                 'Please check your internet connection and try again, '
                 'or update the app if a newer version is available.',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: context.palette.textSecondary,
                   fontSize: 15,
                   height: 1.5,
                 ),
@@ -222,8 +225,8 @@ class _FirebaseInitErrorScreen extends StatelessWidget {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF6B00),
-                  foregroundColor: Colors.white,
+                  backgroundColor: context.palette.brand,
+                  foregroundColor: context.palette.onBrand,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 14,

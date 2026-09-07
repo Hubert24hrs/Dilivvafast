@@ -1,58 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart';
+
+import '../support/harness.dart';
 
 void main() {
   group('LoginScreen', () {
-    Widget createTestWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
-          home: LoginScreen(),
-        ),
-      );
-    }
-
     testWidgets('renders email and password fields', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
 
-      // Should find email and password input fields
-      expect(find.byType(TextField), findsAtLeast(2));
+      expect(find.byType(TextFormField), findsNWidgets(2));
+      expect(find.widgetWithText(TextFormField, 'Email address'),
+          findsOneWidget);
+      expect(find.widgetWithText(TextFormField, 'Password'), findsOneWidget);
     });
 
-    testWidgets('renders login button', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+    testWidgets('renders the log in button', (tester) async {
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
 
-      // Should find a login/sign-in action button
-      expect(
-        find.byWidgetPredicate(
-            (w) => w is Text && w.data?.toLowerCase().contains('log') == true),
-        findsAtLeast(1),
-      );
+      expect(find.byKey(const Key('login_btn')), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Log in'), findsOneWidget);
     });
 
     testWidgets('renders app branding', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
 
-      // Should find Dilivvafast or Fast Delivery branding
-      expect(
-        find.byWidgetPredicate(
-            (w) => w is Text && (w.data?.contains('Fast') == true ||
-                                  w.data?.contains('Dilivva') == true)),
-        findsAtLeast(1),
+      expect(find.text('Dilivvafast'), findsOneWidget);
+    });
+
+    testWidgets('offers a route to sign up', (tester) async {
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
+
+      expect(find.byKey(const Key('toggle_btn')), findsOneWidget);
+    });
+
+    testWidgets('validates an empty form instead of submitting',
+        (tester) async {
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('login_btn')));
+      await tester.pump();
+
+      expect(find.text('Email is required'), findsOneWidget);
+      expect(find.text('Enter your password'), findsOneWidget);
+    });
+
+    testWidgets('password is obscured until the reveal toggle is used',
+        (tester) async {
+      await tester.pumpWidget(wrapScreen(const LoginScreen()));
+      await tester.pump();
+
+      EditableText passwordField() => tester.widget<EditableText>(
+            find.descendant(
+              of: find.ancestor(
+                of: find.text('Password'),
+                matching: find.byType(TextFormField),
+              ),
+              matching: find.byType(EditableText),
+            ),
+          );
+
+      expect(passwordField().obscureText, isTrue);
+
+      await tester.tap(find.byTooltip('Show password'));
+      await tester.pump();
+
+      expect(passwordField().obscureText, isFalse);
+    });
+
+    testWidgets('renders against the light palette', (tester) async {
+      await tester.pumpWidget(
+        wrapScreen(const LoginScreen(), themeMode: ThemeMode.light),
       );
+      await tester.pump();
+
+      final context = tester.element(find.byType(LoginScreen));
+      expect(context.palette.surfaceBase, AppTheme.lightPalette.surfaceBase);
+      expect(context.palette.textPrimary, AppTheme.lightPalette.textPrimary);
     });
 
-    testWidgets('has dark background theme', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+    testWidgets('renders against the dark palette', (tester) async {
+      await tester.pumpWidget(
+        wrapScreen(const LoginScreen(), themeMode: ThemeMode.dark),
+      );
+      await tester.pump();
 
-      // Should have a Scaffold widget
-      expect(find.byType(Scaffold), findsAtLeast(1));
+      final context = tester.element(find.byType(LoginScreen));
+      expect(context.palette.surfaceBase, AppTheme.darkPalette.surfaceBase);
+      expect(context.palette.textPrimary, AppTheme.darkPalette.textPrimary);
     });
+
   });
 }

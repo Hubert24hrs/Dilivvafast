@@ -24,6 +24,10 @@ void main() {
   test('AppTheme has correct colors', () {
     expect(AppTheme.primaryColor, const Color(0xFFFF6B00));
     expect(AppTheme.secondaryColor, const Color(0xFFFF9500));
-    expect(AppTheme.backgroundColor, const Color(0xFF0A0E21));
+    expect(AppTheme.backgroundColor, const Color(0xFF0B0D12));
+    // The brand fill carries near-black text in light mode so the exact brand
+    // orange can be kept without failing contrast.
+    expect(AppTheme.lightPalette.brand, AppTheme.primaryColor);
+    expect(AppTheme.lightPalette.onBrand, const Color(0xFF11131A));
   });
 }

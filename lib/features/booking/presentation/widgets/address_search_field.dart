@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:dilivvafast/core/services/location_helper.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Reusable address search field with autocomplete suggestions.
 /// Uses Mapbox forward geocoding with fallback to hardcoded locations.
@@ -107,12 +108,12 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
         // Input field
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1D1E33),
+            color: context.palette.surfaceRaised,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: _focusNode.hasFocus
-                  ? const Color(0xFFFF6B00)
-                  : Colors.white12,
+                  ? context.palette.brand
+                  : context.palette.border,
               width: 1.5,
             ),
           ),
@@ -123,34 +124,34 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                   controller: _controller,
                   focusNode: _focusNode,
                   style:
-                      const TextStyle(color: Colors.white, fontSize: 15),
+                      TextStyle(color: context.palette.onBrand, fontSize: 15),
                   decoration: InputDecoration(
                     prefixIcon: Icon(widget.icon,
-                        color: const Color(0xFFFF6B00), size: 20),
+                        color: context.palette.brand, size: 20),
                     hintText: widget.label,
                     hintStyle:
-                        TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                        TextStyle(color: context.palette.textSecondary),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
                     suffixIcon: _controller.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear,
-                                color: Colors.white38, size: 18),
+                            icon: Icon(Icons.clear,
+                                color: context.palette.textMuted, size: 18),
                             onPressed: () {
                               _controller.clear();
                               _onTextChanged('');
                             },
                           )
                         : (_isSearching
-                            ? const Padding(
+                            ? Padding(
                                 padding: EdgeInsets.all(14),
                                 child: SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Color(0xFFFF6B00),
+                                    color: context.palette.brand,
                                   ),
                                 ),
                               )
@@ -176,9 +177,9 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
             margin: const EdgeInsets.only(top: 4),
             constraints: const BoxConstraints(maxHeight: 240),
             decoration: BoxDecoration(
-              color: const Color(0xFF1D1E33),
+              color: context.palette.surfaceRaised,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.palette.border),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -192,17 +193,17 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: _suggestions.length,
               separatorBuilder: (context, index) =>
-                  const Divider(height: 1, color: Colors.white10),
+                  Divider(height: 1, color: context.palette.border),
               itemBuilder: (context, index) {
                 final suggestion = _suggestions[index];
                 return ListTile(
                   dense: true,
-                  leading: const Icon(Icons.location_on,
-                      color: Color(0xFFFF9500), size: 18),
+                  leading: Icon(Icons.location_on,
+                      color: context.palette.brand, size: 18),
                   title: Text(
                     suggestion.address,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 13),
+                    style: TextStyle(
+                        color: context.palette.onBrand, fontSize: 13),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -34,12 +34,17 @@ class _BiometricSetupScreenState
       final isDeviceSupported = await _localAuth.isDeviceSupported();
       final available = await _localAuth.getAvailableBiometrics();
 
+      // Three platform round-trips: the screen can easily be gone by now.
+      if (!mounted) return;
       setState(() {
         _isBiometricsAvailable = isAvailable && isDeviceSupported;
         _availableBiometrics = available;
       });
     } catch (e) {
       debugPrint('Biometric check error: $e');
+      if (!mounted) return;
+      // Fail closed: if we cannot establish that biometrics are available,
+      // the enrolment path stays hidden.
       setState(() => _isBiometricsAvailable = false);
     }
   }
@@ -67,7 +72,7 @@ class _BiometricSetupScreenState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Biometric login enabled! 🎉'),
-              backgroundColor: AppTheme.successColor,
+              backgroundColor: context.palette.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
@@ -82,7 +87,7 @@ class _BiometricSetupScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Biometric setup failed: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: context.palette.danger,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -112,7 +117,7 @@ class _BiometricSetupScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -129,7 +134,7 @@ class _BiometricSetupScreenState
                   gradient: AppTheme.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                      color: context.palette.brand.withValues(alpha: 0.4),
                       blurRadius: 40,
                       spreadRadius: -10,
                     ),
@@ -138,7 +143,7 @@ class _BiometricSetupScreenState
                 child: Icon(
                   _biometricIcon,
                   size: 56,
-                  color: Colors.white,
+                  color: context.palette.onBrand,
                 ),
               )
                   .animate()
@@ -150,8 +155,8 @@ class _BiometricSetupScreenState
               // Title
               Text(
                 'Enable $_biometricTypeName',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.palette.textPrimary,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -168,7 +173,7 @@ class _BiometricSetupScreenState
                 'Quick and secure access to your Dilivvafast account. '
                 'No need to type your password every time.',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: context.palette.textPrimary,
                   fontSize: 15,
                   height: 1.6,
                 ),
@@ -199,20 +204,20 @@ class _BiometricSetupScreenState
                   child: ElevatedButton(
                     onPressed: _isEnrolling ? null : _enableBiometrics,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: context.palette.brand,
+                      foregroundColor: context.palette.onBrand,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       elevation: 8,
-                      shadowColor: AppTheme.primaryColor.withValues(alpha: 0.4),
+                      shadowColor: context.palette.brand.withValues(alpha: 0.4),
                     ),
                     child: _isEnrolling
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: Colors.white,
+                              color: context.palette.onBrand,
                             ),
                           )
                         : Text('Enable $_biometricTypeName',
@@ -227,20 +232,20 @@ class _BiometricSetupScreenState
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.warningColor.withValues(alpha: 0.1),
+                    color: context.palette.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppTheme.warningColor.withValues(alpha: 0.3)),
+                        color: context.palette.warning.withValues(alpha: 0.3)),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(Icons.info_outline,
-                          color: AppTheme.warningColor, size: 20),
+                          color: context.palette.warning, size: 20),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Biometric authentication is not available on this device.',
-                          style: TextStyle(color: AppTheme.warningColor, fontSize: 13),
+                          style: TextStyle(color: context.palette.warning, fontSize: 13),
                         ),
                       ),
                     ],
@@ -255,7 +260,7 @@ class _BiometricSetupScreenState
                 child: Text(
                   'Skip for now',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: context.palette.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -276,10 +281,10 @@ class _BiometricSetupScreenState
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            color: context.palette.brand.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: AppTheme.primaryColor, size: 22),
+          child: Icon(icon, color: context.palette.brand, size: 22),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -287,14 +292,14 @@ class _BiometricSetupScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: context.palette.onBrand,
                       fontSize: 14,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Text(subtitle,
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: context.palette.textSecondary,
                       fontSize: 12)),
             ],
           ),

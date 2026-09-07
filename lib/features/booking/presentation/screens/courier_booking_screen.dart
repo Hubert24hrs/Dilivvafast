@@ -9,6 +9,7 @@ import 'package:dilivvafast/core/services/location_helper.dart';
 import 'package:dilivvafast/features/booking/presentation/controllers/courier_booking_controller.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Map-based courier booking screen with a draggable bottom sheet.
 ///
@@ -48,7 +49,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: context.palette.danger,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -57,7 +58,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       body: Stack(
         children: [
           // Map area (top portion)
@@ -121,17 +122,17 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white24,
+                          color: context.palette.textMuted,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
 
                     // Title
-                    const Text(
+                    Text(
                       'Courier delivery',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -171,14 +172,14 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                           Text(
                             'Add stops',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: context.palette.textSecondary,
                               fontSize: 13,
                             ),
                           ),
                           const SizedBox(width: 4),
                           Icon(
                             Icons.add,
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: context.palette.textSecondary,
                             size: 18,
                           ),
                         ],
@@ -252,10 +253,10 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Set pickup location',
               style: TextStyle(
-                color: Colors.white,
+                color: context.palette.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -278,8 +279,8 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
               icon: const Icon(Icons.gps_fixed, size: 18),
               label: const Text('Use current location'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFF6B00),
-                side: const BorderSide(color: Color(0xFFFF6B00)),
+                foregroundColor: context.palette.brand,
+                side: BorderSide(color: context.palette.brand),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -312,7 +313,7 @@ class _CircleIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Colors.black.withValues(alpha: 0.5),
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
+        child: Icon(icon, color: context.palette.textPrimary, size: 20),
       ),
     );
   }
@@ -369,13 +370,13 @@ class _VehicleChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF1D1E33)
+              ? context.palette.surfaceRaised
               : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFFF6B00)
-                : Colors.white24,
+                ? context.palette.brand
+                : context.palette.textMuted,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -385,8 +386,8 @@ class _VehicleChip extends StatelessWidget {
             Icon(
               icon,
               color: isSelected
-                  ? const Color(0xFFFF6B00)
-                  : Colors.white54,
+                  ? context.palette.brand
+                  : context.palette.textSecondary,
               size: 18,
             ),
             const SizedBox(width: 6),
@@ -394,8 +395,8 @@ class _VehicleChip extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected
-                    ? const Color(0xFFFF6B00)
-                    : Colors.white54,
+                    ? context.palette.brand
+                    : context.palette.textSecondary,
                 fontSize: 13,
                 fontWeight:
                     isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -431,12 +432,12 @@ class _PickupLocationRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: hasLocation
-                ? const Color(0xFFFF6B00).withValues(alpha: 0.3)
-                : Colors.white12,
+                ? context.palette.brand.withValues(alpha: 0.3)
+                : context.palette.border,
           ),
         ),
         child: Row(
@@ -445,7 +446,7 @@ class _PickupLocationRow extends StatelessWidget {
               Icons.radio_button_checked,
               color: hasLocation
                   ? const Color(0xFF4CAF50)
-                  : Colors.white38,
+                  : context.palette.textMuted,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -453,19 +454,19 @@ class _PickupLocationRow extends StatelessWidget {
               child: isLoading
                   ? Row(
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           width: 14,
                           height: 14,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFFFF6B00),
+                            color: context.palette.brand,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           displayText,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.palette.textSecondary,
                             fontSize: 14,
                           ),
                         ),
@@ -474,7 +475,7 @@ class _PickupLocationRow extends StatelessWidget {
                   : Text(
                       displayText,
                       style: TextStyle(
-                        color: hasLocation ? Colors.white : Colors.white54,
+                        color: hasLocation ? context.palette.textPrimary : context.palette.textSecondary,
                         fontSize: 14,
                       ),
                       maxLines: 1,
@@ -497,13 +498,13 @@ class _PickupLocationRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
+                    color: context.palette.brand.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Enable',
                     style: TextStyle(
-                      color: Color(0xFFFF6B00),
+                      color: context.palette.brand,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -549,25 +550,25 @@ class _PackageDetailsSection extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: context.palette.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.tune, color: Colors.white54, size: 20),
+                Icon(Icons.tune, color: context.palette.textSecondary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Package details',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.palette.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -587,7 +588,7 @@ class _PackageDetailsSection extends StatelessWidget {
                   isExpanded
                       ? Icons.keyboard_arrow_up
                       : Icons.chevron_right,
-                  color: Colors.white38,
+                  color: context.palette.textMuted,
                 ),
               ],
             ),
@@ -598,7 +599,7 @@ class _PackageDetailsSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildField(
+                    _buildField(context, 
                       hint: 'What are you sending?',
                       icon: Icons.inventory_2,
                       onChanged: onDescriptionChanged,
@@ -617,14 +618,14 @@ class _PackageDetailsSection extends StatelessWidget {
                                 horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFFFF6B00)
+                                  ? context.palette.brand
                                       .withValues(alpha: 0.15)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFFFF6B00)
-                                    : Colors.white12,
+                                    ? context.palette.brand
+                                    : context.palette.border,
                               ),
                             ),
                             child: Text(
@@ -632,8 +633,8 @@ class _PackageDetailsSection extends StatelessWidget {
                                   cat.name.substring(1),
                               style: TextStyle(
                                 color: isSelected
-                                    ? const Color(0xFFFF6B00)
-                                    : Colors.white54,
+                                    ? context.palette.brand
+                                    : context.palette.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -642,7 +643,7 @@ class _PackageDetailsSection extends StatelessWidget {
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
-                    _buildField(
+                    _buildField(context, 
                       hint: 'Weight (kg)',
                       icon: Icons.fitness_center,
                       keyboardType:
@@ -657,14 +658,14 @@ class _PackageDetailsSection extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 10),
-                    _buildField(
+                    _buildField(context, 
                       hint: 'Recipient name',
                       icon: Icons.person_outline,
                       onChanged: onRecipientNameChanged,
                       textCapitalization: TextCapitalization.words,
                     ),
                     const SizedBox(height: 10),
-                    _buildField(
+                    _buildField(context, 
                       hint: 'Recipient phone',
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
@@ -684,7 +685,7 @@ class _PackageDetailsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildField({
+  Widget _buildField(BuildContext context, {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
@@ -694,16 +695,16 @@ class _PackageDetailsSection extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0A0E21),
+        color: context.palette.surfaceBase,
         borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           prefixIcon:
-              Icon(icon, color: const Color(0xFFFF6B00), size: 18),
+              Icon(icon, color: context.palette.brand, size: 18),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
+          hintStyle: TextStyle(color: context.palette.textSecondary),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -740,23 +741,23 @@ class _ProposePriceRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: context.palette.border),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calculate_outlined,
-                color: Colors.white54, size: 20),
+            Icon(Icons.calculate_outlined,
+                color: context.palette.textSecondary, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Propose your price',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.palette.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -764,8 +765,8 @@ class _ProposePriceRow extends StatelessWidget {
                   if (displayPrice.isNotEmpty)
                     Text(
                       displayPrice,
-                      style: const TextStyle(
-                        color: Color(0xFFFF6B00),
+                      style: TextStyle(
+                        color: context.palette.brand,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -773,7 +774,7 @@ class _ProposePriceRow extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: context.palette.textMuted),
           ],
         ),
       ),
@@ -788,11 +789,11 @@ class _ProposePriceRow extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Propose your price',
-            style: TextStyle(color: Colors.white)),
+        title: Text('Propose your price',
+            style: TextStyle(color: context.palette.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -801,31 +802,31 @@ class _ProposePriceRow extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'Suggested: ₦${fareBreakdown!.totalFare.toStringAsFixed(0)}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
                 ),
               ),
             TextField(
               controller: textController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: context.palette.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 prefixText: '₦ ',
-                prefixStyle: const TextStyle(
-                    color: Color(0xFFFF6B00),
+                prefixStyle: TextStyle(
+                    color: context.palette.brand,
                     fontSize: 22,
                     fontWeight: FontWeight.bold),
                 hintText: '0',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
+                hintStyle: TextStyle(color: context.palette.textMuted),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.white24),
+                  borderSide: BorderSide(color: context.palette.textMuted),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFFF6B00)),
+                  borderSide: BorderSide(color: context.palette.brand),
                 ),
               ),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -835,8 +836,8 @@ class _ProposePriceRow extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: Text('Cancel',
+                style: TextStyle(color: context.palette.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -846,12 +847,12 @@ class _ProposePriceRow extends StatelessWidget {
               Navigator.of(ctx).pop();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B00),
+              backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Set Price',
-                style: TextStyle(color: Colors.white)),
+            child: Text('Set Price',
+                style: TextStyle(color: context.palette.onBrand)),
           ),
         ],
       ),
@@ -878,20 +879,20 @@ class _FindCourierButton extends StatelessWidget {
         onPressed: canSubmit && !isSubmitting ? onPressed : null,
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              canSubmit ? const Color(0xFF00E676) : const Color(0xFF1D1E33),
+              canSubmit ? const Color(0xFF00E676) : context.palette.surfaceRaised,
           foregroundColor:
-              canSubmit ? const Color(0xFF0A0E21) : Colors.white38,
+              canSubmit ? context.palette.surfaceBase : context.palette.textMuted,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           elevation: canSubmit ? 4 : 0,
         ),
         child: isSubmitting
-            ? const SizedBox(
+            ? SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                  color: Color(0xFF0A0E21),
+                  color: context.palette.surfaceBase,
                   strokeWidth: 2.5,
                 ),
               )

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:dilivvafast/core/errors/failures.dart';
@@ -141,18 +142,48 @@ class FirebasePaymentRepository implements IPaymentRepository {
     }
   }
 
+  /// Starts a Paystack transaction and returns the checkout URL to open.
+  ///
+  /// This previously returned the caller's own `reference` string without
+  /// contacting Paystack at all. `canLaunchUrl` then rejected it, nothing
+  /// opened, and the user was still shown a "payment processing" dialog — so
+  /// wallet top-up never worked. The reference is now minted server-side; the
+  /// one passed in is ignored so a client cannot pin a reference it has
+  /// already had credited.
   @override
-  Future<Either<Failure, String>> initializePayment({
+  Future<Either<Failure, PaymentInit>> initializePayment({
     required double amount,
     required String email,
     required String reference,
   }) async {
     try {
-      // This returns a reference/URL from the Cloud Function
-      // Actual Paystack initialization happens via PaystackService
-      return Right(reference);
-    } catch (e) {
-      return Left(PaymentFailure(e.toString()));
+      final callable = _functions.httpsCallable('initializePaystackPayment');
+      final result = await callable.call<Map<String, dynamic>>({
+        'amount': amount,
+        'email': email,
+      });
+
+      final data = result.data;
+      final url = data['authorizationUrl'] as String?;
+      final serverReference = data['reference'] as String?;
+
+      if (url == null || url.isEmpty || serverReference == null) {
+        return const Left(
+          PaymentFailure('Payment could not be started. Please try again.'),
+        );
+      }
+
+      return Right(
+        PaymentInit(authorizationUrl: url, reference: serverReference),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      return Left(PaymentFailure(_friendlyMessage(e)));
+    } catch (e, stack) {
+      // Never surface a raw exception to the user.
+      debugPrint('initializePayment failed: $e\n$stack');
+      return const Left(
+        PaymentFailure('Payment could not be started. Please try again.'),
+      );
     }
   }
 
@@ -160,10 +191,32 @@ class FirebasePaymentRepository implements IPaymentRepository {
   Future<Either<Failure, Unit>> verifyPayment(String reference) async {
     try {
       final callable = _functions.httpsCallable('verifyPaystackPayment');
-      await callable.call({'reference': reference});
+      await callable.call<Map<String, dynamic>>({'reference': reference});
       return const Right(unit);
-    } catch (e) {
-      return Left(PaymentFailure(e.toString()));
+    } on FirebaseFunctionsException catch (e) {
+      return Left(PaymentFailure(_friendlyMessage(e)));
+    } catch (e, stack) {
+      debugPrint('verifyPayment failed: $e\n$stack');
+      return const Left(
+        PaymentFailure('We could not confirm that payment yet.'),
+      );
+    }
+  }
+
+  /// Cloud Functions already return user-safe text in `message`; anything else
+  /// is mapped to a generic string so backend internals never reach the UI.
+  String _friendlyMessage(FirebaseFunctionsException e) {
+    switch (e.code) {
+      case 'unauthenticated':
+        return 'Please sign in again to continue.';
+      case 'resource-exhausted':
+        return 'Too many attempts. Please wait a moment and try again.';
+      case 'invalid-argument':
+      case 'failed-precondition':
+      case 'permission-denied':
+        return e.message ?? 'That payment could not be processed.';
+      default:
+        return 'Something went wrong. Please try again.';
     }
   }
 }

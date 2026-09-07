@@ -1,7 +1,5 @@
-import 'dart:convert';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:dilivvafast/core/config/app_config.dart';
 
 /// Message model for Maya chat
 class MayaMessage {
@@ -24,10 +22,13 @@ class MayaMessage {
 /// Maya — Dilivvafast's AI Support Agent
 /// Powered by Claude (Anthropic) API
 class MayaChatService {
-  static const String _baseUrl = 'https://api.anthropic.com/v1/messages';
-  static const String _model = 'claude-sonnet-4-20250514';
-  static const int _maxTokens = 1024;
+  MayaChatService({FirebaseFunctions? functions})
+      : _functions = functions ?? FirebaseFunctions.instance;
 
+  final FirebaseFunctions _functions;
+
+  // Model choice and token budget now live server-side in the askMaya
+  // Cloud Function, so they can be changed without shipping a new build.
   final List<MayaMessage> _conversationHistory = [];
 
   List<MayaMessage> get history => List.unmodifiable(_conversationHistory);
@@ -72,14 +73,14 @@ Important policies:
 Always try to resolve issues yourself. If you truly cannot help (e.g., billing disputes requiring manual review), advise contacting support@dilivvafast.ng or calling +234-800-DELIVER.
 ''';
 
-  /// Send a message and get Maya's response
+  /// Send a message and get Maya's response.
+  ///
+  /// The Anthropic key used to be read from `.env` and sent straight from the
+  /// handset in an `x-api-key` header, which meant it shipped inside the APK
+  /// and could be lifted by anyone who unzipped the bundle. The call now goes
+  /// through the `askMaya` Cloud Function: the key lives in Secret Manager,
+  /// never reaches the device, and the endpoint is rate-limited per user.
   Future<String> sendMessage(String userMessage) async {
-    final apiKey = AppConfig.instance.anthropicApiKey;
-
-    if (apiKey.isEmpty) {
-      return _getFallbackResponse(userMessage);
-    }
-
     // Add user message to history
     _conversationHistory.add(MayaMessage(
       role: 'user',
@@ -87,45 +88,38 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
     ));
 
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: jsonEncode({
-          'model': _model,
-          'max_tokens': _maxTokens,
-          'system': _systemPrompt,
-          'messages': _conversationHistory
-              .map((m) => m.toApiFormat())
-              .toList(),
-        }),
-      );
+      final callable = _functions.httpsCallable('askMaya');
+      final result = await callable.call<Map<String, dynamic>>({
+        'system': _systemPrompt,
+        'messages':
+            _conversationHistory.map((m) => m.toApiFormat()).toList(),
+      });
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final assistantMessage =
-            data['content'][0]['text'] as String;
-
-        // Add assistant response to history
-        _conversationHistory.add(MayaMessage(
-          role: 'assistant',
-          content: assistantMessage,
-        ));
-
-        // Keep history manageable (last 20 messages)
-        if (_conversationHistory.length > 20) {
-          _conversationHistory.removeRange(
-              0, _conversationHistory.length - 20);
-        }
-
-        return assistantMessage;
-      } else {
-        debugPrint('Maya API error: ${response.statusCode} ${response.body}');
+      final assistantMessage = result.data['reply'] as String?;
+      if (assistantMessage == null || assistantMessage.isEmpty) {
         return _getFallbackResponse(userMessage);
       }
+
+      _conversationHistory.add(MayaMessage(
+        role: 'assistant',
+        content: assistantMessage,
+      ));
+
+      // Keep history manageable (last 20 messages) — also the cap the
+      // backend enforces on the request it will accept.
+      if (_conversationHistory.length > 20) {
+        _conversationHistory.removeRange(
+            0, _conversationHistory.length - 20);
+      }
+
+      return assistantMessage;
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'resource-exhausted') {
+        return 'I am handling a lot of questions right now — please try '
+            'again in a few minutes, or email support@dilivvafast.ng.';
+      }
+      debugPrint('Maya chat error: ${e.code}');
+      return _getFallbackResponse(userMessage);
     } catch (e) {
       debugPrint('Maya chat error: $e');
       return _getFallbackResponse(userMessage);

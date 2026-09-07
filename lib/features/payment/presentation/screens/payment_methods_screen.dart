@@ -26,18 +26,18 @@ class PaymentMethodsScreen extends ConsumerWidget {
     final selectedMethod = ref.watch(defaultPaymentMethodProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Payment Methods'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
+          Text(
             'SELECT DEFAULT PAYMENT METHOD',
             style: TextStyle(
-              color: Colors.white54,
+              color: context.palette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -47,12 +47,12 @@ class PaymentMethodsScreen extends ConsumerWidget {
 
           // Wallet Card
           Card(
-            color: AppTheme.surfaceColor,
+            color: context.palette.surfaceRaised,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(
                 color: selectedMethod == 'wallet'
-                    ? AppTheme.primaryColor
+                    ? context.palette.brand
                     : Colors.transparent,
                 width: 2,
               ),
@@ -63,25 +63,25 @@ class PaymentMethodsScreen extends ConsumerWidget {
                     .read(defaultPaymentMethodProvider.notifier)
                     .set('wallet');
               },
-              leading: const Icon(
+              leading: Icon(
                 Icons.account_balance_wallet,
-                color: AppTheme.primaryColor,
+                color: context.palette.brand,
                 size: 32,
               ),
-              title: const Text(
+              title: Text(
                 'Dilivvafast Wallet',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.onBrand,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               subtitle: Text(
                 'Balance: ₦${walletBalance.toStringAsFixed(2)}',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
               trailing: selectedMethod == 'wallet'
-                  ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
-                  : const Icon(Icons.radio_button_unchecked, color: Colors.white38),
+                  ? Icon(Icons.check_circle, color: context.palette.brand)
+                  : Icon(Icons.radio_button_unchecked, color: context.palette.textMuted),
             ),
           ),
 
@@ -89,10 +89,10 @@ class PaymentMethodsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'SAVED CARDS (PAYSTACK)',
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: context.palette.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -126,9 +126,9 @@ class PaymentMethodsScreen extends ConsumerWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
+                      return Center(
                         child: CircularProgressIndicator(
-                          color: AppTheme.primaryColor,
+                          color: context.palette.brand,
                         ),
                       );
                     }
@@ -136,14 +136,14 @@ class PaymentMethodsScreen extends ConsumerWidget {
                     final docs = snapshot.data?.docs ?? [];
                     if (docs.isEmpty) {
                       return Card(
-                        color: AppTheme.surfaceColor,
-                        child: const Padding(
+                        color: context.palette.surfaceRaised,
+                        child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Center(
                             child: Text(
                               'No saved cards yet. Cards used during Paystack payments will be saved here.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white70),
+                              style: TextStyle(color: context.palette.textSecondary),
                             ),
                           ),
                         ),
@@ -159,13 +159,13 @@ class PaymentMethodsScreen extends ConsumerWidget {
                         final isSelected = selectedMethod == cardId;
 
                         return Card(
-                          color: AppTheme.surfaceColor,
+                          color: context.palette.surfaceRaised,
                           margin: const EdgeInsets.only(bottom: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
                               color: isSelected
-                                  ? AppTheme.primaryColor
+                                  ? context.palette.brand
                                   : Colors.transparent,
                             ),
                           ),
@@ -175,19 +175,19 @@ class PaymentMethodsScreen extends ConsumerWidget {
                                   .read(defaultPaymentMethodProvider.notifier)
                                   .set(cardId);
                             },
-                            leading: const Icon(
+                            leading: Icon(
                               Icons.credit_card,
-                              color: Colors.white,
+                              color: context.palette.onBrand,
                             ),
                             title: Text(
                               '$brand ending in $last4',
-                              style: const TextStyle(color: Colors.white),
+                              style: TextStyle(color: context.palette.textPrimary),
                             ),
                             trailing: isSelected
-                                ? const Icon(Icons.check_circle,
-                                    color: AppTheme.primaryColor)
-                                : const Icon(Icons.radio_button_unchecked,
-                                    color: Colors.white38),
+                                ? Icon(Icons.check_circle,
+                                    color: context.palette.brand)
+                                : Icon(Icons.radio_button_unchecked,
+                                    color: context.palette.textMuted),
                           ),
                         );
                       }).toList(),

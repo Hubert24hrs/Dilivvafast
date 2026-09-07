@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
+
 /// Surge pricing multiplier based on demand, time, and zone.
 /// Returns a multiplier (1.0 = normal, 1.5 = 50% surge, etc.)
 class SurgePricingService {
@@ -61,13 +63,14 @@ class SurgePricingService {
         .count()
         .get();
 
-    // Count available drivers in the zone
+    // Count available drivers in the zone.
+    // Reads the public presence projection rather than `users`, which is no
+    // longer listable by customers.
     final availableDrivers = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'driver')
+        .collection(FirestoreConstants.driverLocations)
         .where('currentZoneId', isEqualTo: zoneId)
         .where('isOnline', isEqualTo: true)
-        .where('isOnDelivery', isEqualTo: false)
+        .where('isAvailable', isEqualTo: true)
         .count()
         .get();
 

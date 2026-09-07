@@ -351,7 +351,9 @@ class CourierBookingController extends Notifier<CourierBookingState> {
       );
 
       final result = await courierRepo.createOrder(order);
-      return result.fold(
+      // Explicit type argument: inferred from the async return context, fold
+      // would resolve to FutureOr<String?> and read as an unawaited future.
+      return result.fold<String?>(
         (failure) {
           state = state.copyWith(
             isSubmitting: false,

@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Robust location helper with GPS, geocoding, and error handling.
 ///
@@ -226,20 +227,20 @@ class LocationHelper {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Location Services Disabled',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('Location Services Disabled',
+            style: TextStyle(color: context.palette.textPrimary)),
+        content: Text(
           'Please enable location services in your device settings '
           'to use automatic location detection.',
-          style: TextStyle(color: Colors.white60, height: 1.5),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: Text('Cancel',
+                style: TextStyle(color: context.palette.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -247,12 +248,12 @@ class LocationHelper {
               Geolocator.openLocationSettings();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B00),
+              backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Open Settings',
-                style: TextStyle(color: Colors.white)),
+            child: Text('Open Settings',
+                style: TextStyle(color: context.palette.onBrand)),
           ),
         ],
       ),
@@ -264,20 +265,20 @@ class LocationHelper {
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Location Permission Required',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('Location Permission Required',
+            style: TextStyle(color: context.palette.textPrimary)),
+        content: Text(
           'We need access to your location to show your pickup address. '
           'Please grant location permission in your app settings.',
-          style: TextStyle(color: Colors.white60, height: 1.5),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child: Text('Cancel',
+                style: TextStyle(color: context.palette.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -285,12 +286,12 @@ class LocationHelper {
               Geolocator.openAppSettings();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B00),
+              backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Open Settings',
-                style: TextStyle(color: Colors.white)),
+            child: Text('Open Settings',
+                style: TextStyle(color: context.palette.onBrand)),
           ),
         ],
       ),

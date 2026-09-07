@@ -6,6 +6,7 @@ import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/driver/presentation/controllers/driver_route_controller.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class DriverHomeScreen extends ConsumerWidget {
   const DriverHomeScreen({super.key});
@@ -24,7 +25,7 @@ class DriverHomeScreen extends ConsumerWidget {
         .fold(0.0, (sum, o) => sum + o.driverEarnings);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       drawer: const AppDrawer(),
       body: SafeArea(
         child: Column(
@@ -39,20 +40,20 @@ class DriverHomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Stats row
-                    _buildStatsRow(todayEarnings, earnings.length, user?.rating ?? 0),
+                    _buildStatsRow(context, todayEarnings, earnings.length, user?.rating ?? 0),
                     const SizedBox(height: 24),
 
                     // Route setup section
                     if (!routeState.hasRoute) ...[
-                      _buildRouteSetup(routeState, routeCtrl),
+                      _buildRouteSetup(context, routeState, routeCtrl),
                     ] else ...[
                       // Active route banner
-                      _buildActiveRouteBanner(routeState, routeCtrl),
+                      _buildActiveRouteBanner(context, routeState, routeCtrl),
                       const SizedBox(height: 20),
 
                       // En-route orders
                       if (routeState.enRouteOrders.isNotEmpty) ...[
-                        _buildSectionHeader(
+                        _buildSectionHeader(context, 
                           'Orders Along Your Route',
                           '${routeState.enRouteCount} available',
                         ),
@@ -60,13 +61,13 @@ class DriverHomeScreen extends ConsumerWidget {
                         ...routeState.enRouteOrders.map((enRoute) =>
                             _buildEnRouteOrderCard(context, enRoute, routeCtrl)),
                       ] else
-                        _buildEmptyState(),
+                        _buildEmptyState(context),
                     ],
 
                     const SizedBox(height: 24),
 
                     // Pending orders (all available)
-                    _buildAllPendingOrders(ref),
+                    _buildAllPendingOrders(context, ref),
                   ],
                 ),
               ),
@@ -84,8 +85,8 @@ class DriverHomeScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF0A0E21),
-            const Color(0xFF1D1E33).withValues(alpha: 0.5),
+            context.palette.surfaceBase,
+            context.palette.surfaceRaised.withValues(alpha: 0.5),
           ],
         ),
       ),
@@ -93,7 +94,7 @@ class DriverHomeScreen extends ConsumerWidget {
         children: [
           Builder(
             builder: (ctx) => IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
+              icon: Icon(Icons.menu, color: context.palette.textPrimary),
               onPressed: () => Scaffold.of(ctx).openDrawer(),
             ),
           ),
@@ -106,16 +107,16 @@ class DriverHomeScreen extends ConsumerWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFFF6B00),
-                  const Color(0xFFFF6B00).withValues(alpha: 0.5),
+                  context.palette.brand,
+                  context.palette.brand.withValues(alpha: 0.5),
                 ],
               ),
             ),
             child: Center(
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : 'D',
-                style: const TextStyle(
-                  color: Color(0xFF0A0E21),
+                style: TextStyle(
+                  color: context.palette.surfaceBase,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -129,8 +130,8 @@ class DriverHomeScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Hello, $name',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -140,7 +141,7 @@ class DriverHomeScreen extends ConsumerWidget {
                   style: TextStyle(
                     color: state.isOnline
                         ? const Color(0xFF4CAF50)
-                        : Colors.white54,
+                        : context.palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -160,11 +161,11 @@ class DriverHomeScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(17),
                 color: state.isOnline
                     ? const Color(0xFF4CAF50)
-                    : const Color(0xFF1D1E33),
+                    : context.palette.surfaceRaised,
                 border: Border.all(
                   color: state.isOnline
                       ? const Color(0xFF4CAF50)
-                      : Colors.white24,
+                      : context.palette.textMuted,
                 ),
               ),
               child: AnimatedAlign(
@@ -175,9 +176,9 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: Container(
                   width: 28,
                   height: 28,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: context.palette.textPrimary,
                   ),
                   child: Icon(
                     state.isOnline ? Icons.power : Icons.power_off,
@@ -195,27 +196,27 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(double earnings, int deliveries, double rating) {
+  Widget _buildStatsRow(BuildContext context, double earnings, int deliveries, double rating) {
     return Row(
       children: [
-        _statCard('Today', '₦${earnings.toStringAsFixed(0)}',
+        _statCard(context, 'Today', '₦${earnings.toStringAsFixed(0)}',
             Icons.attach_money, const Color(0xFF4CAF50)),
         const SizedBox(width: 12),
-        _statCard('Deliveries', '$deliveries', Icons.local_shipping,
-            const Color(0xFFFF6B00)),
+        _statCard(context, 'Deliveries', '$deliveries', Icons.local_shipping,
+            context.palette.brand),
         const SizedBox(width: 12),
-        _statCard('Rating', rating.toStringAsFixed(1), Icons.star,
+        _statCard(context, 'Rating', rating.toStringAsFixed(1), Icons.star,
             const Color(0xFFFFAB00)),
       ],
     );
   }
 
-  Widget _statCard(String label, String value, IconData icon, Color color) {
+  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
@@ -227,14 +228,14 @@ class DriverHomeScreen extends ConsumerWidget {
                 style: TextStyle(
                     color: color, fontSize: 16, fontWeight: FontWeight.bold)),
             Text(label,
-                style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 11)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRouteSetup(DriverRouteState state, DriverRouteController ctrl) {
+  Widget _buildRouteSetup(BuildContext context, DriverRouteState state, DriverRouteController ctrl) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -242,25 +243,25 @@ class DriverHomeScreen extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFFF6B00).withValues(alpha: 0.08),
-            const Color(0xFFFF9500).withValues(alpha: 0.05),
+            context.palette.brand.withValues(alpha: 0.08),
+            context.palette.brand.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: const Color(0xFFFF6B00).withValues(alpha: 0.15)),
+            Border.all(color: context.palette.brand.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.route, color: Color(0xFFFF6B00), size: 22),
+              Icon(Icons.route, color: context.palette.brand, size: 22),
               SizedBox(width: 8),
               Text(
                 'Set Your Route',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.onBrand,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -271,7 +272,7 @@ class DriverHomeScreen extends ConsumerWidget {
           Text(
             'Tell us where you\'re heading and we\'ll find deliveries along your path',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                color: context.palette.textPrimary, fontSize: 13),
           ),
           const SizedBox(height: 16),
           AddressSearchField(
@@ -293,17 +294,17 @@ class DriverHomeScreen extends ConsumerWidget {
                   ? ctrl.buildRouteAndFindOrders
                   : null,
               icon: state.isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Color(0xFF0A0E21)),
+                          strokeWidth: 2, color: context.palette.surfaceBase),
                     )
                   : const Icon(Icons.search, size: 18),
               label: Text(state.isLoading ? 'Searching...' : 'Find Deliveries'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6B00),
-                foregroundColor: const Color(0xFF0A0E21),
+                backgroundColor: context.palette.brand,
+                foregroundColor: context.palette.surfaceBase,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
@@ -315,7 +316,7 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveRouteBanner(
+  Widget _buildActiveRouteBanner(BuildContext context, 
       DriverRouteState state, DriverRouteController ctrl) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -339,7 +340,7 @@ class DriverHomeScreen extends ConsumerWidget {
                         fontSize: 14)),
                 Text(
                   '${state.originAddress} → ${state.destinationAddress}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -347,7 +348,7 @@ class DriverHomeScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+            icon: Icon(Icons.close, color: context.palette.textSecondary, size: 20),
             onPressed: ctrl.clearRoute,
           ),
         ],
@@ -362,10 +363,10 @@ class DriverHomeScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
+          color: context.palette.brand.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -378,13 +379,13 @@ class DriverHomeScreen extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
+                  color: context.palette.brand.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '₦${order.driverEarnings.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Color(0xFFFF6B00),
+                  style: TextStyle(
+                    color: context.palette.brand,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -407,29 +408,29 @@ class DriverHomeScreen extends ConsumerWidget {
               const Spacer(),
               Text(
                 '${enRoute.distanceFromRoute.toStringAsFixed(1)}km away',
-                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 11),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
           // Route
-          _orderRouteRow(Icons.location_on, order.pickupAddress,
-              const Color(0xFFFF6B00)),
+          _orderRouteRow(context, Icons.location_on, order.pickupAddress,
+              context.palette.brand),
           const SizedBox(height: 6),
-          _orderRouteRow(
-              Icons.flag, order.dropoffAddress, const Color(0xFFFF9500)),
+          _orderRouteRow(context, 
+              Icons.flag, order.dropoffAddress, context.palette.brand),
           const SizedBox(height: 6),
 
           // Package info
           Row(
             children: [
               Icon(Icons.inventory_2,
-                  color: Colors.white.withValues(alpha: 0.5), size: 14),
+                  color: context.palette.textSecondary, size: 14),
               const SizedBox(width: 6),
               Text(
                 '${order.packageCategory.name} • ${order.packageWeight}kg',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 12),
               ),
             ],
           ),
@@ -442,8 +443,8 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () => ctrl.declineOrder(order.id),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white54,
-                    side: const BorderSide(color: Colors.white24),
+                    foregroundColor: context.palette.textSecondary,
+                    side: BorderSide(color: context.palette.textMuted),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -457,8 +458,8 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () => ctrl.acceptOrder(order.id),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B00),
-                    foregroundColor: const Color(0xFF0A0E21),
+                    backgroundColor: context.palette.brand,
+                    foregroundColor: context.palette.surfaceBase,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -474,14 +475,14 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _orderRouteRow(IconData icon, String address, Color color) {
+  Widget _orderRouteRow(BuildContext context, IconData icon, String address, Color color) {
     return Row(
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(address,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
         ),
@@ -489,57 +490,57 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Center(
         child: Column(
           children: [
             Icon(Icons.local_shipping_outlined,
-                size: 48, color: Colors.white.withValues(alpha: 0.3)),
+                size: 48, color: context.palette.textMuted),
             const SizedBox(height: 12),
-            const Text('No deliveries along your route yet',
-                style: TextStyle(color: Colors.white54, fontSize: 14)),
-            const Text('We\'ll notify you when orders become available',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('No deliveries along your route yet',
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 14)),
+            Text('We\'ll notify you when orders become available',
+                style: TextStyle(color: context.palette.textMuted, fontSize: 12)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, String badge) {
+  Widget _buildSectionHeader(BuildContext context, String title, String badge) {
     return Row(
       children: [
         Text(title,
-            style: const TextStyle(
-                color: Colors.white,
+            style: TextStyle(
+                color: context.palette.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: const Color(0xFFFF9500).withValues(alpha: 0.15),
+            color: context.palette.brand.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(badge,
-              style: const TextStyle(color: Color(0xFFFF9500), fontSize: 11)),
+              style: TextStyle(color: context.palette.brand, fontSize: 11)),
         ),
       ],
     );
   }
 
-  Widget _buildAllPendingOrders(WidgetRef ref) {
+  Widget _buildAllPendingOrders(BuildContext context, WidgetRef ref) {
     final pendingAsync = ref.watch(pendingOrdersProvider);
 
     return pendingAsync.when(
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+      loading: () => Center(
+          child: CircularProgressIndicator(color: context.palette.brand)),
       error: (e, _) =>
           Text('Error: $e', style: const TextStyle(color: Colors.red)),
       data: (orders) {
@@ -547,15 +548,15 @@ class DriverHomeScreen extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('All Pending Orders', '${orders.length}'),
+            _buildSectionHeader(context, 'All Pending Orders', '${orders.length}'),
             const SizedBox(height: 12),
             ...orders.take(5).map((order) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1D1E33),
+                    color: context.palette.surfaceRaised,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(color: context.palette.border),
                   ),
                   child: Row(
                     children: [
@@ -564,14 +565,14 @@ class DriverHomeScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(order.pickupAddress,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 13),
+                                style: TextStyle(
+                                    color: context.palette.textPrimary, fontSize: 13),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
                             Text(
                                 '→ ${order.dropoffAddress}',
-                                style: const TextStyle(
-                                    color: Colors.white54, fontSize: 12),
+                                style: TextStyle(
+                                    color: context.palette.textSecondary, fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
                           ],
@@ -579,8 +580,8 @@ class DriverHomeScreen extends ConsumerWidget {
                       ),
                       Text(
                         '₦${order.driverEarnings.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            color: Color(0xFFFF6B00),
+                        style: TextStyle(
+                            color: context.palette.brand,
                             fontWeight: FontWeight.bold),
                       ),
                     ],

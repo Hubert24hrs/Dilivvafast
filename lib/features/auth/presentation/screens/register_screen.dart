@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:dilivvafast/core/presentation/components/glass_card.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/presentation/utils/validators.dart';
 import 'package:dilivvafast/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
+/// Sign-up flow.
+///
+/// Everyone registers as a customer — there is deliberately no role picker.
+/// Driver and investor are unlocked afterwards from the drawer's mode
+/// switcher, which routes into the vetting flows those modes require.
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -17,6 +21,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  static const _totalSteps = 2;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -26,9 +32,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _referralController = TextEditingController();
 
   int _step = 0;
-  UserRole _selectedRole = UserRole.customer;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -43,398 +49,469 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final authState = ref.watch(authControllerProvider);
 
     ref.listen<AsyncValue<void>>(authControllerProvider, (_, next) {
       if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString()),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(_friendlyError(next.error)),
+              backgroundColor: palette.danger,
+            ),
+          );
       }
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: _step > 0 ? 'Previous step' : 'Back to sign in',
+          onPressed: _handleBack,
+        ),
+        title: Text('Step ${_step + 1} of $_totalSteps',
+            style: context.text.bodyMedium),
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back button
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  if (_step > 0) {
-                    setState(() => _step--);
-                  } else {
-                    context.go('/login');
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-
-              // Header
-              Text(
-                _step == 0
-                    ? 'Create Account'
-                    : _step == 1
-                        ? 'Choose Your Role'
-                        : 'Almost Done!',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _step == 0
-                    ? 'Fill in your details to get started'
-                    : _step == 1
-                        ? 'How will you use Dilivvafast?'
-                        : 'Got a referral code? Enter it below',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Progress
-              Row(
-                children: List.generate(3, (i) {
-                  return Expanded(
-                    child: Container(
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: i <= _step
-                            ? AppTheme.primaryColor
-                            : const Color(0xFF1D1E33),
-                      ),
+        child: Column(
+          children: [
+            _StepProgress(step: _step, total: _totalSteps),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _step == 0 ? 'Create your account' : 'Almost done',
+                      style: context.text.headlineMedium,
                     ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 28),
-
-              // Steps
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _step == 0
-                    ? _buildPersonalInfoStep()
-                    : _step == 1
-                        ? _buildRoleStep()
-                        : _buildReferralStep(),
-              ),
-              const SizedBox(height: 24),
-
-              // Action button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: authState.isLoading ? null : _handleNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: const Color(0xFF0A0E21),
-                    disabledBackgroundColor: AppTheme.primaryColor.withValues(alpha: 0.4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 6),
+                    Text(
+                      _step == 0
+                          ? 'A few details and you can start sending packages.'
+                          : 'Add a referral code if you have one, then accept the terms.',
+                      style: context.text.bodyMedium,
                     ),
-                    elevation: 4,
-                  ),
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF0A0E21),
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : Text(
-                          _step < 2 ? 'Continue' : 'Create Account',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                    const SizedBox(height: 24),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                      alignment: Alignment.topCenter,
+                      child: _step == 0
+                          ? _buildDetailsStep()
+                          : _buildReferralStep(),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Login link
-              Center(
-                child: GestureDetector(
-                  onTap: () => context.go('/login'),
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Already have an account? ',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 14),
-                      children: const [
-                        TextSpan(
-                          text: 'Sign In',
-                          style: TextStyle(
-                            color: Color(0xFFFF6B00),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            _BottomBar(
+              isLoading: authState.isLoading,
+              enabled: _step == 0 || _acceptedTerms,
+              label: _step == 0 ? 'Continue' : 'Create account',
+              onPressed: _handleNext,
+              footer: _step == 0 ? const _SignInLink() : null,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPersonalInfoStep() {
+  // ── Steps ────────────────────────────────────────────────────────────────
+
+  Widget _buildDetailsStep() {
     return Form(
       key: _formKey,
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              _buildTextField(_nameController, 'Full Name', Icons.person_outline),
-              const SizedBox(height: 14),
-              _buildTextField(_emailController, 'Email Address', Icons.email_outlined,
-                  keyboard: TextInputType.emailAddress),
-              const SizedBox(height: 14),
-              _buildTextField(_phoneController, 'Phone Number', Icons.phone_outlined,
-                  keyboard: TextInputType.phone),
-              const SizedBox(height: 14),
-              _buildPasswordField(_passwordController, 'Password',
-                  _obscurePassword, () => setState(() => _obscurePassword = !_obscurePassword)),
-              const SizedBox(height: 14),
-              _buildPasswordField(_confirmPasswordController, 'Confirm Password',
-                  _obscureConfirm, () => setState(() => _obscureConfirm = !_obscureConfirm),
-                  validator: (v) {
-                    if (v != _passwordController.text) return 'Passwords do not match';
-                    return null;
-                  }),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        key: const ValueKey('details'),
+        children: [
+          _Field(
+            controller: _nameController,
+            label: 'Full name',
+            icon: Icons.person_outline_rounded,
+            textCapitalization: TextCapitalization.words,
+            autofillHints: const [AutofillHints.name],
+            validator: Validators.name,
+          ),
+          const SizedBox(height: 14),
+          _Field(
+            controller: _emailController,
+            label: 'Email address',
+            icon: Icons.mail_outline_rounded,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            validator: Validators.email,
+          ),
+          const SizedBox(height: 14),
+          _Field(
+            controller: _phoneController,
+            label: 'Phone number',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+            autofillHints: const [AutofillHints.telephoneNumber],
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
             ],
+            validator: Validators.phoneNumber,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-      TextEditingController c, String label, IconData icon,
-      {TextInputType keyboard = TextInputType.text}) {
-    return TextFormField(
-      controller: c,
-      keyboardType: keyboard,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.white38, size: 20),
-      ),
-      validator: (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null,
-    );
-  }
-
-  Widget _buildPasswordField(
-    TextEditingController c,
-    String label,
-    bool obscure,
-    VoidCallback toggleObscure, {
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: c,
-      obscureText: obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white38, size: 20),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_off : Icons.visibility,
-            color: Colors.white38,
-          ),
-          onPressed: toggleObscure,
-        ),
-      ),
-      validator: validator ?? Validators.password,
-    );
-  }
-
-  Widget _buildRoleStep() {
-    return Column(
-      key: const ValueKey('role'),
-      children: UserRole.values
-          .where((r) => r != UserRole.admin) // Admin is internal only
-          .map((role) {
-        final isSelected = _selectedRole == role;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedRole = role),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppTheme.primaryColor.withValues(alpha: 0.12)
-                  : const Color(0xFF1D1E33),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color:
-                    isSelected ? AppTheme.primaryColor : Colors.white12,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _roleColor(role).withValues(alpha: 0.15),
-                  ),
-                  child: Icon(_roleIcon(role),
-                      color: _roleColor(role), size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _roleLabel(role),
-                        style: TextStyle(
-                          color: isSelected
-                              ? AppTheme.primaryColor
-                              : Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _roleDescription(role),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  const Icon(Icons.check_circle,
-                      color: Color(0xFFFF6B00), size: 24),
-              ],
+          const SizedBox(height: 14),
+          _Field(
+            controller: _passwordController,
+            label: 'Password',
+            icon: Icons.lock_outline_rounded,
+            obscureText: _obscurePassword,
+            autofillHints: const [AutofillHints.newPassword],
+            validator: Validators.password,
+            trailing: _ObscureToggle(
+              obscured: _obscurePassword,
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
-        );
-      }).toList(),
+          const SizedBox(height: 8),
+          _PasswordStrength(password: _passwordController.text),
+          const SizedBox(height: 14),
+          _Field(
+            controller: _confirmPasswordController,
+            label: 'Confirm password',
+            icon: Icons.lock_outline_rounded,
+            obscureText: _obscureConfirm,
+            validator: (v) => Validators.confirmPassword(
+              v,
+              _passwordController.text,
+            ),
+            trailing: _ObscureToggle(
+              obscured: _obscureConfirm,
+              onPressed: () =>
+                  setState(() => _obscureConfirm = !_obscureConfirm),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildReferralStep() {
-    return GlassCard(
+    final palette = context.palette;
+    return Column(
       key: const ValueKey('referral'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Container(
-              width: 72,
-              height: 72,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Field(
+          controller: _referralController,
+          label: 'Referral code (optional)',
+          icon: Icons.card_giftcard_outlined,
+          textCapitalization: TextCapitalization.characters,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+            LengthLimitingTextInputFormatter(12),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: palette.brandSubtle,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline_rounded, size: 20, color: palette.brand),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'You are joining as a customer. You can apply to drive or '
+                  'invest at any time from the menu once you are signed in.',
+                  style: context.text.bodySmall?.copyWith(
+                    color: palette.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        _TermsCheckbox(
+          value: _acceptedTerms,
+          onChanged: (v) => setState(() => _acceptedTerms = v),
+          onOpenTerms: () =>
+              _openLegalUrl('https://hubert24hrs.github.io/Dilivvafast/terms.html'),
+          onOpenPrivacy: () => _openLegalUrl(
+              'https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
+        ),
+      ],
+    );
+  }
+
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  void _handleBack() {
+    if (_step > 0) {
+      setState(() => _step--);
+    } else {
+      context.go('/login');
+    }
+  }
+
+  void _handleNext() {
+    FocusScope.of(context).unfocus();
+
+    if (_step == 0) {
+      if (_formKey.currentState?.validate() ?? false) {
+        setState(() => _step = 1);
+      }
+      return;
+    }
+
+    if (!_acceptedTerms) return;
+
+    // Role is intentionally not passed — registration always creates a
+    // customer, and the repository defaults accordingly.
+    ref.read(authControllerProvider.notifier).signUp(
+          fullName: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          password: _passwordController.text,
+          referralCode: _referralController.text.trim().isNotEmpty
+              ? _referralController.text.trim().toUpperCase()
+              : null,
+        );
+  }
+
+  Future<void> _openLegalUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the link.')),
+      );
+    }
+  }
+
+  String _friendlyError(Object? error) {
+    final message = error.toString();
+    return message.startsWith('Exception: ')
+        ? message.substring('Exception: '.length)
+        : message;
+  }
+}
+
+// ── Pieces ──────────────────────────────────────────────────────────────────
+
+class _StepProgress extends StatelessWidget {
+  const _StepProgress({required this.step, required this.total});
+
+  final int step;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: List.generate(total, (i) {
+          return Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              height: 4,
+              margin: EdgeInsets.only(right: i == total - 1 ? 0 : 6),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.primaryColor.withValues(alpha: 0.15),
-              ),
-              child: const Icon(Icons.card_giftcard,
-                  color: Color(0xFFFF6B00), size: 36),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Referral Code (Optional)',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Enter a referral code to earn bonus credits',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _referralController,
-              textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'Referral Code',
-                prefixIcon:
-                    Icon(Icons.qr_code, color: Colors.white38, size: 20),
+                borderRadius: BorderRadius.circular(999),
+                color: i <= step ? palette.brand : palette.border,
               ),
             ),
-            const SizedBox(height: 20),
-            // Legal consent
-            Center(
-              child: RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  text: 'By creating an account you agree to our\n',
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      fontSize: 12),
-                  children: [
-                    WidgetSpan(
-                      child: GestureDetector(
-                        onTap: () => _openLegalUrl(
-                            'https://hubert24hrs.github.io/Dilivvafast/terms.html'),
-                        child: const Text(
-                          'Terms of Service',
-                          style: TextStyle(
-                            color: Color(0xFFFF6B00),
-                            fontSize: 12,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Color(0xFFFF6B00),
-                          ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  const _Field({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.keyboardType,
+    this.obscureText = false,
+    this.validator,
+    this.trailing,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
+    this.autofillHints,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final String? Function(String?)? validator;
+  final Widget? trailing;
+  final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
+  final List<String>? autofillHints;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+      textCapitalization: textCapitalization,
+      inputFormatters: inputFormatters,
+      autofillHints: autofillHints,
+      style: context.text.bodyLarge,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+        suffixIcon: trailing,
+      ),
+    );
+  }
+}
+
+class _ObscureToggle extends StatelessWidget {
+  const _ObscureToggle({required this.obscured, required this.onPressed});
+
+  final bool obscured;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      tooltip: obscured ? 'Show password' : 'Hide password',
+      icon: Icon(
+        obscured
+            ? Icons.visibility_outlined
+            : Icons.visibility_off_outlined,
+        size: 20,
+      ),
+    );
+  }
+}
+
+/// Live feedback on password quality, mirroring the rules in [Validators].
+class _PasswordStrength extends StatelessWidget {
+  const _PasswordStrength({required this.password});
+
+  final String password;
+
+  @override
+  Widget build(BuildContext context) {
+    if (password.isEmpty) return const SizedBox.shrink();
+
+    final palette = context.palette;
+    final checks = <bool>[
+      password.length >= 8,
+      RegExp(r'[A-Za-z]').hasMatch(password),
+      RegExp(r'[0-9]').hasMatch(password),
+      RegExp(r'[^A-Za-z0-9]').hasMatch(password),
+    ];
+    final score = checks.where((c) => c).length;
+    final (color, label) = switch (score) {
+      <= 1 => (palette.danger, 'Weak'),
+      2 => (palette.warning, 'Fair'),
+      3 => (palette.info, 'Good'),
+      _ => (palette.success, 'Strong'),
+    };
+
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: score / checks.length,
+              minHeight: 4,
+              color: color,
+              backgroundColor: palette.border,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(label,
+            style: context.text.bodySmall?.copyWith(
+                color: color, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
+class _TermsCheckbox extends StatelessWidget {
+  const _TermsCheckbox({
+    required this.value,
+    required this.onChanged,
+    required this.onOpenTerms,
+    required this.onOpenPrivacy,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback onOpenTerms;
+  final VoidCallback onOpenPrivacy;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final linkStyle = context.text.bodySmall?.copyWith(
+      color: palette.brand,
+      fontWeight: FontWeight.w600,
+    );
+
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text.rich(
+                  TextSpan(
+                    text: 'I agree to the ',
+                    style: context.text.bodySmall,
+                    children: [
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.baseline,
+                        baseline: TextBaseline.alphabetic,
+                        child: GestureDetector(
+                          onTap: onOpenTerms,
+                          child: Text('Terms of Service', style: linkStyle),
                         ),
                       ),
-                    ),
-                    TextSpan(
-                      text: ' and ',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 12),
-                    ),
-                    WidgetSpan(
-                      child: GestureDetector(
-                        onTap: () => _openLegalUrl(
-                            'https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
-                        child: const Text(
-                          'Privacy Policy',
-                          style: TextStyle(
-                            color: Color(0xFFFF6B00),
-                            fontSize: 12,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Color(0xFFFF6B00),
-                          ),
+                      const TextSpan(text: ' and '),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.baseline,
+                        baseline: TextBaseline.alphabetic,
+                        child: GestureDetector(
+                          onTap: onOpenPrivacy,
+                          child: Text('Privacy Policy', style: linkStyle),
                         ),
                       ),
-                    ),
-                  ],
+                      const TextSpan(text: '.'),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -443,65 +520,81 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ),
     );
   }
+}
 
-  void _handleNext() {
-    if (_step == 0) {
-      if (_formKey.currentState?.validate() ?? false) {
-        setState(() => _step = 1);
-      }
-    } else if (_step == 1) {
-      setState(() => _step = 2);
-    } else {
-      ref.read(authControllerProvider.notifier).signUp(
-            fullName: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            phone: _phoneController.text.trim(),
-            password: _passwordController.text,
-            role: _selectedRole,
-            referralCode: _referralController.text.trim().isNotEmpty
-                ? _referralController.text.trim()
-                : null,
-          );
-    }
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.isLoading,
+    required this.enabled,
+    required this.label,
+    required this.onPressed,
+    this.footer,
+  });
+
+  final bool isLoading;
+  final bool enabled;
+  final String label;
+  final VoidCallback onPressed;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      decoration: BoxDecoration(
+        color: palette.surfaceBase,
+        border: Border(top: BorderSide(color: palette.border)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton(
+            onPressed: (isLoading || !enabled) ? null : onPressed,
+            child: isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: palette.onBrand,
+                    ),
+                  )
+                : Text(label),
+          ),
+          if (footer != null) ...[
+            const SizedBox(height: 4),
+            footer!,
+          ],
+        ],
+      ),
+    );
   }
+}
 
-  void _openLegalUrl(String url) {
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  }
+class _SignInLink extends StatelessWidget {
+  const _SignInLink();
 
-  IconData _roleIcon(UserRole role) {
-    return switch (role) {
-      UserRole.customer => Icons.person,
-      UserRole.driver => Icons.delivery_dining,
-      UserRole.investor => Icons.trending_up,
-      UserRole.admin => Icons.admin_panel_settings,
-    };
-  }
-
-  Color _roleColor(UserRole role) {
-    return switch (role) {
-      UserRole.customer => const Color(0xFFFF6B00),
-      UserRole.driver => const Color(0xFF4CAF50),
-      UserRole.investor => const Color(0xFFFF9800),
-      UserRole.admin => const Color(0xFFE91E63),
-    };
-  }
-
-  String _roleLabel(UserRole role) {
-    return switch (role) {
-      UserRole.customer => 'Customer',
-      UserRole.driver => 'Driver / Rider',
-      UserRole.investor => 'Investor',
-      UserRole.admin => 'Admin',
-    };
-  }
-
-  String _roleDescription(UserRole role) {
-    return switch (role) {
-      UserRole.customer => 'Send and receive packages across Nigeria',
-      UserRole.driver => 'Earn by delivering packages on your route',
-      UserRole.investor => 'Fund bikes and earn passive income',
-      UserRole.admin => 'Manage the platform',
-    };
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () => context.go('/login'),
+      child: Text.rich(
+        TextSpan(
+          text: 'Already have an account? ',
+          style: context.text.bodySmall,
+          children: [
+            TextSpan(
+              text: 'Sign in',
+              style: context.text.bodySmall?.copyWith(
+                color: context.palette.brand,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

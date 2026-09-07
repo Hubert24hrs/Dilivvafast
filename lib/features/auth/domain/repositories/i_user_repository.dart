@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:dilivvafast/core/domain/entities/driver_presence.dart';
 import 'package:dilivvafast/core/errors/failures.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
@@ -33,9 +34,14 @@ abstract class IUserRepository {
   Future<Either<Failure, String>> uploadProfilePhoto(
       String userId, String filePath);
 
-  /// Get all online available drivers
+  /// Full records for all online available drivers. Admin-only — reading
+  /// arbitrary user documents is denied to customers by firestore.rules.
   Stream<List<UserModel>> watchOnlineDrivers();
 
-  /// Get user by referral code
-  Future<Either<Failure, UserModel?>> getUserByReferralCode(String code);
+  /// Live courier presence for the customer map. Contains no personal data.
+  Stream<List<DriverPresence>> watchOnlineDriverPresence();
+
+  /// Resolve a referral code to the referrer's uid via Cloud Function.
+  /// Returns null when the code does not exist.
+  Future<Either<Failure, String?>> getUserIdByReferralCode(String code);
 }

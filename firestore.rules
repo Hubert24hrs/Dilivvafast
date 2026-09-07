@@ -12,26 +12,86 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
+    // Admin is authoritative from a custom claim set by the Admin SDK only.
+    // The legacy `role` field is still consulted so existing admin accounts
+    // keep working, but the custom claim is the supported path and the only
+    // one that no client write can ever reach.
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.get('admin', false) == true ||
+        userDoc().role == 'admin'
+      );
+    }
+
+    // Driver and investor access are granted by an admin. The legacy `role`
+    // field is still honoured so accounts created before mode entitlements
+    // existed keep working.
     function isDriver() {
       return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
+        (userDoc().get('driverStatus', 'none') == 'approved' ||
+         userDoc().role == 'driver');
+    }
+
+    function isInvestor() {
+      return isAuthenticated() &&
+        (userDoc().get('investorStatus', 'none') == 'approved' ||
+         userDoc().role == 'investor');
+    }
+
+    function affects(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny(keys);
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function isNonNegativeNumber(v) {
+      return v is number && v >= 0;
     }
 
     // ==================== USERS ====================
 
     match /users/{userId} {
+      // A user may only move their own entitlement to 'pending' — approving is
+      // an admin action. Anything already approved or suspended is frozen to
+      // the client so access cannot be re-requested to escape a suspension.
+      function selfServiceStatus(field) {
+        return !affects([field]) ||
+          (request.resource.data[field] == 'pending' &&
+           !(resource.data.get(field, 'none') in ['approved', 'suspended']));
+      }
+
       allow read: if isOwner(userId) || isAdmin();
-      allow update: if isOwner(userId) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+
+      // Financial and reputation fields must start at zero. Previously only
+      // `role` was constrained on create, so a patched client could register
+      // with an arbitrary opening wallet balance.
+      allow create: if isOwner(userId) &&
+        request.resource.data.role == 'customer' &&
+        request.resource.data.get('driverStatus', 'none') == 'none' &&
+        request.resource.data.get('investorStatus', 'none') == 'none' &&
+        request.resource.data.get('walletBalance', 0) == 0 &&
+        request.resource.data.get('rating', 0) == 0 &&
+        request.resource.data.get('totalDeliveries', 0) == 0 &&
+        request.resource.data.get('isVerified', false) == false;
+
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        !affects(['role', 'walletBalance', 'rating', 'totalDeliveries',
+                  'isVerified', 'createdAt', 'referralCode']) &&
+        selfServiceStatus('driverStatus') &&
+        selfServiceStatus('investorStatus')
+      );
+
+      allow delete: if isOwner(userId) || isAdmin();
 
       match /notifications/{notificationId} {
-        allow read, update: if isOwner(userId);
+        allow read, update, delete: if isOwner(userId);
         allow create: if isAuthenticated();
       }
 
@@ -44,41 +104,173 @@ service cloud.firestore {
       }
     }
 
-    // ==================== ORDERS & SUPPORT CHAT ====================
+    // ================ DRIVER PRESENCE (public projection) ================
+    // Live tracking and the home map need driver position and availability.
+    // These used to be read straight off the `users` document, which exposed
+    // every driver email, phone, wallet balance and FCM token to any signed-in
+    // customer. This collection carries only what a customer actually needs.
 
-    match /orders/{orderId} {
-      allow read: if isAuthenticated() && (
+    match /driver_locations/{driverId} {
+      allow get, list: if isAuthenticated();
+      // Only the driver publishes their own presence, and only about
+      // themselves. Nothing financial or identifying belongs in here.
+      allow create, update: if isOwner(driverId) &&
+        request.resource.data.driverId == driverId &&
+        !request.resource.data.keys().hasAny(
+          ['email', 'phone', 'walletBalance', 'fcmToken', 'role']);
+      allow delete: if isOwner(driverId) || isAdmin();
+    }
+
+    // ==================== ORDERS (couriers) ====================
+    // The app stores delivery orders in `couriers`; `orders` is retained for
+    // the support-chat threads that were written under that path.
+
+    match /couriers/{orderId} {
+
+      // Mirrors CourierOrderModel.canTransitionTo. Enforced here too so a
+      // patched client cannot jump an order straight to `delivered`.
+      //
+      // Values are the snake_case @JsonValue forms the model serialises to
+      // (`picked_up`, `in_transit`) — NOT the Dart enum `.name`. The legacy
+      // camelCase spellings older builds wrote are accepted on the `from`
+      // side only, so an order already stuck in one can still be progressed.
+      function validTransition(from, to) {
+        return (from == 'pending' && to in ['accepted', 'cancelled']) ||
+               (from == 'accepted' && to in ['picked_up', 'cancelled']) ||
+               (from in ['picked_up', 'pickedUp'] && to == 'in_transit') ||
+               (from in ['in_transit', 'inTransit'] &&
+                to in ['delivered', 'failed']);
+      }
+
+      function statusUnchangedOrValid() {
+        return !affects(['status']) ||
+          validTransition(resource.data.status, request.resource.data.status);
+      }
+
+      // Money, identity and audit fields are never client-writable after
+      // creation. Cloud Functions use the Admin SDK and bypass these rules.
+      function financialsFrozen() {
+        return !affects(['totalFare', 'baseFare', 'driverEarnings',
+                         'platformCommission', 'surgeMultiplier',
+                         'discountAmount', 'paymentStatus', 'userId',
+                         'createdAt', 'trackingCode', 'paystackReference']);
+      }
+
+      allow get: if isAuthenticated() && (
         resource.data.userId == request.auth.uid ||
-        resource.data.driverId == request.auth.uid ||
-        orderId.matches('support_.*') ||
+        resource.data.get('driverId', '') == request.auth.uid ||
+        isDriver() ||
         isAdmin()
       );
-      allow create: if isAuthenticated() && (
-        request.resource.data.userId == request.auth.uid ||
-        orderId.matches('support_.*')
+
+      // Drivers browse the unassigned queue; customers and admins list their
+      // own. Firestore applies the rule per document in the result set.
+      allow list: if isAuthenticated() && (
+        isDriver() || isAdmin() ||
+        resource.data.userId == request.auth.uid
       );
-      allow update: if isAuthenticated() && (
-        (resource.data.driverId == request.auth.uid && isDriver()) ||
-        resource.data.userId == request.auth.uid ||
-        orderId.matches('support_.*') ||
-        isAdmin()
-      );
+
+      // An order is always born unassigned, unpaid and unearned. The fare the
+      // client supplies is an estimate only — onCourierCreated recomputes it
+      // server-side and overwrites it.
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.driverId == null &&
+        request.resource.data.get('paymentStatus', 'pending') == 'pending' &&
+        request.resource.data.get('driverEarnings', 0) == 0 &&
+        request.resource.data.get('platformCommission', 0) == 0 &&
+        request.resource.data.get('rating', null) == null &&
+        request.resource.data.get('proofOfDeliveryUrl', null) == null &&
+        request.resource.data.get('pickedUpAt', null) == null &&
+        request.resource.data.get('deliveredAt', null) == null &&
+        isNonNegativeNumber(request.resource.data.get('totalFare', 0)) &&
+        isNonNegativeNumber(request.resource.data.get('baseFare', 0)) &&
+        isNonNegativeNumber(request.resource.data.get('discountAmount', 0));
+
+      allow update: if isAdmin() ||
+        // The customer may cancel or rate — never reprice, reassign, or mark
+        // their own delivery complete.
+        (resource.data.userId == request.auth.uid &&
+         financialsFrozen() &&
+         !affects(['driverId', 'proofOfDeliveryUrl', 'pickedUpAt',
+                   'deliveredAt']) &&
+         (!affects(['status']) ||
+          (request.resource.data.status == 'cancelled' &&
+           resource.data.status in ['pending', 'accepted']))) ||
+        // A driver may claim an unassigned job or progress one already theirs,
+        // following the same transition table the app enforces.
+        (isDriver() &&
+         financialsFrozen() &&
+         !affects(['rating', 'ratingComment']) &&
+         statusUnchangedOrValid() && (
+          // progressing a job that is already mine
+          (resource.data.get('driverId', '') == request.auth.uid &&
+           !affects(['driverId'])) ||
+          // claiming an unassigned pending job for myself
+          (resource.data.status == 'pending' &&
+           resource.data.get('driverId', null) == null &&
+           request.resource.data.driverId == request.auth.uid)
+        ));
+
       allow delete: if isAdmin();
 
       match /messages/{messageId} {
         allow read, create: if isAuthenticated() && (
-          orderId.matches('support_.*') ||
-          get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid ||
-          get(/databases/$(database)/documents/orders/$(orderId)).data.driverId == request.auth.uid ||
+          get(/databases/$(database)/documents/couriers/$(orderId)).data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/couriers/$(orderId)).data.get('driverId', '') == request.auth.uid ||
           isAdmin()
         );
+        allow update, delete: if isAdmin();
       }
+    }
+
+    // ==================== SUPPORT THREADS (orders) ====================
+    // Thread ids are `support_<uid>`. The previous rule matched any id
+    // starting with `support_`, which let any signed-in user read and write
+    // every other user support conversation.
+
+    match /orders/{orderId} {
+      function isOwnSupportThread() {
+        return isAuthenticated() && orderId == 'support_' + request.auth.uid;
+      }
+
+      allow read, create, update: if isOwnSupportThread() || isAdmin();
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        function isOwnThread() {
+          return isAuthenticated() && orderId == 'support_' + request.auth.uid;
+        }
+        allow read, create: if isOwnThread() || isAdmin();
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // ==================== NOTIFICATIONS (top-level) ====================
+
+    match /notifications/{notificationId} {
+      // `list` previously allowed any authenticated user to enumerate every
+      // notification in the system. Reads are owner-scoped now; a query must
+      // be constrained by userId to satisfy this rule.
+      allow read: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      // Written by Cloud Functions; clients never author notifications.
+      allow create: if isAdmin();
     }
 
     // ==================== REFERRALS ====================
 
     match /referrals/{referralId} {
-      allow read, create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.get('refereeId', '') == request.auth.uid ||
+        resource.data.get('referrerId', '') == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.refereeId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
@@ -88,20 +280,103 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (
         resource.data.userId == request.auth.uid || isAdmin()
       );
-      allow create: if false;
+      // Ledger entries are authored server-side only.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Idempotency ledger for Paystack references and driver payouts. Written
+    // exclusively by Cloud Functions through the Admin SDK, never by clients.
+    match /processed_payments/{reference} {
+      allow read, write: if false;
+    }
+
+    match /payouts/{payoutId} {
+      allow read: if isAuthenticated() && (
+        resource.data.get('driverId', '') == request.auth.uid || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    match /withdrawal_requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        isNonNegativeNumber(request.resource.data.get('amount', 0));
       allow update, delete: if isAdmin();
     }
 
-    // ==================== BIKES ====================
+    // ==================== INVESTOR ====================
 
-    match /bikes/{bikeId} {
+    match /investors/{investorId} {
+      allow read: if isOwner(investorId) || isAdmin();
+      // Enrolment creates the profile; totals are maintained server-side and
+      // must start at zero rather than at whatever the client supplies.
+      allow create: if isOwner(investorId) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.get('totalInvested', 0) == 0 &&
+        request.resource.data.get('totalEarned', 0) == 0 &&
+        request.resource.data.get('activeBikes', 0) == 0 &&
+        request.resource.data.get('pendingWithdrawal', 0) == 0;
+      allow update: if isAdmin() || (
+        isOwner(investorId) &&
+        !affects(['totalInvested', 'totalEarned', 'activeBikes',
+                  'pendingWithdrawal'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /investor_earnings/{earningId} {
       allow read: if isAuthenticated() && (
         resource.data.investorId == request.auth.uid || isAdmin()
       );
       allow create, update, delete: if isAdmin();
     }
 
-    // ==================== ZONES & PROMOS ====================
+    match /investor_withdrawals/{withdrawalId} {
+      allow read: if isAuthenticated() && (
+        resource.data.investorId == request.auth.uid || isAdmin()
+      );
+      allow create: if isInvestor() &&
+        request.resource.data.investorId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        isNonNegativeNumber(request.resource.data.get('amount', 0));
+      allow update, delete: if isAdmin();
+    }
+
+    // ==================== BIKES ====================
+
+    match /bikes/{bikeId} {
+      // Unfunded bikes must be visible to investors browsing the catalogue,
+      // which the previous owner-only rule made impossible.
+      allow read: if isAuthenticated() && (
+        resource.data.get('investorId', '') == request.auth.uid ||
+        resource.data.get('status', '') == 'available' ||
+        isAdmin()
+      );
+      allow create, delete: if isAdmin();
+      // Funding claims an available bike. The claim may only set ownership and
+      // status — price and financial history stay admin-controlled.
+      allow update: if isAdmin() || (
+        isInvestor() &&
+        resource.data.get('status', '') == 'available' &&
+        request.resource.data.investorId == request.auth.uid &&
+        changedKeys().hasOnly(['investorId', 'status', 'fundedAt', 'updatedAt'])
+      );
+    }
+
+    match /hp_agreements/{agreementId} {
+      allow read: if isAuthenticated() && (
+        resource.data.investorId == request.auth.uid ||
+        resource.data.riderId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==================== ZONES, PROMOS & PRICING ====================
 
     match /zones/{zoneId} {
       allow read: if isAuthenticated();
@@ -113,6 +388,34 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Per-user redemption ledger, written server-side, so a promo cannot be
+    // claimed twice by racing two clients.
+    match /promo_redemptions/{redemptionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.get('userId', '') == request.auth.uid || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    match /surge_overrides/{overrideId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /surge_events/{eventId} {
+      allow read: if isAdmin();
+      // Demand signals are appended by the app as orders are requested, and
+      // must be attributable so one client cannot forge demand anonymously.
+      allow create: if isAuthenticated() &&
+        request.resource.data.get('userId', '') == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /app_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // ==================== DRIVER APPLICATIONS ====================
 
     match /driver_applications/{applicationId} {
@@ -120,19 +423,21 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || isAdmin()
       );
       allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.get('status', 'submitted') == 'submitted';
+      allow update, delete: if isAdmin();
     }
 
-    // ==================== HP AGREEMENTS ====================
+    // ==================== SAFETY ====================
 
-    match /hp_agreements/{agreementId} {
+    match /sos_alerts/{alertId} {
+      // Never blocked for the person raising it, and never readable by peers.
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
       allow read: if isAuthenticated() && (
-        resource.data.investorId == request.auth.uid ||
-        resource.data.riderId == request.auth.uid ||
-        isAdmin()
+        resource.data.userId == request.auth.uid || isAdmin()
       );
-      allow create, update, delete: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     // ==================== RATINGS ====================
@@ -140,8 +445,30 @@ service cloud.firestore {
     match /ratings/{ratingId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.get('rating', 0) is number &&
+        request.resource.data.get('rating', 0) >= 1 &&
+        request.resource.data.get('rating', 0) <= 5;
+      allow update, delete: if isAdmin();
+    }
+
+    // ==================== SUPPORT TICKETS ====================
+
+    match /support_tickets/{ticketId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false;
+      allow update, delete: if isAdmin();
+    }
+
+    // ==================== ADMIN AUDIT LOG ====================
+    // Append-only from the Admin SDK; readable by admins for review.
+
+    match /admin_audit_log/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // ==================== CATCH-ALL ====================

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/auth/presentation/screens/login_screen.dart';
 import 'package:dilivvafast/features/home/presentation/screens/home_screen.dart';
@@ -17,6 +18,7 @@ import 'package:dilivvafast/features/driver/presentation/screens/driver_home_scr
 import 'package:dilivvafast/features/driver/presentation/screens/driver_active_delivery_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_screens.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_applications_screen.dart';
 import 'package:dilivvafast/features/investor/presentation/screens/investor_screens.dart';
 import 'package:dilivvafast/features/profile/presentation/screens/profile_screen.dart';
 import 'package:dilivvafast/features/rating/presentation/screens/rating_screen.dart';
@@ -33,6 +35,7 @@ import 'package:dilivvafast/features/admin/presentation/screens/admin_zones_scre
 // Phase 4 screens
 import 'package:dilivvafast/features/payment/presentation/screens/top_up_screen.dart';
 import 'package:dilivvafast/features/investor/presentation/screens/investor_bike_detail_screen.dart';
+import 'package:dilivvafast/features/investor/presentation/screens/investor_join_screen.dart';
 
 // Phase 5 screens
 import 'package:dilivvafast/features/profile/presentation/screens/settings_screen.dart';
@@ -65,64 +68,167 @@ import 'package:dilivvafast/features/driver/presentation/screens/driver_vehicle_
 
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
 
+/// Destination descriptor for the mode shells' bottom navigation.
+class _Destination {
+  const _Destination(this.icon, this.selectedIcon, this.label, this.route);
+
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final String route;
+}
+
+/// Shared scaffold for the customer, driver, admin and investor shells.
+///
+/// Uses Material 3's [NavigationBar] with a hairline top border, which is the
+/// current convention on both platforms and reads correctly in light and dark.
 class _ShellScaffold extends StatelessWidget {
   const _ShellScaffold({
     required this.child,
+    required this.destinations,
     required this.currentIndex,
-    required this.items,
-    required this.onTap,
-    required this.role,
   });
 
   final Widget child;
+  final List<_Destination> destinations;
   final int currentIndex;
-  final List<BottomNavigationBarItem> items;
-  final ValueChanged<int> onTap;
-  final String role;
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppTheme.surfaceColor,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: Colors.white54,
-        items: items,
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: palette.border)),
+        ),
+        child: NavigationBar(
+          selectedIndex: currentIndex,
+          onDestinationSelected: (i) {
+            final target = destinations[i].route;
+            if (target != GoRouterState.of(context).matchedLocation) {
+              context.go(target);
+            }
+          },
+          destinations: [
+            for (final d in destinations)
+              NavigationDestination(
+                icon: Icon(d.icon),
+                selectedIcon: Icon(d.selectedIcon),
+                label: d.label,
+                tooltip: d.label,
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
+/// Resolves the selected tab from the current location.
+///
+/// Matches the longest route first so `/customer/orders/abc` selects Orders
+/// rather than falling through to the first tab.
+int _indexFor(String location, List<_Destination> destinations) {
+  var bestIndex = 0;
+  var bestLength = -1;
+  for (var i = 0; i < destinations.length; i++) {
+    final route = destinations[i].route;
+    if (location.startsWith(route) && route.length > bestLength) {
+      bestIndex = i;
+      bestLength = route.length;
+    }
+  }
+  return bestIndex;
+}
+
+const _customerDestinations = [
+  _Destination(Icons.home_outlined, Icons.home_rounded, 'Home', '/customer/home'),
+  _Destination(Icons.add_box_outlined, Icons.add_box_rounded, 'Send', '/customer/book'),
+  _Destination(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Orders', '/customer/orders'),
+  _Destination(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet', '/customer/wallet'),
+  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/customer/profile'),
+];
+
+const _driverDestinations = [
+  _Destination(Icons.explore_outlined, Icons.explore_rounded, 'Jobs', '/driver/home'),
+  _Destination(Icons.history_rounded, Icons.history_rounded, 'History', '/driver/history'),
+  _Destination(Icons.payments_outlined, Icons.payments_rounded, 'Earnings', '/driver/earnings'),
+  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/driver/profile'),
+];
+
+const _adminDestinations = [
+  _Destination(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Dashboard', '/admin/dashboard'),
+  _Destination(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Orders', '/admin/orders'),
+  _Destination(Icons.people_outline_rounded, Icons.people_rounded, 'Users', '/admin/users'),
+  _Destination(Icons.assignment_outlined, Icons.assignment_rounded, 'Applications', '/admin/applications'),
+  _Destination(Icons.attach_money_rounded, Icons.attach_money_rounded, 'Finance', '/admin/finance'),
+];
+
+const _investorDestinations = [
+  _Destination(Icons.pedal_bike_outlined, Icons.pedal_bike_rounded, 'Bikes', '/investor/home'),
+  _Destination(Icons.trending_up_outlined, Icons.trending_up_rounded, 'Earnings', '/investor/earnings'),
+  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/investor/profile'),
+];
+
 // ==================== ROUTER PROVIDER ====================
+
+/// Routes reachable without being signed in.
+const _authRoutes = {
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/onboarding',
+  '/biometric-setup',
+};
+
+/// Onboarding flows that deliberately sit under a mode's path prefix but must
+/// stay reachable by people who have not been granted that mode yet.
+const _enrollmentRoutes = {
+  '/driver/apply',
+  '/investor/join',
+};
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  final userRole = ref.watch(currentUserRoleProvider);
+  final userAsync = ref.watch(currentUserProvider);
 
   return GoRouter(
     initialLocation: '/',
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      final location = state.matchedLocation;
+
+      // The splash screen decides where to go once auth has settled.
+      if (location == '/') return null;
+
       final isLoggedIn = authState.value != null;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register' ||
-          state.matchedLocation == '/forgot-password' ||
-          state.matchedLocation == '/onboarding' ||
-          state.matchedLocation == '/biometric-setup' ||
-          state.matchedLocation == '/';
+      final isAuthRoute = _authRoutes.contains(location);
 
-      // Not logged in — redirect to login
-      if (!isLoggedIn && !isAuthRoute) {
-        return '/login';
-      }
+      if (!isLoggedIn) return isAuthRoute ? null : '/login';
 
-      // Logged in but on auth route — redirect to role-based home
-      if (isLoggedIn && isAuthRoute && state.matchedLocation != '/') {
-        return _getHomeRouteForRole(userRole);
+      // Signed in, but the profile document has not arrived yet. Redirecting
+      // now would bounce drivers and investors to the customer home, so hold
+      // position until the entitlements are known.
+      final user = userAsync.value;
+      if (user == null) return null;
+
+      final mode = user.effectiveMode;
+      if (isAuthRoute) return mode.homeRoute;
+
+      if (_enrollmentRoutes.contains(location)) return null;
+
+      // Keep people out of surfaces they are not entitled to, sending them to
+      // that mode's onboarding rather than a screen that would fail to load.
+      for (final guarded in const [
+        AppMode.driver,
+        AppMode.investor,
+        AppMode.admin,
+      ]) {
+        if (location.startsWith(guarded.routePrefix) && !user.canEnter(guarded)) {
+          return _entryPointFor(guarded);
+        }
       }
 
       return null;
@@ -157,26 +263,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ========== CUSTOMER ROUTES ==========
       ShellRoute(
-        builder: (context, state, child) {
-          final index = _getCustomerTabIndex(state.matchedLocation);
-          return _ShellScaffold(
-            currentIndex: index,
-            role: 'customer',
-            onTap: (i) => _onCustomerTabTap(context, i),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.local_shipping), label: 'Send'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long), label: 'Orders'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
-            ],
-            child: child,
-          );
-        },
+        builder: (context, state, child) => _ShellScaffold(
+          currentIndex:
+              _indexFor(state.matchedLocation, _customerDestinations),
+          destinations: _customerDestinations,
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: '/customer/home',
@@ -243,24 +335,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ========== DRIVER ROUTES ==========
       ShellRoute(
-        builder: (context, state, child) {
-          final index = _getDriverTabIndex(state.matchedLocation);
-          return _ShellScaffold(
-            currentIndex: index,
-            role: 'driver',
-            onTap: (i) => _onDriverTabTap(context, i),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.history), label: 'History'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.account_balance_wallet), label: 'Wallet'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
-            ],
-            child: child,
-          );
-        },
+        builder: (context, state, child) => _ShellScaffold(
+          currentIndex:
+              _indexFor(state.matchedLocation, _driverDestinations),
+          destinations: _driverDestinations,
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: '/driver/home',
@@ -302,27 +382,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ========== ADMIN ROUTES ==========
       ShellRoute(
-        builder: (context, state, child) {
-          final index = _getAdminTabIndex(state.matchedLocation);
-          return _ShellScaffold(
-            currentIndex: index,
-            role: 'admin',
-            onTap: (i) => _onAdminTabTap(context, i),
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard), label: 'Dashboard'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long), label: 'Orders'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.people), label: 'Users'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.assignment), label: 'Applications'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.attach_money), label: 'Finance'),
-            ],
-            child: child,
-          );
-        },
+        builder: (context, state, child) => _ShellScaffold(
+          currentIndex:
+              _indexFor(state.matchedLocation, _adminDestinations),
+          destinations: _adminDestinations,
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: '/admin/dashboard',
@@ -364,22 +429,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ========== INVESTOR ROUTES ==========
       ShellRoute(
-        builder: (context, state, child) {
-          final index = _getInvestorTabIndex(state.matchedLocation);
-          return _ShellScaffold(
-            currentIndex: index,
-            role: 'investor',
-            onTap: (i) => _onInvestorTabTap(context, i),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.attach_money), label: 'Earnings'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
-            ],
-            child: child,
-          );
-        },
+        builder: (context, state, child) => _ShellScaffold(
+          currentIndex:
+              _indexFor(state.matchedLocation, _investorDestinations),
+          destinations: _investorDestinations,
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: '/investor/home',
@@ -397,6 +452,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ProfileScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/investor/join',
+        name: 'investorJoin',
+        builder: (context, state) => const InvestorJoinScreen(),
       ),
       GoRoute(
         path: '/investor/bikes/:bikeId',
@@ -517,90 +577,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 // ==================== HELPER FUNCTIONS ====================
 
-String _getHomeRouteForRole(UserRole? role) {
-  switch (role) {
-    case UserRole.customer:
-      return '/customer/home';
-    case UserRole.driver:
-      return '/driver/home';
-    case UserRole.admin:
-      return '/admin/dashboard';
-    case UserRole.investor:
-      return '/investor/home';
-    case null:
-      return '/customer/home'; // Default for unknown role
-  }
-}
-
-int _getCustomerTabIndex(String location) {
-  if (location.startsWith('/customer/book')) return 1;
-  if (location.startsWith('/customer/orders')) return 2;
-  if (location.startsWith('/customer/wallet')) return 3;
-  if (location.startsWith('/customer/profile')) return 4;
-  return 0;
-}
-
-void _onCustomerTabTap(BuildContext context, int index) {
-  const routes = [
-    '/customer/home',
-    '/customer/book',
-    '/customer/orders',
-    '/customer/wallet',
-    '/customer/profile',
-  ];
-  context.go(routes[index]);
-}
-
-int _getDriverTabIndex(String location) {
-  if (location.startsWith('/driver/history')) return 1;
-  if (location.startsWith('/driver/earnings')) return 2;
-  if (location.startsWith('/driver/profile')) return 3;
-  return 0;
-}
-
-void _onDriverTabTap(BuildContext context, int index) {
-  const routes = [
-    '/driver/home',
-    '/driver/history',
-    '/driver/earnings',
-    '/driver/profile',
-  ];
-  context.go(routes[index]);
-}
-
-int _getAdminTabIndex(String location) {
-  if (location.startsWith('/admin/orders')) return 1;
-  if (location.startsWith('/admin/users')) return 2;
-  if (location.startsWith('/admin/applications')) return 3;
-  if (location.startsWith('/admin/finance')) return 4;
-  return 0;
-}
-
-void _onAdminTabTap(BuildContext context, int index) {
-  const routes = [
-    '/admin/dashboard',
-    '/admin/orders',
-    '/admin/users',
-    '/admin/applications',
-    '/admin/finance',
-  ];
-  context.go(routes[index]);
-}
-
-int _getInvestorTabIndex(String location) {
-  if (location.startsWith('/investor/earnings')) return 1;
-  if (location.startsWith('/investor/profile')) return 2;
-  return 0;
-}
-
-void _onInvestorTabTap(BuildContext context, int index) {
-  const routes = [
-    '/investor/home',
-    '/investor/earnings',
-    '/investor/profile',
-  ];
-  context.go(routes[index]);
-}
+/// Where to send someone who reached a mode they are not entitled to.
+String _entryPointFor(AppMode mode) => switch (mode) {
+      AppMode.driver => '/driver/apply',
+      AppMode.investor => '/investor/join',
+      // There is no self-service route into admin.
+      AppMode.admin || AppMode.customer => '/customer/home',
+    };
 
 // ==================== SPLASH SCREEN ====================
 
@@ -612,47 +595,93 @@ class _SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<_SplashScreen> {
+  /// Minimum time the brand mark stays up, so the splash never flashes.
+  static const _minimumDwell = Duration(milliseconds: 900);
+
+  /// How long to wait for the profile document before falling back to the
+  /// customer home, so a slow or failing read cannot strand people here.
+  static const _profileTimeout = Duration(seconds: 6);
+
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    _navigate();
+    _resolveDestination();
   }
 
-  Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+  Future<void> _resolveDestination() async {
+    final deadline = DateTime.now().add(_profileTimeout);
+    await Future<void>.delayed(_minimumDwell);
 
-    final authState = ref.read(authStateProvider);
-    final userRole = ref.read(currentUserRoleProvider);
+    while (mounted && DateTime.now().isBefore(deadline)) {
+      final auth = ref.read(authStateProvider);
 
-    if (authState.value != null) {
-      context.go(_getHomeRouteForRole(userRole));
-    } else {
-      context.go('/login');
+      // Auth itself has not resolved yet.
+      if (auth.isLoading) {
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        continue;
+      }
+
+      if (auth.value == null) return _goTo('/login');
+
+      // Signed in — wait for the profile so we route by the right mode.
+      final user = ref.read(currentUserProvider).value;
+      if (user != null) return _goTo(user.effectiveMode.homeRoute);
+
+      await Future<void>.delayed(const Duration(milliseconds: 120));
     }
+
+    if (!mounted) return;
+    _goTo(ref.read(authStateProvider).value == null
+        ? '/login'
+        : AppMode.customer.homeRoute);
+  }
+
+  void _goTo(String route) {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    context.go(route);
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.delivery_dining,
-                size: 80, color: AppTheme.primaryColor),
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: palette.brandSubtle,
+                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+              ),
+              child: Icon(Icons.delivery_dining_rounded,
+                  size: 46, color: palette.brand),
+            ),
             const SizedBox(height: 24),
             Text(
-              'DILIVVAFAST',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 4,
-                  ),
+              'Dilivvafast',
+              style: context.text.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(color: AppTheme.primaryColor),
+            const SizedBox(height: 8),
+            Text('Delivery, sorted.', style: context.text.bodyMedium),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: palette.brand,
+              ),
+            ),
           ],
         ),
       ),

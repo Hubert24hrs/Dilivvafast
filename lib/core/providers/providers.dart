@@ -35,6 +35,7 @@ import 'package:dilivvafast/features/investor/domain/entities/investor_model.dar
 import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/investor_earnings_model.dart';
 import 'package:dilivvafast/core/domain/entities/notification_model.dart';
+import 'package:dilivvafast/core/domain/entities/driver_presence.dart';
 
 // Core services
 import 'package:dilivvafast/core/services/fare_calculator_service.dart';
@@ -132,9 +133,18 @@ final walletBalanceProvider = StreamProvider<double>((ref) {
   return ref.watch(userRepositoryProvider).watchWalletBalance(userId);
 });
 
-/// Online drivers stream (for customer home and admin map)
+/// Full online-driver records. ADMIN SCREENS ONLY — customers cannot read the
+/// `users` collection, so this stream errors for them by design.
 final onlineDriversProvider = StreamProvider<List<UserModel>>((ref) {
   return ref.watch(userRepositoryProvider).watchOnlineDrivers();
+});
+
+/// Courier presence for customer-facing surfaces (availability note, map
+/// pins). Reads the public `driver_locations` projection, which carries no
+/// personal or financial data.
+final onlineDriverPresenceProvider =
+    StreamProvider<List<DriverPresence>>((ref) {
+  return ref.watch(userRepositoryProvider).watchOnlineDriverPresence();
 });
 
 // ==================== COURIER ORDER PROVIDERS ====================
@@ -264,19 +274,25 @@ final unreadNotificationCountProvider = Provider<int>((ref) {
 
 /// Driver online/offline toggle notifier
 class DriverStatusNotifier extends Notifier<bool> {
+  /// Seeded from the profile so a driver who was online before the app was
+  /// reopened is not shown as offline while Firestore still has them live.
   @override
-  bool build() => false;
+  bool build() => ref.watch(currentUserProvider).value?.isOnline ?? false;
 
   Future<void> toggle() async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) return;
 
-    final newStatus = !state;
+    final previous = state;
+    final newStatus = !previous;
     state = newStatus;
 
-    await ref
+    final result = await ref
         .read(userRepositoryProvider)
         .updateOnlineStatus(userId, newStatus, newStatus);
+
+    // Roll back so the switch cannot claim a state the backend rejected.
+    result.fold((_) => state = previous, (_) {});
   }
 
   void set(bool value) => state = value;
@@ -303,17 +319,16 @@ final fcmServiceProvider = Provider<FCMService>((ref) {
   );
 });
 
-/// Stream driver location in real-time
+/// Stream one courier's live position, for the tracking map.
+///
+/// Reads `driver_locations`, not `users` — a customer tracking their delivery
+/// needs coordinates, not the courier's email, phone and wallet balance.
 final driverLocationProvider =
     StreamProvider.family<GeoPoint?, String>((ref, driverId) {
   return ref
       .watch(firestoreProvider)
-      .collection('users')
+      .collection(FirestoreConstants.driverLocations)
       .doc(driverId)
       .snapshots()
-      .map((snap) {
-    final data = snap.data();
-    if (data == null || data['location'] == null) return null;
-    return data['location'] as GeoPoint;
-  });
+      .map((snap) => snap.data()?['location'] as GeoPoint?);
 });

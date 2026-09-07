@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// Dilivvafast Cloud Storage rules.
+//
+// The project previously shipped no storage.rules at all, so the bucket ran on
+// whatever default the Firebase console had — for a bucket holding driver
+// licences and ID documents that is not acceptable. Everything is denied unless
+// a rule below allows it.
+//
+// NOTE ON DOWNLOAD URLS: getDownloadURL() mints a long-lived bearer token that
+// bypasses these rules for anyone holding the link. Sensitive identity
+// documents should be referenced by storage path and served to admins through
+// short-lived signed URLs from the Admin SDK. Until that migration lands, the
+// rules below at least stop direct bucket enumeration and cross-user reads.
+// See SECURITY.md, "Driver document access".
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Admin is asserted by a custom claim only. There is deliberately no
+    // Firestore lookup fallback here: Storage rules cannot read a document the
+    // caller controls without inviting the same escalation path we closed in
+    // firestore.rules.
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.get('admin', false) == true;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+
+    // 8 MB ceiling on anything a phone camera produces.
+    function withinSizeLimit() {
+      return request.resource.size < 8 * 1024 * 1024;
+    }
+
+    // ==================== PROFILE PHOTOS ====================
+    // Readable by any signed-in user: a customer sees their driver avatar and
+    // vice versa. Writable only by the owner.
+
+    match /profile_photos/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId.split('[.]')[0]) &&
+                      isImage() && withinSizeLimit();
+    }
+
+    // ==================== DRIVER IDENTITY DOCUMENTS ====================
+    // Licences, IDs, vehicle papers. Never readable by customers, never
+    // listable, never readable by other drivers.
+
+    match /drivers/{userId}/{document=**} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isImage() && withinSizeLimit();
+      allow delete: if isAdmin();
+    }
+
+    match /driver_applications/{userId}/{document=**} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isImage() && withinSizeLimit();
+      allow delete: if isAdmin();
+    }
+
+    // ==================== PROOF OF DELIVERY ====================
+    // Written by the assigned driver, read by the customer on that order and
+    // by admins. Order membership is checked in Firestore.
+
+    match /proof_of_delivery/{orderId}/{document=**} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        firestore.get(/databases/(default)/documents/couriers/$(orderId)).data.userId == request.auth.uid ||
+        firestore.get(/databases/(default)/documents/couriers/$(orderId)).data.driverId == request.auth.uid
+      );
+      allow write: if isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/couriers/$(orderId)).data.driverId == request.auth.uid &&
+        isImage() && withinSizeLimit();
+      allow delete: if isAdmin();
+    }
+
+    // ==================== CATCH-ALL ====================
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

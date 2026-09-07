@@ -51,27 +51,41 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
           .where('isActive', isEqualTo: true)
           .get();
 
+      if (!mounted) return;
+
       if (snap.docs.isEmpty) {
         setState(() => _errorText = 'Invalid or expired promo code');
         return;
       }
 
       final promoData = snap.docs.first.data();
+
+      // Client-side expiry check. This is a convenience so the customer sees
+      // a clear message; the authoritative check is server-side when the
+      // discount is applied to an order — a promo accepted here is only an
+      // intent, never a committed discount. See SECURITY.md, "Promotions".
+      final expiresAt = (promoData['expiresAt'] as Timestamp?)?.toDate();
+      if (expiresAt != null && expiresAt.isBefore(DateTime.now())) {
+        setState(() => _errorText = 'That promo code has expired');
+        return;
+      }
+
       ref.read(appliedPromoProvider.notifier).set(promoData);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Promo code "$code" applied! ${promoData['discountPercent'] ?? 0}% off your next delivery.',
-            ),
-            backgroundColor: AppTheme.successColor,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Promo code "$code" applied! ${promoData['discountPercent'] ?? 0}% off your next delivery.',
           ),
-        );
-        _codeCtrl.clear();
-      }
+          backgroundColor: context.palette.success,
+        ),
+      );
+      _codeCtrl.clear();
     } catch (e) {
-      setState(() => _errorText = 'Error validating code: $e');
+      // Never render a raw backend exception into the UI.
+      debugPrint('Promo validation failed: $e');
+      if (!mounted) return;
+      setState(() => _errorText = 'Could not validate that code right now.');
     } finally {
       if (mounted) setState(() => _isChecking = false);
     }
@@ -82,10 +96,10 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
     final appliedPromo = ref.watch(appliedPromoProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Promotions & Coupons'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -94,7 +108,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
           children: [
             // Code Input Section
             Card(
-              color: AppTheme.surfaceColor,
+              color: context.palette.surfaceRaised,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -103,10 +117,10 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Enter Promo Code',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.palette.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -118,7 +132,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                           child: TextField(
                             controller: _codeCtrl,
                             textCapitalization: TextCapitalization.characters,
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(color: context.palette.textPrimary),
                             decoration: InputDecoration(
                               hintText: 'e.g. DILIVVA10',
                               errorText: _errorText,
@@ -129,19 +143,19 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         ElevatedButton(
                           onPressed: _isChecking ? null : _applyCode,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
+                            backgroundColor: context.palette.brand,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 16,
                             ),
                           ),
                           child: _isChecking
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: context.palette.onBrand,
                                   ),
                                 )
                               : const Text('Apply'),
@@ -156,29 +170,29 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
             if (appliedPromo != null) ...[
               const SizedBox(height: 20),
               Card(
-                color: AppTheme.successColor.withValues(alpha: 0.15),
+                color: context.palette.success.withValues(alpha: 0.15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: AppTheme.successColor),
+                  side: BorderSide(color: context.palette.success),
                 ),
                 child: ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.check_circle,
-                    color: AppTheme.successColor,
+                    color: context.palette.success,
                   ),
                   title: Text(
                     'Active Code: ${appliedPromo['code']}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.palette.onBrand,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     '${appliedPromo['discountPercent'] ?? 0}% discount applied to next booking',
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: context.palette.textSecondary),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: Icon(Icons.close, color: context.palette.textSecondary),
                     onPressed: () {
                       ref.read(appliedPromoProvider.notifier).set(null);
                     },
@@ -188,10 +202,10 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
             ],
 
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'AVAILABLE PROMOTIONS',
               style: TextStyle(
-                color: Colors.white54,
+                color: context.palette.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -207,24 +221,24 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
+                      color: context.palette.brand,
                     ),
                   );
                 }
 
                 final docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty) {
-                  return const Card(
-                    color: AppTheme.surfaceColor,
+                  return Card(
+                    color: context.palette.surfaceRaised,
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Center(
                         child: Text(
                           'No public promo codes available right now.\nCheck back soon!',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: context.palette.textSecondary),
                         ),
                       ),
                     ),
@@ -239,31 +253,31 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     final discount = data['discountPercent'] ?? 0;
 
                     return Card(
-                      color: AppTheme.surfaceColor,
+                      color: context.palette.surfaceRaised,
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color:
-                                AppTheme.primaryColor.withValues(alpha: 0.2),
+                                context.palette.brand.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.local_offer,
-                            color: AppTheme.primaryColor,
+                            color: context.palette.brand,
                           ),
                         ),
                         title: Text(
                           code,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.palette.onBrand,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         subtitle: Text(
                           '$desc — Save $discount%',
-                          style: const TextStyle(color: Colors.white70),
+                          style: TextStyle(color: context.palette.textSecondary),
                         ),
                         trailing: OutlinedButton(
                           onPressed: () {
@@ -271,7 +285,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Promo "$code" applied!'),
-                                backgroundColor: AppTheme.successColor,
+                                backgroundColor: context.palette.success,
                               ),
                             );
                           },

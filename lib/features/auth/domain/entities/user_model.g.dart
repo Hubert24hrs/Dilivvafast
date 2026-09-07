@@ -28,15 +28,21 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   updatedAt: const TimestampConverter().fromJson(
     json['updatedAt'] as Timestamp,
   ),
-  location: const NullableGeoPointConverter().fromJson(
-    json['location'] as Map<String, dynamic>?,
-  ),
+  location: const NullableGeoPointConverter().fromJson(json['location']),
   address: json['address'] as String?,
-  bvn: json['bvn'] as String?,
   vehicleType: json['vehicleType'] as String?,
   vehiclePlate: json['vehiclePlate'] as String?,
   licenseUrl: json['licenseUrl'] as String?,
   isAvailable: json['isAvailable'] as bool? ?? true,
+  driverStatus:
+      $enumDecodeNullable(_$ModeAccessEnumMap, json['driverStatus']) ??
+      ModeAccess.none,
+  investorStatus:
+      $enumDecodeNullable(_$ModeAccessEnumMap, json['investorStatus']) ??
+      ModeAccess.none,
+  activeMode:
+      $enumDecodeNullable(_$AppModeEnumMap, json['activeMode']) ??
+      AppMode.customer,
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -59,11 +65,13 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
       'location': const NullableGeoPointConverter().toJson(instance.location),
       'address': instance.address,
-      'bvn': instance.bvn,
       'vehicleType': instance.vehicleType,
       'vehiclePlate': instance.vehiclePlate,
       'licenseUrl': instance.licenseUrl,
       'isAvailable': instance.isAvailable,
+      'driverStatus': _$ModeAccessEnumMap[instance.driverStatus]!,
+      'investorStatus': _$ModeAccessEnumMap[instance.investorStatus]!,
+      'activeMode': _$AppModeEnumMap[instance.activeMode]!,
     };
 
 const _$UserRoleEnumMap = {
@@ -71,4 +79,19 @@ const _$UserRoleEnumMap = {
   UserRole.driver: 'driver',
   UserRole.admin: 'admin',
   UserRole.investor: 'investor',
+};
+
+const _$ModeAccessEnumMap = {
+  ModeAccess.none: 'none',
+  ModeAccess.pending: 'pending',
+  ModeAccess.approved: 'approved',
+  ModeAccess.rejected: 'rejected',
+  ModeAccess.suspended: 'suspended',
+};
+
+const _$AppModeEnumMap = {
+  AppMode.customer: 'customer',
+  AppMode.driver: 'driver',
+  AppMode.investor: 'investor',
+  AppMode.admin: 'admin',
 };

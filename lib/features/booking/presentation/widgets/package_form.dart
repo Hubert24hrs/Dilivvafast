@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Package details form: category, weight, recipient info, and notes.
 class PackageForm extends StatelessWidget {
@@ -46,13 +47,13 @@ class PackageForm extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFFFF6B00).withValues(alpha: 0.15)
-                      : const Color(0xFF1D1E33),
+                      ? context.palette.brand.withValues(alpha: 0.15)
+                      : context.palette.surfaceRaised,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFFFF6B00)
-                        : Colors.white12,
+                        ? context.palette.brand
+                        : context.palette.border,
                     width: 1.5,
                   ),
                 ),
@@ -62,15 +63,15 @@ class PackageForm extends StatelessWidget {
                     Icon(
                       _categoryIcon(category),
                       color: isSelected
-                          ? const Color(0xFFFF6B00)
-                          : Colors.white54,
+                          ? context.palette.brand
+                          : context.palette.textSecondary,
                       size: 18,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       _categoryLabel(category),
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFFFF6B00) : Colors.white70,
+                        color: isSelected ? context.palette.brand : context.palette.textSecondary,
                         fontSize: 13,
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -88,7 +89,7 @@ class PackageForm extends StatelessWidget {
         // Package weight
         const _SectionLabel('Estimated Weight (kg)'),
         const SizedBox(height: 8),
-        _buildTextField(
+        _buildTextField(context, 
           hint: 'e.g. 2.5',
           icon: Icons.fitness_center,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -106,7 +107,7 @@ class PackageForm extends StatelessWidget {
         // Package description
         const _SectionLabel('Package Description'),
         const SizedBox(height: 8),
-        _buildTextField(
+        _buildTextField(context, 
           hint: 'What are you sending?',
           icon: Icons.inventory_2,
           onChanged: onDescriptionChanged,
@@ -117,14 +118,14 @@ class PackageForm extends StatelessWidget {
         // Recipient info
         const _SectionLabel('Recipient Details'),
         const SizedBox(height: 8),
-        _buildTextField(
+        _buildTextField(context, 
           hint: 'Recipient name',
           icon: Icons.person_outline,
           onChanged: onRecipientNameChanged,
           textCapitalization: TextCapitalization.words,
         ),
         const SizedBox(height: 12),
-        _buildTextField(
+        _buildTextField(context, 
           hint: 'Recipient phone (e.g. 08012345678)',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
@@ -140,7 +141,7 @@ class PackageForm extends StatelessWidget {
         // Notes
         const _SectionLabel('Delivery Notes (Optional)'),
         const SizedBox(height: 8),
-        _buildTextField(
+        _buildTextField(context, 
           hint: 'e.g. Call before delivery, fragile item...',
           icon: Icons.note_outlined,
           maxLines: 3,
@@ -150,7 +151,7 @@ class PackageForm extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(BuildContext context, {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
@@ -161,16 +162,16 @@ class PackageForm extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.palette.border),
       ),
       child: TextField(
-        style: const TextStyle(color: Colors.white, fontSize: 15),
+        style: TextStyle(color: context.palette.textPrimary, fontSize: 15),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: const Color(0xFFFF6B00), size: 20),
+          prefixIcon: Icon(icon, color: context.palette.brand, size: 20),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          hintStyle: TextStyle(color: context.palette.textSecondary),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -215,8 +216,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: context.palette.textPrimary,
         fontSize: 14,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,

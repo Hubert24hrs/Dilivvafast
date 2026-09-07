@@ -195,13 +195,16 @@ class FirebaseAuthRepository implements IAuthRepository {
     try {
       final uid = user.uid;
 
-      // 1. Delete notifications sub-collection
+      // 1. Delete this user's notifications.
+      //
+      // These live in the top-level `notifications` collection keyed by
+      // userId — the per-user sub-collection this previously cleared is not
+      // where the app writes them, so deletion left the records behind.
       final notifsSnap = await _firestore
-          .collection(FirestoreConstants.users)
-          .doc(uid)
           .collection(FirestoreConstants.notifications)
+          .where(FirestoreConstants.fieldUserId, isEqualTo: uid)
           .get();
-      
+
       final batch = _firestore.batch();
       for (final doc in notifsSnap.docs) {
         batch.delete(doc.reference);

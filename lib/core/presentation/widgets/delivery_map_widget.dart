@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// A reusable delivery map widget that shows pickup/dropoff markers
 /// and an optional driver location marker with route visualization.
@@ -48,7 +49,7 @@ class DeliveryMapWidget extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFF6B00).withValues(alpha: 0.2),
+          color: context.palette.brand.withValues(alpha: 0.2),
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -69,7 +70,7 @@ class DeliveryMapWidget extends StatelessWidget {
             ),
             child: CustomPaint(
               size: Size.infinite,
-              painter: _MapGridPainter(),
+              painter: _MapGridPainter(lineColor: context.palette.border),
             ),
           ),
 
@@ -78,6 +79,7 @@ class DeliveryMapWidget extends StatelessWidget {
             CustomPaint(
               size: Size.infinite,
               painter: _RoutePainter(
+                routeColor: context.palette.brand,
                 hasDriver: _hasDriver,
               ),
             ),
@@ -88,7 +90,7 @@ class DeliveryMapWidget extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  if (_hasDriver) _buildDriverMarker(),
+                  if (_hasDriver) _buildDriverMarker(context),
                   const Spacer(),
                   Row(
                     children: [
@@ -96,7 +98,7 @@ class DeliveryMapWidget extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: onPickupTap,
-                            child: _buildLocationPin(
+                            child: _buildLocationPin(context, 
                               label: pickupLabel,
                               color: const Color(0xFF4CAF50),
                               icon: Icons.radio_button_checked,
@@ -110,7 +112,7 @@ class DeliveryMapWidget extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Icon(
                             Icons.arrow_forward,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: context.palette.textMuted,
                             size: 16,
                           ),
                         ),
@@ -118,7 +120,7 @@ class DeliveryMapWidget extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: onDropoffTap,
-                            child: _buildLocationPin(
+                            child: _buildLocationPin(context, 
                               label: dropoffLabel,
                               color: const Color(0xFFFF5252),
                               icon: Icons.flag,
@@ -141,14 +143,14 @@ class DeliveryMapWidget extends StatelessWidget {
                 children: [
                   Icon(Icons.map,
                       size: 32,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                      color: context.palette.textMuted),
                   const SizedBox(height: 8),
                   Text(
                     interactive
                         ? 'Tap to select location'
                         : 'No locations set',
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: context.palette.textMuted,
                         fontSize: 12),
                   ),
                 ],
@@ -168,7 +170,7 @@ class DeliveryMapWidget extends StatelessWidget {
               child: Text(
                 '© Mapbox',
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.4), fontSize: 8),
+                    color: context.palette.textSecondary, fontSize: 8),
               ),
             ),
           ),
@@ -177,7 +179,7 @@ class DeliveryMapWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationPin({
+  Widget _buildLocationPin(BuildContext context, {
     required String label,
     required Color color,
     required IconData icon,
@@ -209,7 +211,7 @@ class DeliveryMapWidget extends StatelessWidget {
                 Text(
                   '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: context.palette.textSecondary,
                       fontSize: 8),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -221,16 +223,16 @@ class DeliveryMapWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverMarker() {
+  Widget _buildDriverMarker(BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
+          color: context.palette.brand.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: const Color(0xFFFF6B00).withValues(alpha: 0.4)),
+              color: context.palette.brand.withValues(alpha: 0.4)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -238,22 +240,22 @@ class DeliveryMapWidget extends StatelessWidget {
             Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFFFF6B00),
+                color: context.palette.brand,
               ),
             ),
             const SizedBox(width: 6),
-            const Text('Driver Location',
+            Text('Driver Location',
                 style: TextStyle(
-                    color: Color(0xFFFF6B00),
+                    color: context.palette.brand,
                     fontSize: 10,
                     fontWeight: FontWeight.w600)),
             const SizedBox(width: 4),
             Text(
               '${driverLat!.toStringAsFixed(3)}, ${driverLng!.toStringAsFixed(3)}',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4), fontSize: 9),
+                  color: context.palette.textSecondary, fontSize: 9),
             ),
           ],
         ),
@@ -264,10 +266,14 @@ class DeliveryMapWidget extends StatelessWidget {
 
 /// Grid lines painter for the map background
 class _MapGridPainter extends CustomPainter {
+  _MapGridPainter({required this.lineColor});
+
+  final Color lineColor;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.04)
+      ..color = lineColor
       ..strokeWidth = 0.5;
 
     // Horizontal lines
@@ -281,18 +287,21 @@ class _MapGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MapGridPainter oldDelegate) =>
+      oldDelegate.lineColor != lineColor;
 }
 
 /// Route line painter
 class _RoutePainter extends CustomPainter {
-  _RoutePainter({required this.hasDriver});
+  _RoutePainter({required this.hasDriver, required this.routeColor});
+
   final bool hasDriver;
+  final Color routeColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFFF6B00).withValues(alpha: 0.3)
+      ..color = routeColor.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Reusable line chart for earnings data (driver or investor).
 class EarningsChart extends StatelessWidget {
@@ -7,7 +8,7 @@ class EarningsChart extends StatelessWidget {
     super.key,
     required this.data,
     this.height = 180,
-    this.lineColor = const Color(0xFFFF6B00),
+    this.lineColor,
     this.gradientColors,
     this.title,
   });
@@ -15,23 +16,25 @@ class EarningsChart extends StatelessWidget {
   /// Map of DateTime → earnings amount
   final Map<DateTime, double> data;
   final double height;
-  final Color lineColor;
+  /// Defaults to the brand colour resolved from the active theme.
+  final Color? lineColor;
   final List<Color>? gradientColors;
   final String? title;
 
   @override
   Widget build(BuildContext context) {
+    final line = lineColor ?? context.palette.brand;
     if (data.isEmpty) {
       return Container(
         height: height,
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
+          color: context.palette.surfaceRaised,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Center(
           child: Text('No earnings data',
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3), fontSize: 13)),
+                  color: context.palette.textMuted, fontSize: 13)),
         ),
       );
     }
@@ -50,9 +53,9 @@ class EarningsChart extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: context.palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,8 +64,8 @@ class EarningsChart extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: 8, bottom: 8),
               child: Text(title!,
-                  style: const TextStyle(
-                      color: Colors.white54,
+                  style: TextStyle(
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600)),
             ),
@@ -74,7 +77,7 @@ class EarningsChart extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: maxY > 0 ? maxY / 4 : 1,
                   getDrawingHorizontalLine: (v) => FlLine(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: context.palette.border,
                     strokeWidth: 1,
                   ),
                 ),
@@ -86,7 +89,7 @@ class EarningsChart extends StatelessWidget {
                       getTitlesWidget: (v, meta) => Text(
                         _formatValue(v),
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: context.palette.textMuted,
                             fontSize: 9),
                       ),
                     ),
@@ -104,7 +107,7 @@ class EarningsChart extends StatelessWidget {
                         return Text(
                           '${date.day}/${date.month}',
                           style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: context.palette.textMuted,
                               fontSize: 9),
                         );
                       },
@@ -124,7 +127,7 @@ class EarningsChart extends StatelessWidget {
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    color: lineColor,
+                    color: line,
                     barWidth: 2.5,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
@@ -132,9 +135,9 @@ class EarningsChart extends StatelessWidget {
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
                         radius: 3,
-                        color: lineColor,
+                        color: line,
                         strokeWidth: 1,
-                        strokeColor: Colors.white24,
+                        strokeColor: context.palette.textMuted,
                       ),
                     ),
                     belowBarData: BarAreaData(
@@ -144,8 +147,8 @@ class EarningsChart extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: gradientColors ??
                             [
-                              lineColor.withValues(alpha: 0.2),
-                              lineColor.withValues(alpha: 0.0),
+                              line.withValues(alpha: 0.2),
+                              line.withValues(alpha: 0.0),
                             ],
                       ),
                     ),
@@ -156,8 +159,8 @@ class EarningsChart extends StatelessWidget {
                     getTooltipItems: (spots) => spots.map((spot) {
                       return LineTooltipItem(
                         '₦${spot.y.toStringAsFixed(0)}',
-                        const TextStyle(
-                          color: Color(0xFFFF6B00),
+                        TextStyle(
+                          color: context.palette.brand,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),

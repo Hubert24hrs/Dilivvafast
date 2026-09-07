@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -12,12 +13,12 @@ class AdminDashboardScreen extends ConsumerWidget {
     final driversAsync = ref.watch(onlineDriversProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
-        title: const Text('Admin Dashboard',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Admin Dashboard',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -33,53 +34,53 @@ class AdminDashboardScreen extends ConsumerWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 1.4,
               children: [
-                _statCard(
+                _statCard(context, 
                   'Total Orders',
                   '${ordersAsync.value?.length ?? 0}',
                   Icons.receipt_long,
-                  const Color(0xFFFF6B00),
+                  context.palette.brand,
                 ),
-                _statCard(
+                _statCard(context, 
                   'Active Drivers',
                   '${driversAsync.value?.length ?? 0}',
                   Icons.delivery_dining,
                   const Color(0xFF4CAF50),
                 ),
-                _statCard(
+                _statCard(context, 
                   'Revenue',
                   '₦${_totalRevenue(ordersAsync).toStringAsFixed(0)}',
                   Icons.attach_money,
                   const Color(0xFFFF9800),
                 ),
-                _statCard(
+                _statCard(context, 
                   'Commission',
                   '₦${_totalCommission(ordersAsync).toStringAsFixed(0)}',
                   Icons.trending_up,
-                  const Color(0xFFFF9500),
+                  context.palette.brand,
                 ),
               ],
             ),
             const SizedBox(height: 28),
 
             // Recent orders
-            const Text('Recent Orders',
+            Text('Recent Orders',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: context.palette.onBrand,
                     fontSize: 16,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
 
             ordersAsync.when(
-              loading: () => const Center(
+              loading: () => Center(
                   child:
-                      CircularProgressIndicator(color: Color(0xFFFF6B00))),
+                      CircularProgressIndicator(color: context.palette.brand)),
               error: (e, _) => Text('Error: $e',
-                  style: const TextStyle(color: Colors.redAccent)),
+                  style: TextStyle(color: context.palette.danger)),
               data: (orders) {
                 if (orders.isEmpty) {
-                  return const Center(
+                  return Center(
                       child: Text('No orders yet',
-                          style: TextStyle(color: Colors.white54)));
+                          style: TextStyle(color: context.palette.textSecondary)));
                 }
                 return Column(
                   children: orders
@@ -88,9 +89,9 @@ class AdminDashboardScreen extends ConsumerWidget {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1D1E33),
+                              color: context.palette.surfaceRaised,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white10),
+                              border: Border.all(color: context.palette.border),
                             ),
                             child: Row(
                               children: [
@@ -99,7 +100,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                                   height: 8,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: _statusColor(order.status.name),
+                                    color: _statusColor(context, order.status.name),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -109,14 +110,14 @@ class AdminDashboardScreen extends ConsumerWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(order.trackingCode,
-                                          style: const TextStyle(
-                                              color: Colors.white,
+                                          style: TextStyle(
+                                              color: context.palette.textPrimary,
                                               fontSize: 13,
                                               fontWeight: FontWeight.w500)),
                                       Text(
                                           '${order.pickupAddress} → ${order.dropoffAddress}',
-                                          style: const TextStyle(
-                                              color: Colors.white54,
+                                          style: TextStyle(
+                                              color: context.palette.textSecondary,
                                               fontSize: 11),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis),
@@ -125,8 +126,8 @@ class AdminDashboardScreen extends ConsumerWidget {
                                 ),
                                 Text(
                                     '₦${order.totalFare.toStringAsFixed(0)}',
-                                    style: const TextStyle(
-                                        color: Color(0xFFFF6B00),
+                                    style: TextStyle(
+                                        color: context.palette.brand,
                                         fontWeight: FontWeight.bold)),
                               ],
                             ),
@@ -141,11 +142,11 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _statCard(String label, String value, IconData icon, Color color) {
+  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
@@ -163,7 +164,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               Text(label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12)),
             ],
           ),
         ],
@@ -184,14 +185,14 @@ class AdminDashboardScreen extends ConsumerWidget {
         .fold(0.0, (sum, o) => sum + (o.platformCommission as double));
   }
 
-  Color _statusColor(String status) {
+  Color _statusColor(BuildContext context, String status) {
     return switch (status) {
       'pending' => const Color(0xFFFF9800),
       'accepted' => const Color(0xFF2196F3),
       'inTransit' => const Color(0xFF00BCD4),
       'delivered' => const Color(0xFF4CAF50),
       'cancelled' => const Color(0xFFE91E63),
-      _ => Colors.white54,
+      _ => context.palette.textSecondary,
     };
   }
 }

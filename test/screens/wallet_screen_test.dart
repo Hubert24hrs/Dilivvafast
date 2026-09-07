@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/features/payment/presentation/screens/wallet_screen.dart';
 
+import '../support/harness.dart';
+
 void main() {
   group('WalletScreen', () {
-    Widget createTestWidget() {
-      return const ProviderScope(
-        child: MaterialApp(
-          home: WalletScreen(),
-        ),
-      );
-    }
+    Widget createTestWidget() => wrapScreen(const WalletScreen());
 
     testWidgets('renders wallet title', (tester) async {
       await tester.pumpWidget(createTestWidget());

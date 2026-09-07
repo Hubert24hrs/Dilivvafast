@@ -37,18 +37,18 @@ class HelpCenterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Help Center & FAQs'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
+          Text(
             'FREQUENTLY ASKED QUESTIONS',
             style: TextStyle(
-              color: Colors.white54,
+              color: context.palette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -57,18 +57,18 @@ class HelpCenterScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           ...faqs.map((faq) => Card(
-                color: AppTheme.surfaceColor,
+                color: context.palette.surfaceRaised,
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ExpansionTile(
-                  iconColor: AppTheme.primaryColor,
-                  collapsedIconColor: Colors.white70,
+                  iconColor: context.palette.brand,
+                  collapsedIconColor: context.palette.textSecondary,
                   title: Text(
                     faq['question']!,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.palette.onBrand,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
@@ -78,8 +78,8 @@ class HelpCenterScreen extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: Text(
                         faq['answer']!,
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: context.palette.textSecondary,
                           height: 1.4,
                         ),
                       ),
@@ -90,36 +90,36 @@ class HelpCenterScreen extends StatelessWidget {
 
           const SizedBox(height: 24),
           Card(
-            color: AppTheme.primaryColor.withValues(alpha: 0.15),
+            color: context.palette.brand.withValues(alpha: 0.15),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(
-                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                color: context.palette.brand.withValues(alpha: 0.3),
               ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.headset_mic_outlined,
                     size: 48,
-                    color: AppTheme.primaryColor,
+                    color: context.palette.brand,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Need Additional Assistance?',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.palette.onBrand,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Our support team is available 24/7 to assist with active orders, account issues, or billing.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
@@ -136,7 +136,7 @@ class HelpCenterScreen extends StatelessWidget {
                     icon: const Icon(Icons.email),
                     label: const Text('Email Support'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
+                      backgroundColor: context.palette.brand,
                     ),
                   ),
                 ],

@@ -2,6 +2,21 @@ import 'package:fpdart/fpdart.dart';
 import 'package:dilivvafast/core/errors/failures.dart';
 import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 
+/// What the backend hands back when a Paystack transaction is opened.
+///
+/// The reference is minted by the Cloud Function, not by the caller, so it is
+/// returned here alongside the checkout URL — the client needs it to verify
+/// the payment afterwards.
+class PaymentInit {
+  const PaymentInit({
+    required this.authorizationUrl,
+    required this.reference,
+  });
+
+  final String authorizationUrl;
+  final String reference;
+}
+
 /// Abstract repository for payment and transaction operations.
 abstract class IPaymentRepository {
   /// Stream transactions for a user
@@ -26,8 +41,10 @@ abstract class IPaymentRepository {
   Future<Either<Failure, TransactionModel>> createTransaction(
       TransactionModel transaction);
 
-  /// Initialize Paystack payment
-  Future<Either<Failure, String>> initializePayment({
+  /// Open a Paystack transaction and return its checkout URL and reference.
+  /// [reference] is retained for source compatibility but is ignored — the
+  /// authoritative reference is generated server-side.
+  Future<Either<Failure, PaymentInit>> initializePayment({
     required double amount,
     required String email,
     required String reference,

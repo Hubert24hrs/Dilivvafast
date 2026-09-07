@@ -23,20 +23,25 @@ class _AboutScreenState extends State<AboutScreen> {
   Future<void> _loadPackageInfo() async {
     try {
       final info = await PackageInfo.fromPlatform();
+      // The user can pop this screen while the platform channel is still in
+      // flight; calling setState on a disposed State throws.
+      if (!mounted) return;
       setState(() {
         _version = info.version;
         _buildNumber = info.buildNumber;
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AboutScreen: could not read package info: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('About Dilivvafast'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -44,16 +49,16 @@ class _AboutScreenState extends State<AboutScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.delivery_dining,
                 size: 80,
-                color: AppTheme.primaryColor,
+                color: context.palette.brand,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'DILIVVAFAST',
                 style: TextStyle(
-                  color: AppTheme.primaryColor,
+                  color: context.palette.brand,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 3,
@@ -62,38 +67,38 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 8),
               Text(
                 'Version $_version (Build $_buildNumber)',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Dilivvafast is Nigeria\'s premier tech-driven logistics and courier delivery network. Connecting individuals, merchants, and enterprise businesses with reliable, real-time tracked dispatch riders.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: context.palette.textSecondary,
                   fontSize: 15,
                   height: 1.5,
                 ),
               ),
               const SizedBox(height: 32),
               Card(
-                color: AppTheme.surfaceColor,
+                color: context.palette.surfaceRaised,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       _infoRow('Developer', 'Dilivvafast Technologies Ltd'),
-                      const Divider(color: Colors.white10),
+                      Divider(color: context.palette.border),
                       _infoRow('Website', 'https://dilivvafast.app'),
-                      const Divider(color: Colors.white10),
+                      Divider(color: context.palette.border),
                       _infoRow('Contact Email', 'support@dilivvafast.app'),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 '© 2026 Dilivvafast Inc. All rights reserved.',
-                style: TextStyle(color: Colors.white38, fontSize: 12),
+                style: TextStyle(color: context.palette.textMuted, fontSize: 12),
               ),
             ],
           ),
@@ -106,11 +111,11 @@ class _AboutScreenState extends State<AboutScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white54)),
+        Text(label, style: TextStyle(color: context.palette.textSecondary)),
         Text(
           val,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.palette.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),

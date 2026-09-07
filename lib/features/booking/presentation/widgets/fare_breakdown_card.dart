@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dilivvafast/core/services/fare_calculator_service.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Itemized fare breakdown card showing base fare, distance, surge, promo, etc.
 class FareBreakdownCard extends StatelessWidget {
@@ -15,7 +16,7 @@ class FareBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return _buildShimmer();
+      return _buildShimmer(context);
     }
     if (breakdown == null) {
       return const SizedBox.shrink();
@@ -29,24 +30,24 @@ class FareBreakdownCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1D1E33),
-            const Color(0xFF1D1E33).withValues(alpha: 0.8),
+            context.palette.surfaceRaised,
+            context.palette.surfaceRaised.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFF6B00).withValues(alpha: 0.2)),
+        border: Border.all(color: context.palette.brand.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.receipt_long, color: Color(0xFFFF6B00), size: 20),
+              Icon(Icons.receipt_long, color: context.palette.brand, size: 20),
               SizedBox(width: 8),
               Text(
                 'Fare Breakdown',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.onBrand,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -55,44 +56,44 @@ class FareBreakdownCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          _fareRow('Base fare', '₦${b.baseFare.toStringAsFixed(0)}'),
-          _fareRow('Distance', '₦${b.distanceFare.toStringAsFixed(0)}'),
+          _fareRow(context, 'Base fare', '₦${b.baseFare.toStringAsFixed(0)}'),
+          _fareRow(context, 'Distance', '₦${b.distanceFare.toStringAsFixed(0)}'),
           if (b.weightSurcharge > 0)
-            _fareRow('Weight surcharge', '₦${b.weightSurcharge.toStringAsFixed(0)}'),
+            _fareRow(context, 'Weight surcharge', '₦${b.weightSurcharge.toStringAsFixed(0)}'),
           if (b.surgeMultiplier > 1.0)
-            _fareRow(
+            _fareRow(context, 
               'Surge (${b.surgeMultiplier.toStringAsFixed(1)}x)',
               '',
               highlight: true,
             ),
           if (b.promoDiscount > 0)
-            _fareRow(
+            _fareRow(context, 
               'Promo discount',
               '-₦${b.promoDiscount.toStringAsFixed(0)}',
               isDiscount: true,
             ),
 
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: Colors.white24, height: 1),
+            child: Divider(color: context.palette.textMuted, height: 1),
           ),
 
           // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 '₦${b.totalFare.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: Color(0xFFFF6B00),
+                style: TextStyle(
+                  color: context.palette.brand,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -105,12 +106,12 @@ class FareBreakdownCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
+                color: context.palette.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 '📍 ${b.zoneName}',
-                style: const TextStyle(color: Color(0xFFFF6B00), fontSize: 12),
+                style: TextStyle(color: context.palette.brand, fontSize: 12),
               ),
             ),
           ],
@@ -119,7 +120,7 @@ class FareBreakdownCard extends StatelessWidget {
     );
   }
 
-  Widget _fareRow(String label, String value,
+  Widget _fareRow(BuildContext context, String label, String value,
       {bool highlight = false, bool isDiscount = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -131,7 +132,7 @@ class FareBreakdownCard extends StatelessWidget {
             style: TextStyle(
               color: highlight
                   ? const Color(0xFFFF9800)
-                  : Colors.white.withValues(alpha: 0.7),
+                  : context.palette.textPrimary,
               fontSize: 14,
             ),
           ),
@@ -142,7 +143,7 @@ class FareBreakdownCard extends StatelessWidget {
                   ? const Color(0xFF4CAF50)
                   : highlight
                       ? const Color(0xFFFF9800)
-                      : Colors.white,
+                      : context.palette.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -152,17 +153,17 @@ class FareBreakdownCard extends StatelessWidget {
     );
   }
 
-  Widget _buildShimmer() {
+  Widget _buildShimmer(BuildContext context) {
     return Container(
       height: 180,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D1E33),
+        color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Center(
+      child: Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFFF6B00),
+          color: context.palette.brand,
           strokeWidth: 2,
         ),
       ),

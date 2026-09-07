@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/domain/entities/notification_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -12,17 +13,17 @@ class NotificationsScreen extends ConsumerWidget {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
-        title: const Text('Notifications',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Notifications',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
         actions: [
           TextButton(
             onPressed: () => _markAllRead(ref),
-            child: const Text('Mark all read',
-                style: TextStyle(color: Color(0xFFFF6B00), fontSize: 12)),
+            child: Text('Mark all read',
+                style: TextStyle(color: context.palette.brand, fontSize: 12)),
           ),
         ],
       ),
@@ -35,10 +36,10 @@ class NotificationsScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.notifications_none,
                       size: 56,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                      color: context.palette.textMuted),
                   const SizedBox(height: 12),
-                  const Text('No notifications yet',
-                      style: TextStyle(color: Colors.white38, fontSize: 15)),
+                  Text('No notifications yet',
+                      style: TextStyle(color: context.palette.textMuted, fontSize: 15)),
                 ],
               ),
             );
@@ -61,32 +62,32 @@ class NotificationsScreen extends ConsumerWidget {
                       child: Text(
                         group.dateLabel,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: context.palette.textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  _buildNotificationTile(ref, group.notification),
+                  _buildNotificationTile(context, ref, group.notification),
                 ],
               );
             },
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+        loading: () => Center(
+          child: CircularProgressIndicator(color: context.palette.brand),
         ),
         error: (e, _) => Center(
           child:
-              Text('Error: $e', style: const TextStyle(color: Colors.redAccent)),
+              Text('Error: $e', style: TextStyle(color: context.palette.danger)),
         ),
       ),
     );
   }
 
-  Widget _buildNotificationTile(WidgetRef ref, NotificationModel n) {
+  Widget _buildNotificationTile(BuildContext context, WidgetRef ref, NotificationModel n) {
     final icon = _iconForType(n.type);
-    final color = _colorForType(n.type);
+    final color = _colorForType(context, n.type);
 
     return GestureDetector(
       onTap: () => _markRead(ref, n),
@@ -96,11 +97,11 @@ class NotificationsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: n.isRead
-              ? const Color(0xFF1D1E33)
-              : const Color(0xFF1D1E33).withValues(alpha: 0.9),
+              ? context.palette.surfaceRaised
+              : context.palette.surfaceRaised.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: n.isRead ? Colors.white12 : color.withValues(alpha: 0.3),
+            color: n.isRead ? context.palette.border : color.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -128,7 +129,7 @@ class NotificationsScreen extends ConsumerWidget {
                         child: Text(
                           n.title,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.palette.textPrimary,
                             fontSize: 14,
                             fontWeight:
                                 n.isRead ? FontWeight.w400 : FontWeight.w600,
@@ -150,7 +151,7 @@ class NotificationsScreen extends ConsumerWidget {
                   Text(
                     n.body,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                     ),
                     maxLines: 2,
@@ -160,7 +161,7 @@ class NotificationsScreen extends ConsumerWidget {
                   Text(
                     _timeAgo(n.createdAt),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: context.palette.textMuted,
                       fontSize: 10,
                     ),
                   ),
@@ -202,13 +203,13 @@ class NotificationsScreen extends ConsumerWidget {
     };
   }
 
-  Color _colorForType(NotificationType type) {
+  Color _colorForType(BuildContext context, NotificationType type) {
     return switch (type) {
-      NotificationType.orderUpdate => const Color(0xFFFF6B00),
+      NotificationType.orderUpdate => context.palette.brand,
       NotificationType.driverAssigned => const Color(0xFF4CAF50),
       NotificationType.deliveryComplete => const Color(0xFF4CAF50),
       NotificationType.payment => const Color(0xFFFF9800),
-      NotificationType.promo => const Color(0xFFFF9500),
+      NotificationType.promo => context.palette.brand,
       NotificationType.system => const Color(0xFF90CAF9),
     };
   }

@@ -50,10 +50,10 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     final threadId = 'support_${uid ?? "guest"}';
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Chat with Support'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       body: Column(
         children: [
@@ -71,9 +71,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return const Center(
+                        return Center(
                           child: CircularProgressIndicator(
-                            color: AppTheme.primaryColor,
+                            color: context.palette.brand,
                           ),
                         );
                       }
@@ -89,22 +89,22 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                 Icon(
                                   Icons.chat_bubble_outline_rounded,
                                   size: 64,
-                                  color: Colors.white.withValues(alpha: 0.3),
+                                  color: context.palette.textMuted,
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
+                                Text(
                                   'How can we help you today?',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: context.palette.textPrimary,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                   'Send a message below and a Dilivvafast support agent will respond shortly.',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white70),
+                                  style: TextStyle(color: context.palette.textSecondary),
                                 ),
                               ],
                             ),
@@ -135,8 +135,8 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isMe
-                                    ? AppTheme.primaryColor
-                                    : AppTheme.surfaceColor,
+                                    ? context.palette.brand
+                                    : context.palette.surfaceRaised,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               constraints: BoxConstraints(
@@ -145,7 +145,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                               ),
                               child: Text(
                                 text,
-                                style: const TextStyle(color: Colors.white),
+                                style: TextStyle(color: context.palette.onBrand),
                               ),
                             ),
                           );
@@ -156,13 +156,13 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
           ),
           Container(
             padding: const EdgeInsets.all(16),
-            color: AppTheme.surfaceColor,
+            color: context.palette.surfaceRaised,
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _msgCtrl,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.palette.textPrimary),
                     decoration: const InputDecoration(
                       hintText: 'Type your message...',
                       border: InputBorder.none,
@@ -171,7 +171,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send, color: AppTheme.primaryColor),
+                  icon: Icon(Icons.send, color: context.palette.brand),
                   onPressed: _sendMessage,
                 ),
               ],

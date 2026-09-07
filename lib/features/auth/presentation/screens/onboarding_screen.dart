@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -12,24 +13,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  static const _pages = [
+  List<_OnboardingPage> get _pages => [
     _OnboardingPage(
       icon: Icons.delivery_dining,
-      color: Color(0xFFFF6B00),
+      color: context.palette.brand,
       title: 'Fast & Reliable Delivery',
       subtitle:
           'Send packages across Lagos, Abuja, Kano, and Port Harcourt with real-time tracking and affordable rates.',
     ),
     _OnboardingPage(
       icon: Icons.gps_fixed,
-      color: Color(0xFFFF9500),
+      color: context.palette.brand,
       title: 'Track in Real-Time',
       subtitle:
           'Watch your delivery move on the map in real-time. Get instant updates at every step — pickup, transit, and delivery.',
     ),
     _OnboardingPage(
       icon: Icons.two_wheeler,
-      color: Color(0xFF4CAF50),
+      color: context.palette.driverAccent,
       title: 'Earn as a Rider',
       subtitle:
           'Pick up deliveries along your route and earn extra income. No detours — deliver on your way!',
@@ -45,7 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       body: SafeArea(
         child: Column(
           children: [
@@ -59,7 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     'Skip',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: context.palette.textSecondary,
                       fontSize: 14,
                     ),
                   ),
@@ -96,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(4),
                           color: isActive
                               ? _pages[_currentPage].color
-                              : const Color(0xFF1D1E33),
+                              : context.palette.surfaceRaised,
                         ),
                       );
                     }),
@@ -120,7 +121,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _pages[_currentPage].color,
-                        foregroundColor: const Color(0xFF0A0E21),
+                        foregroundColor: context.palette.surfaceBase,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -178,8 +179,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             page.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.palette.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
               height: 1.2,
@@ -190,7 +191,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             page.subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: context.palette.textPrimary,
               fontSize: 15,
               height: 1.5,
             ),

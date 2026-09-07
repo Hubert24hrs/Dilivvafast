@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class DriverActiveDeliveryScreen extends ConsumerWidget {
   const DriverActiveDeliveryScreen({super.key, required this.orderId});
@@ -14,28 +15,28 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
     final orderAsync = ref.watch(orderStreamProvider(orderId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
+        backgroundColor: context.palette.surfaceBase,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Active Delivery',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text('Active Delivery',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: orderAsync.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B00))),
+        loading: () => Center(
+            child: CircularProgressIndicator(color: context.palette.brand)),
         error: (e, _) => Center(
             child: Text('Error: $e',
-                style: const TextStyle(color: Colors.redAccent))),
+                style: TextStyle(color: context.palette.danger))),
         data: (order) {
           if (order == null) {
-            return const Center(
+            return Center(
                 child: Text('Order not found',
-                    style: TextStyle(color: Colors.white54)));
+                    style: TextStyle(color: context.palette.textSecondary)));
           }
           return _buildBody(context, ref, order);
         },
@@ -53,26 +54,26 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
           child: Container(
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1D1E33),
+              color: context.palette.surfaceRaised,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: context.palette.border),
             ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.navigation,
-                      color: Color(0xFFFF6B00), size: 48),
+                  Icon(Icons.navigation,
+                      color: context.palette.brand, size: 48),
                   const SizedBox(height: 8),
                   Text('Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
-                      style: const TextStyle(color: Colors.white54)),
+                      style: TextStyle(color: context.palette.textSecondary)),
                   const SizedBox(height: 4),
                   Text(
                     order.status == OrderStatus.accepted
                         ? order.pickupAddress
                         : order.dropoffAddress,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 14),
+                    style: TextStyle(
+                        color: context.palette.onBrand, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -85,7 +86,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1D1E33),
+            color: context.palette.surfaceRaised,
             borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
@@ -104,7 +105,7 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: context.palette.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -117,13 +118,13 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(order.recipientName,
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: context.palette.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600)),
                         Text(order.recipientPhone,
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 13)),
+                            style: TextStyle(
+                                color: context.palette.textSecondary, fontSize: 13)),
                       ],
                     ),
                   ),
@@ -144,10 +145,10 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFFF6B00).withValues(alpha: 0.15),
+                      color: context.palette.brand.withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.chat_bubble,
-                        color: Color(0xFFFF6B00), size: 20),
+                    child: Icon(Icons.chat_bubble,
+                        color: context.palette.brand, size: 20),
                   ),
                 ],
               ),
@@ -157,18 +158,18 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0E21),
+                  color: context.palette.surfaceBase,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.inventory_2,
-                        color: Color(0xFFFF6B00), size: 18),
+                    Icon(Icons.inventory_2,
+                        color: context.palette.brand, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(order.packageDescription,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 13)),
+                          style: TextStyle(
+                              color: context.palette.onBrand, fontSize: 13)),
                     ),
                     Text('₦${order.driverEarnings.toStringAsFixed(0)}',
                         style: const TextStyle(
@@ -186,8 +187,8 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () => _updateStatus(ref, order),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _getStatusButtonColor(order.status),
-                    foregroundColor: Colors.white,
+                    backgroundColor: _getStatusButtonColor(context, order.status),
+                    foregroundColor: context.palette.textPrimary,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
@@ -205,12 +206,12 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
     );
   }
 
-  Color _getStatusButtonColor(OrderStatus status) {
+  Color _getStatusButtonColor(BuildContext context, OrderStatus status) {
     return switch (status) {
       OrderStatus.accepted => const Color(0xFF2196F3),
       OrderStatus.pickedUp => const Color(0xFF9C27B0),
       OrderStatus.inTransit => const Color(0xFF4CAF50),
-      _ => const Color(0xFFFF6B00),
+      _ => context.palette.brand,
     };
   }
 

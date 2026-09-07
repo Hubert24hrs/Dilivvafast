@@ -58,7 +58,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving address: $e'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: context.palette.danger,
           ),
         );
       }
@@ -71,7 +71,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: context.palette.surfaceRaised,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -87,10 +87,10 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Add Saved Address',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.palette.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -98,7 +98,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _labelCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.palette.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'Label (e.g. Home, Work, Gym)',
                 ),
@@ -106,7 +106,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: _addressCtrl,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.palette.textPrimary),
                 maxLines: 2,
                 decoration: const InputDecoration(
                   labelText: 'Full Address',
@@ -123,15 +123,15 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                           await _addAddress();
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: context.palette.brand,
                   ),
                   child: _isSaving
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: context.palette.onBrand,
                           ),
                         )
                       : const Text('Save Address'),
@@ -161,15 +161,15 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
     final uid = ref.watch(currentUserIdProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         title: const Text('Saved Addresses'),
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: context.palette.brand,
+        child: Icon(Icons.add, color: context.palette.onBrand),
       ),
       body: uid == null
           ? const Center(child: Text('Please log in'))
@@ -186,14 +186,14 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                   return Center(
                     child: Text(
                       'Error loading addresses: ${snapshot.error}',
-                      style: const TextStyle(color: AppTheme.errorColor),
+                      style: TextStyle(color: context.palette.danger),
                     ),
                   );
                 }
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
+                      color: context.palette.brand,
                     ),
                   );
                 }
@@ -207,21 +207,21 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                         Icon(
                           Icons.location_off_outlined,
                           size: 64,
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: context.palette.textMuted,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           'No saved addresses yet',
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: context.palette.textSecondary,
                             fontSize: 16,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Tap + to save home, work, or favorite places',
                           style: TextStyle(
-                            color: Colors.white38,
+                            color: context.palette.textMuted,
                             fontSize: 13,
                           ),
                         ),
@@ -240,7 +240,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                     final address = data['address'] ?? '';
 
                     return Card(
-                      color: AppTheme.surfaceColor,
+                      color: context.palette.surfaceRaised,
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -248,27 +248,27 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor:
-                              AppTheme.primaryColor.withValues(alpha: 0.15),
+                              context.palette.brand.withValues(alpha: 0.15),
                           child: Icon(
                             _getLabelIcon(label),
-                            color: AppTheme.primaryColor,
+                            color: context.palette.brand,
                           ),
                         ),
                         title: Text(
                           label,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.palette.onBrand,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         subtitle: Text(
                           address,
-                          style: const TextStyle(color: Colors.white70),
+                          style: TextStyle(color: context.palette.textSecondary),
                         ),
                         trailing: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.delete_outline,
-                            color: Colors.white38,
+                            color: context.palette.textMuted,
                           ),
                           onPressed: () => _deleteAddress(docId),
                         ),

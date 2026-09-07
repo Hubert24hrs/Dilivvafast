@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class RatingScreen extends ConsumerStatefulWidget {
   const RatingScreen({super.key, required this.orderId});
@@ -26,29 +27,29 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0E21),
-        title: const Text('Rate Delivery',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+        backgroundColor: context.palette.surfaceBase,
+        title: Text('Rate Delivery',
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.delivery_dining,
-                color: Color(0xFFFF6B00), size: 64),
+            Icon(Icons.delivery_dining,
+                color: context.palette.brand, size: 64),
             const SizedBox(height: 20),
-            const Text('How was your delivery?',
+            Text('How was your delivery?',
                 style: TextStyle(
-                    color: Colors.white,
+                    color: context.palette.onBrand,
                     fontSize: 20,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('Your feedback helps us improve',
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6), fontSize: 14)),
+                    color: context.palette.textPrimary, fontSize: 14)),
             const SizedBox(height: 32),
 
             // Stars
@@ -82,18 +83,18 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             // Comment
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1D1E33),
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: context.palette.border),
               ),
               child: TextField(
                 controller: _commentController,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Add a comment (optional)',
                   hintStyle:
-                      TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                      TextStyle(color: context.palette.textMuted),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
                 ),
@@ -111,18 +112,18 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _rating > 0
-                      ? const Color(0xFFFF6B00)
-                      : const Color(0xFF1D1E33),
-                  foregroundColor: const Color(0xFF0A0E21),
+                      ? context.palette.brand
+                      : context.palette.surfaceRaised,
+                  foregroundColor: context.palette.surfaceBase,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                            color: Color(0xFF0A0E21), strokeWidth: 2.5))
+                            color: context.palette.surfaceBase, strokeWidth: 2.5))
                     : const Text('Submit Rating',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w700)),
@@ -168,7 +169,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to submit: $e'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: context.palette.danger,
           ),
         );
       }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dilivvafast/core/constants/firestore_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 
@@ -79,16 +80,20 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     _listenForDriverAssignment();
   }
 
-  /// Attaches a Firestore snapshot listener to orders/{orderId}.
-  /// When a driverId is written to the document (by Cloud Functions or admin),
-  /// the screen transitions to the live tracking view.
+  /// Attaches a Firestore snapshot listener to couriers/{orderId}.
+  /// When a driverId is written to the document (by a driver claiming the job,
+  /// or by an admin), the screen transitions to the live tracking view.
+  ///
+  /// This listened on `orders/` until now — the wrong collection, and one that
+  /// firestore.rules denies outright — so a driver could accept a job and the
+  /// customer would sit on the searching screen until it timed out.
   void _listenForDriverAssignment() {
     final orderId = widget.orderId;
     if (orderId == null || orderId.isEmpty) return;
 
     final firestore = ref.read(firestoreProvider);
     _orderSubscription = firestore
-        .collection('orders')
+        .collection(FirestoreConstants.couriers)
         .doc(orderId)
         .snapshots()
         .listen((snapshot) {
@@ -127,13 +132,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
+        backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('No Couriers Available',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('No Couriers Available',
+            style: TextStyle(color: context.palette.textPrimary)),
+        content: Text(
           'We couldn\'t find a courier right now. This might be due to high demand or limited availability in your area.',
-          style: TextStyle(color: Colors.white60, height: 1.5),
+          style: TextStyle(color: context.palette.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
@@ -144,8 +149,8 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                 if (mounted && !_driverFound) _showTimeoutDialog();
               });
             },
-            child: const Text('Keep Waiting',
-                style: TextStyle(color: AppTheme.primaryColor)),
+            child: Text('Keep Waiting',
+                style: TextStyle(color: context.palette.brand)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -153,12 +158,12 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               context.go('/customer/home');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white)),
+            child: Text('Cancel',
+                style: TextStyle(color: context.palette.onBrand)),
           ),
         ],
       ),
@@ -184,7 +189,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: context.palette.surfaceBase,
       body: SafeArea(
         child: Column(
           children: [
@@ -196,13 +201,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                 children: [
                   TextButton.icon(
                     onPressed: () => context.go('/customer/home'),
-                    icon: const Icon(Icons.close, color: Colors.white54, size: 20),
-                    label: const Text('Cancel',
-                        style: TextStyle(color: Colors.white54)),
+                    icon: Icon(Icons.close, color: context.palette.textSecondary, size: 20),
+                    label: Text('Cancel',
+                        style: TextStyle(color: context.palette.textSecondary)),
                   ),
                   Text(_formattedTime,
                       style:
-                          const TextStyle(color: Colors.white38, fontSize: 14)),
+                          TextStyle(color: context.palette.textMuted, fontSize: 14)),
                 ],
               ),
             ),
@@ -228,7 +233,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.primaryColor
+                              color: context.palette.brand
                                   .withValues(alpha: 0.15),
                               width: 2,
                             ),
@@ -243,10 +248,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                                   height: 12,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: AppTheme.primaryColor,
+                                    color: context.palette.brand,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppTheme.primaryColor
+                                        color: context.palette.brand
                                             .withValues(alpha: 0.6),
                                         blurRadius: 8,
                                       ),
@@ -274,7 +279,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppTheme.primaryColor
+                              color: context.palette.brand
                                   .withValues(alpha: 0.1),
                               width: 1.5,
                             ),
@@ -288,7 +293,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                   ...List.generate(3, (index) {
                     return _AnimatedRipple(
                       delay: Duration(milliseconds: index * 600),
-                      color: AppTheme.primaryColor,
+                      color: context.palette.brand,
                     );
                   }),
 
@@ -301,7 +306,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                       gradient: AppTheme.primaryGradient,
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryColor
+                          color: context.palette.brand
                               .withValues(alpha: 0.4),
                           blurRadius: 24,
                           spreadRadius: -4,
@@ -312,7 +317,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                       _driverFound
                           ? Icons.check_rounded
                           : Icons.local_shipping_rounded,
-                      color: Colors.white,
+                      color: context.palette.onBrand,
                       size: 36,
                     ),
                   ),
@@ -325,8 +330,8 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
             // Status text
             Text(
               _statusText,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.palette.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
@@ -344,7 +349,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                   ? 'Preparing your delivery...'
                   : 'Please wait while we connect you with a nearby courier',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: context.palette.textSecondary,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -364,8 +369,8 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                     height: 8,
                     decoration: BoxDecoration(
                       color: isActive
-                          ? AppTheme.primaryColor
-                          : Colors.white.withValues(alpha: 0.15),
+                          ? context.palette.brand
+                          : context.palette.textMuted,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   )
@@ -383,20 +388,20 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               margin: const EdgeInsets.symmetric(horizontal: 32),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
+                color: context.palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: context.palette.border),
               ),
               child: Row(
                 children: [
                   Icon(Icons.lightbulb_outline,
-                      color: AppTheme.secondaryColor, size: 20),
+                      color: context.palette.brand, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Tip: You can track your courier in real-time once matched!',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: context.palette.textPrimary,
                         fontSize: 12,
                         height: 1.4,
                       ),

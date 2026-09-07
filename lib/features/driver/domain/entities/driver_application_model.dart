@@ -64,7 +64,7 @@ extension DriverApplicationModelX on DriverApplicationModel {
       'bankName': bankName,
       'accountNumber': accountNumber,
       'accountName': accountName,
-      'status': status.name,
+      'status': _$ApplicationStatusEnumMap[status],
       'rejectionReason': rejectionReason,
       'createdAt': Timestamp.fromDate(createdAt),
       'reviewedAt':

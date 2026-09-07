@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Wrapper that shows a connectivity banner when the device goes offline.
 /// Automatically hides when connectivity is restored.
@@ -50,18 +51,18 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           height: _isOffline ? 36 : 0,
-          color: Colors.redAccent,
+          color: context.palette.danger,
           child: _isOffline
-              ? const Center(
+              ? Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                      Icon(Icons.wifi_off, color: context.palette.onBrand, size: 16),
                       SizedBox(width: 8),
                       Text(
                         'No internet connection',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.palette.onBrand,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
