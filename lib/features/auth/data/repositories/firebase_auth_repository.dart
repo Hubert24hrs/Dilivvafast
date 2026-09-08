@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:dilivvafast/core/errors/failures.dart';
@@ -66,7 +67,13 @@ class FirebaseAuthRepository implements IAuthRepository {
         fullName: fullName,
         email: email,
         phone: phone,
-        role: role,
+        // Registration always creates a customer, whatever the caller asked
+        // for. Elevated roles are granted server-side by an admin through the
+        // `setUserRole` Cloud Function, which writes a custom claim.
+        // firestore.rules rejects any create with a different role, so this is
+        // defence in depth rather than the only barrier — but the parameter
+        // should never have been able to reach the document.
+        role: UserRole.customer,
         referralCode: _generateReferralCode(),
         referredBy: referralCode,
         createdAt: now,
@@ -77,6 +84,14 @@ class FirebaseAuthRepository implements IAuthRepository {
           .collection(FirestoreConstants.users)
           .doc(userModel.uid)
           .set(userModel.toFirestore());
+
+      // Kick off address confirmation. Non-fatal: a delivery failure here must
+      // not strand a user who already has an account.
+      try {
+        await credential.user!.sendEmailVerification();
+      } catch (e) {
+        debugPrint('Could not send verification email: $e');
+      }
 
       // If referred, save referral record
       if (referralCode != null && referralCode.isNotEmpty) {
@@ -282,6 +297,47 @@ class FirebaseAuthRepository implements IAuthRepository {
       });
     } catch (_) {
       // Non-critical — don't fail registration if referral save fails
+    }
+  }
+
+  @override
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  @override
+  Future<Either<Failure, Unit>> sendVerificationEmail() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Left(const AuthFailure('Please sign in first.'));
+    }
+    if (user.emailVerified) return const Right(unit);
+
+    try {
+      await user.sendEmailVerification();
+      return const Right(unit);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
+    } catch (e) {
+      debugPrint('sendVerificationEmail failed: $e');
+      return Left(const AuthFailure('Could not send the email. Try again.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> refreshEmailVerified() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Left(const AuthFailure('Please sign in first.'));
+    }
+    try {
+      // emailVerified is cached in the ID token; without a reload this keeps
+      // reporting the value from whenever the token was minted.
+      await user.reload();
+      return Right(_auth.currentUser?.emailVerified ?? false);
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
+    } catch (e) {
+      debugPrint('refreshEmailVerified failed: $e');
+      return Left(const AuthFailure('Could not check verification status.'));
     }
   }
 

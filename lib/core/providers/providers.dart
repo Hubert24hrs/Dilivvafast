@@ -112,6 +112,21 @@ final currentUserIdProvider = Provider<String?>((ref) {
   return ref.watch(authStateProvider).value?.uid;
 });
 
+/// Whether the signed-in user has confirmed their email address.
+///
+/// Firebase Auth's `emailVerified`, which the client cannot forge — not the
+/// `isVerified` field on the user document, which is an admin-controlled
+/// identity flag with a different meaning.
+///
+/// The value is cached in the ID token, so call
+/// `authRepository.refreshEmailVerified()` after the user says they have
+/// clicked the link; this provider will not update on its own.
+final emailVerifiedProvider = Provider<bool>((ref) {
+  // Re-read whenever the auth state changes (sign-in, sign-out, reload).
+  ref.watch(authStateProvider);
+  return ref.watch(authRepositoryProvider).isEmailVerified;
+});
+
 // ==================== USER PROVIDERS ====================
 
 /// Stream current user profile

@@ -53,4 +53,20 @@ abstract class IAuthRepository {
 
   /// Delete the current user account
   Future<Either<Failure, Unit>> deleteAccount();
+
+  /// Whether the signed-in user has confirmed their email address.
+  ///
+  /// This is Firebase Auth's `emailVerified`, which the client cannot forge.
+  /// It is deliberately NOT the `isVerified` field on the user document —
+  /// that is an admin-controlled identity-verification flag with a different
+  /// meaning, and firestore.rules freezes it against client writes.
+  bool get isEmailVerified;
+
+  /// Re-send the confirmation email to the signed-in user.
+  Future<Either<Failure, Unit>> sendVerificationEmail();
+
+  /// Refresh the auth token and report the current verification state.
+  /// `emailVerified` is cached in the ID token, so it only changes after a
+  /// reload — checking without this returns a stale answer.
+  Future<Either<Failure, bool>> refreshEmailVerified();
 }

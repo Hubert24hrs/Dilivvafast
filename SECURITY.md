@@ -72,10 +72,26 @@ Then set `role: "admin"` on that user's Firestore document so the legacy check
 agrees. Claims only refresh when the client's ID token is renewed — sign out
 and back in, or force a token refresh.
 
+Registration always creates a `customer`, regardless of the `role` argument
+passed to `AuthRepository.register` — elevated roles come only from
+`setUserRole`. `firestore.rules` rejects a create with any other role, so this
+is defence in depth.
+
+### Email verification — partially implemented
+
+A confirmation email **is** now sent on registration, and the state is
+observable via `emailVerifiedProvider` / `refreshEmailVerified()`. This is
+Firebase Auth's `emailVerified`, which the client cannot forge — distinct from
+the `isVerified` field on the user document, which is an admin-controlled
+identity flag that the rules freeze against client writes.
+
+**It is not yet enforced.** Nothing currently refuses service to an unverified
+account. Gating specific flows (wallet top-up, first order) is the follow-up;
+it was left out here because switching it on retroactively would lock out
+every existing account until they re-confirm.
+
 ### Not yet implemented
 
-- **Email verification is not enforced.** Accounts can act on an unverified
-  address. Gating sensitive operations on `emailVerified` is outstanding.
 - **Re-authentication is not required** before high-risk account operations
   (changing email, deleting the account).
 - Biometric unlock (`biometric_setup_screen.dart`) is a **local convenience
@@ -253,6 +269,27 @@ identifying data.
 
 ---
 
+## Promotions
+
+A promo code is validated and redeemed **server-side**, inside
+`onCourierCreated`:
+
+- The code the client writes on the order is honoured; the **discount amount it
+  writes is ignored** and recomputed from the promo document.
+- Redemption is recorded at `promo_redemptions/{promoId}_{uid}`, created with
+  `tx.create` in the same transaction that increments `usedCount`. Two orders
+  racing the same code cannot both claim it, and a code is single-use per
+  customer.
+- `isActive`, `expiresAt`, `minOrderAmount` and `maxUses` are all checked
+  server-side.
+- The discount is capped so it can never take a fare below `MINIMUM_FARE`, and
+  never below zero.
+
+`promo_redemptions` is client-read-only (your own) and client-write-never.
+
+The client-side check in `promotions_screen` is a convenience that gives the
+customer a clear message; it is not a commitment, and nothing trusts it.
+
 ## Cloud Storage
 
 `storage.rules` — **the project previously shipped none at all**, for a bucket
@@ -351,10 +388,10 @@ position so a stale pin does not linger on the customer map.
    behaviour but are unverified.
 3. **Storage download URLs bypass storage rules** (above).
 4. **Money is floating-point**, not integer minor units.
-5. **Email verification is not enforced.**
+5. **Email verification is sent but not enforced** (see above).
 6. **Firebase App Check is not configured** — see README for setup. Without it,
    the backend accepts calls from any client, not only genuine app installs.
-7. **Promotion redemption is not transactional.** `promo_redemptions` exists in
-   the rules as a server-only ledger, but no Cloud Function writes to it yet,
-   so a promo code can still be applied more than once.
-8. **Admin screen writes are not audited.**
+7. **Admin screen writes are not audited.** The admin UI writes to Firestore
+   directly; only `setUserRole` and `reviewDriverApplication` reach
+   `admin_audit_log`.
+8. **Re-authentication is not required** for high-risk account operations.

@@ -386,6 +386,91 @@ export const paystackWebhook = onRequest(
   }
 );
 
+// ==================== PROMOTIONS ====================
+
+/**
+ * Validate and atomically redeem a promo code.
+ *
+ * Returns the discount in Naira, or 0 if the code is missing, invalid,
+ * expired, exhausted, or already used by this customer.
+ *
+ * Redemption is recorded at `promo_redemptions/{promoId}_{uid}` and created
+ * with `tx.create` in the same transaction that increments `usedCount`, so
+ * two orders racing the same code cannot both claim it. The client-supplied
+ * `discountAmount` on the order is never trusted — this figure replaces it.
+ *
+ * A promo is single-use per customer. `maxUses` of 0 means unlimited.
+ */
+async function redeemPromo(
+  code: string,
+  uid: string,
+  subtotal: number
+): Promise<number> {
+  // Queries cannot run inside a transaction, so resolve the document first
+  // and re-read it by reference under the transaction below.
+  const matches = await db
+    .collection("promos")
+    .where("code", "==", code.trim().toUpperCase())
+    .limit(1)
+    .get();
+
+  if (matches.empty) return 0;
+  const promoRef = matches.docs[0].ref;
+
+  try {
+    return await db.runTransaction(async (tx) => {
+      const snap = await tx.get(promoRef);
+      const promo = snap.data();
+      if (!promo) return 0;
+
+      if (promo.isActive === false) return 0;
+
+      const expiresAt = promo.expiresAt?.toDate?.();
+      if (expiresAt && expiresAt.getTime() < Date.now()) return 0;
+
+      const minOrder = Number(promo.minOrderAmount) || 0;
+      if (subtotal < minOrder) return 0;
+
+      const maxUses = Number(promo.maxUses) || 0;
+      const usedCount = Number(promo.usedCount) || 0;
+      if (maxUses > 0 && usedCount >= maxUses) return 0;
+
+      const redemptionRef = db
+        .collection("promo_redemptions")
+        .doc(`${promoRef.id}_${uid}`);
+      const existing = await tx.get(redemptionRef);
+      if (existing.exists) return 0; // this customer has already used it
+
+      const amount = Number(promo.amount) || 0;
+      const discount =
+        promo.discountType === "percent"
+          ? toKoboPrecision((subtotal * amount) / 100)
+          : toKoboPrecision(amount);
+
+      // Never discount below zero, and never below the minimum fare.
+      const capped = Math.max(0, Math.min(discount, subtotal - MINIMUM_FARE));
+      if (capped <= 0) return 0;
+
+      tx.create(redemptionRef, {
+        promoId: promoRef.id,
+        code: promo.code,
+        userId: uid,
+        discount: capped,
+        redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      tx.update(promoRef, {
+        usedCount: admin.firestore.FieldValue.increment(1),
+      });
+
+      return capped;
+    });
+  } catch (error) {
+    // A losing race on tx.create means someone else redeemed it first.
+    logger.warn("Promo redemption failed", { code, uid, error });
+    return 0;
+  }
+}
+
 // ==================== ORDER CREATED ====================
 
 /**
@@ -439,16 +524,27 @@ export const onCourierCreated = onDocumentCreated(
       if (weightKg >= 10) weightSurcharge = 500;
       else if (weightKg >= 5) weightSurcharge = 200;
 
-      const subtotal = (baseFare + distanceKm * perKmRate + weightSurcharge) * surgeMultiplier;
-      // Discounts are only honoured once promo redemption is validated
-      // server-side; an unvalidated client discount is ignored.
-      const totalFare = toKoboPrecision(Math.max(subtotal, MINIMUM_FARE));
+      const subtotal =
+        (baseFare + distanceKm * perKmRate + weightSurcharge) * surgeMultiplier;
+
+      // The client writes a promo code and its own idea of the discount. The
+      // code is honoured; the amount is recomputed and redeemed atomically
+      // here, so a code cannot be applied twice or inflated.
+      const promoCode = typeof order.promoCode === "string" ? order.promoCode : "";
+      const discountAmount = promoCode
+        ? await redeemPromo(promoCode, order.userId, subtotal)
+        : 0;
+
+      const totalFare = toKoboPrecision(
+        Math.max(subtotal - discountAmount, MINIMUM_FARE)
+      );
       const platformCommission = toKoboPrecision(totalFare * PLATFORM_COMMISSION_RATE);
       const driverEarnings = toKoboPrecision(totalFare - platformCommission);
 
       await snapshot.ref.update({
         baseFare: toKoboPrecision(baseFare),
         surgeMultiplier,
+        discountAmount,
         totalFare,
         platformCommission,
         driverEarnings,

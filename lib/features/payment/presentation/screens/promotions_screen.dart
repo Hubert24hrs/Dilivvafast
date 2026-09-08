@@ -34,6 +34,23 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
     super.dispose();
   }
 
+  /// Render a promo's value from the fields PromoModel actually writes.
+  ///
+  /// This read `promoData['discountPercent']`, which no promo document has —
+  /// the schema is `discountType` (`flat` | `percent`) plus `amount` — so
+  /// every applied code announced "0% off".
+  ///
+  /// The figure shown here is indicative. The binding discount is computed and
+  /// redeemed server-side by `onCourierCreated`.
+  String _describeDiscount(Map<String, dynamic> promoData) {
+    final amount = (promoData['amount'] as num?)?.toDouble() ?? 0;
+    final isPercent = promoData['discountType'] == 'percent';
+    if (amount <= 0) return 'A discount';
+    return isPercent
+        ? '${amount.toStringAsFixed(amount % 1 == 0 ? 0 : 1)}%'
+        : '₦${amount.toStringAsFixed(0)}';
+  }
+
   Future<void> _applyCode() async {
     final code = _codeCtrl.text.trim().toUpperCase();
     if (code.isEmpty) return;
@@ -75,7 +92,8 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Promo code "$code" applied! ${promoData['discountPercent'] ?? 0}% off your next delivery.',
+            'Promo code "$code" applied! '
+            '${_describeDiscount(promoData)} off your next delivery.',
           ),
           backgroundColor: context.palette.success,
         ),
@@ -188,7 +206,8 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     ),
                   ),
                   subtitle: Text(
-                    '${appliedPromo['discountPercent'] ?? 0}% discount applied to next booking',
+                    '${_describeDiscount(appliedPromo)} discount applied to '
+                    'next booking',
                     style: TextStyle(color: context.palette.textSecondary),
                   ),
                   trailing: IconButton(
@@ -250,7 +269,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     final data = doc.data() as Map<String, dynamic>;
                     final code = data['code'] ?? '';
                     final desc = data['description'] ?? 'Special discount';
-                    final discount = data['discountPercent'] ?? 0;
+                    final discount = _describeDiscount(data);
 
                     return Card(
                       color: context.palette.surfaceRaised,
@@ -276,7 +295,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          '$desc — Save $discount%',
+                          '$desc — Save $discount',
                           style: TextStyle(color: context.palette.textSecondary),
                         ),
                         trailing: OutlinedButton(
