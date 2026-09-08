@@ -56,37 +56,39 @@ class HelpCenterScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          ...faqs.map((faq) => Card(
-                color: context.palette.surfaceRaised,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ExpansionTile(
-                  iconColor: context.palette.brand,
-                  collapsedIconColor: context.palette.textSecondary,
-                  title: Text(
-                    faq['question']!,
-                    style: TextStyle(
-                      color: context.palette.onBrand,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
+          ...faqs.map(
+            (faq) => Card(
+              color: context.palette.surfaceRaised,
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ExpansionTile(
+                iconColor: context.palette.brand,
+                collapsedIconColor: context.palette.textSecondary,
+                title: Text(
+                  faq['question']!,
+                  style: TextStyle(
+                    color: context.palette.onBrand,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Text(
-                        faq['answer']!,
-                        style: TextStyle(
-                          color: context.palette.textSecondary,
-                          height: 1.4,
-                        ),
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Text(
+                      faq['answer']!,
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
+                        height: 1.4,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           const SizedBox(height: 24),
           Card(
@@ -119,7 +121,10 @@ class HelpCenterScreen extends StatelessWidget {
                   Text(
                     'Our support team is available 24/7 to assist with active orders, account issues, or billing.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
+                    style: TextStyle(
+                      color: context.palette.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(

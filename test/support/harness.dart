@@ -8,10 +8,7 @@ import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 /// Screens read semantic colours through `context.palette`, so pumping them
 /// under a bare `MaterialApp` would exercise the fallback palette rather than
 /// the themes the app actually ships.
-Widget wrapScreen(
-  Widget screen, {
-  ThemeMode themeMode = ThemeMode.light,
-}) {
+Widget wrapScreen(Widget screen, {ThemeMode themeMode = ThemeMode.light}) {
   return ProviderScope(
     child: MaterialApp(
       theme: AppTheme.light,

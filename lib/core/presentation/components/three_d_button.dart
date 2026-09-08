@@ -15,6 +15,7 @@ class ThreeDButton extends StatefulWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isLoading;
+
   /// Defaults to the brand colour resolved from the active theme.
   final Color? color;
   final double height;

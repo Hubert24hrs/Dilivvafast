@@ -109,7 +109,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
       info: isDark ? const Color(0xFF6BA5F7) : const Color(0xFF175CD3),
       infoSubtle: isDark ? const Color(0xFF0F1E33) : const Color(0xFFE8F0FE),
       driverAccent: isDark ? const Color(0xFF3CCB93) : const Color(0xFF12805C),
-      investorAccent: isDark ? const Color(0xFF9F7BFF) : const Color(0xFF6938EF),
+      investorAccent: isDark
+          ? const Color(0xFF9F7BFF)
+          : const Color(0xFF6938EF),
       shadow: scheme.shadow,
       scrim: scheme.scrim,
     );

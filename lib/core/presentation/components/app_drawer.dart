@@ -82,120 +82,124 @@ class AppDrawer extends ConsumerWidget {
   // ── Mode-specific navigation ─────────────────────────────────────────────
 
   List<Widget> _itemsForMode(AppMode mode) => switch (mode) {
-        AppMode.customer => _customerItems(),
-        AppMode.driver => _driverItems(),
-        AppMode.investor => _investorItems(),
-        AppMode.admin => _adminItems(),
-      };
+    AppMode.customer => _customerItems(),
+    AppMode.driver => _driverItems(),
+    AppMode.investor => _investorItems(),
+    AppMode.admin => _adminItems(),
+  };
 
   List<Widget> _customerItems() => [
-        _SectionLabel('Deliveries'),
-        _NavTile(
-          icon: Icons.add_box_outlined,
-          label: 'Send a package',
-          onTap: (c) => _go(c, '/customer/book'),
-        ),
-        _NavTile(
-          icon: Icons.local_shipping_outlined,
-          label: 'My orders',
-          onTap: (c) => _go(c, '/customer/orders'),
-        ),
-        _NavTile(
-          icon: Icons.location_on_outlined,
-          label: 'Saved addresses',
-          onTap: (c) => _push(c, '/customer/addresses'),
-        ),
-        _SectionLabel('Money'),
-        _NavTile(
-          icon: Icons.account_balance_wallet_outlined,
-          label: 'Wallet',
-          onTap: (c) => _go(c, '/customer/wallet'),
-        ),
-        _NavTile(
-          icon: Icons.credit_card_outlined,
-          label: 'Payment methods',
-          onTap: (c) => _push(c, '/payment-methods'),
-        ),
-        _NavTile(
-          icon: Icons.local_offer_outlined,
-          label: 'Promotions',
-          onTap: (c) => _push(c, '/customer/promotions'),
-        ),
-        _NavTile(
-          icon: Icons.card_giftcard_outlined,
-          label: 'Refer and earn',
-          onTap: (c) => _push(c, '/customer/refer'),
-        ),
-      ];
+    _SectionLabel('Deliveries'),
+    _NavTile(
+      icon: Icons.add_box_outlined,
+      label: 'Send a package',
+      onTap: (c) => _go(c, '/customer/book'),
+    ),
+    _NavTile(
+      icon: Icons.local_shipping_outlined,
+      label: 'My orders',
+      onTap: (c) => _go(c, '/customer/orders'),
+    ),
+    _NavTile(
+      icon: Icons.location_on_outlined,
+      label: 'Saved addresses',
+      onTap: (c) => _push(c, '/customer/addresses'),
+    ),
+    _SectionLabel('Money'),
+    _NavTile(
+      icon: Icons.account_balance_wallet_outlined,
+      label: 'Wallet',
+      onTap: (c) => _go(c, '/customer/wallet'),
+    ),
+    _NavTile(
+      icon: Icons.credit_card_outlined,
+      label: 'Payment methods',
+      onTap: (c) => _push(c, '/payment-methods'),
+    ),
+    _NavTile(
+      icon: Icons.local_offer_outlined,
+      label: 'Promotions',
+      onTap: (c) => _push(c, '/customer/promotions'),
+    ),
+    _NavTile(
+      icon: Icons.card_giftcard_outlined,
+      label: 'Refer and earn',
+      onTap: (c) => _push(c, '/customer/refer'),
+    ),
+  ];
 
   List<Widget> _driverItems() => [
-        _SectionLabel('Driving'),
-        _NavTile(
-          icon: Icons.history_rounded,
-          label: 'Trip history',
-          onTap: (c) => _go(c, '/driver/history'),
-        ),
-        _NavTile(
-          icon: Icons.payments_outlined,
-          label: 'Earnings and payouts',
-          onTap: (c) => _go(c, '/driver/earnings'),
-        ),
-        _SectionLabel('Compliance'),
-        _NavTile(
-          icon: Icons.folder_outlined,
-          label: 'Documents',
-          onTap: (c) => _push(c, '/driver/documents'),
-        ),
-        _NavTile(
-          icon: Icons.two_wheeler_outlined,
-          label: 'Vehicle details',
-          onTap: (c) => _push(c, '/driver/vehicle'),
-        ),
-      ];
+    _SectionLabel('Driving'),
+    _NavTile(
+      icon: Icons.history_rounded,
+      label: 'Trip history',
+      onTap: (c) => _go(c, '/driver/history'),
+    ),
+    _NavTile(
+      icon: Icons.payments_outlined,
+      label: 'Earnings and payouts',
+      onTap: (c) => _go(c, '/driver/earnings'),
+    ),
+    _SectionLabel('Compliance'),
+    _NavTile(
+      icon: Icons.folder_outlined,
+      label: 'Documents',
+      onTap: (c) => _push(c, '/driver/documents'),
+    ),
+    _NavTile(
+      icon: Icons.two_wheeler_outlined,
+      label: 'Vehicle details',
+      onTap: (c) => _push(c, '/driver/vehicle'),
+    ),
+  ];
 
   List<Widget> _investorItems() => [
-        _SectionLabel('Portfolio'),
-        _NavTile(
-          icon: Icons.pedal_bike_outlined,
-          label: 'My bikes',
-          onTap: (c) => _go(c, '/investor/home'),
-        ),
-        _NavTile(
-          icon: Icons.trending_up_rounded,
-          label: 'Earnings',
-          onTap: (c) => _go(c, '/investor/earnings'),
-        ),
-      ];
+    _SectionLabel('Portfolio'),
+    _NavTile(
+      icon: Icons.pedal_bike_outlined,
+      label: 'My bikes',
+      onTap: (c) => _go(c, '/investor/home'),
+    ),
+    _NavTile(
+      icon: Icons.trending_up_rounded,
+      label: 'Earnings',
+      onTap: (c) => _go(c, '/investor/earnings'),
+    ),
+  ];
 
   List<Widget> _adminItems() => [
-        _SectionLabel('Operations'),
-        _NavTile(
-          icon: Icons.dashboard_outlined,
-          label: 'Dashboard',
-          onTap: (c) => _go(c, '/admin/dashboard'),
-        ),
-        _NavTile(
-          icon: Icons.assignment_outlined,
-          label: 'Applications',
-          onTap: (c) => _go(c, '/admin/applications'),
-        ),
-        _NavTile(
-          icon: Icons.insights_outlined,
-          label: 'Analytics',
-          onTap: (c) => _push(c, '/admin/analytics'),
-        ),
-      ];
+    _SectionLabel('Operations'),
+    _NavTile(
+      icon: Icons.dashboard_outlined,
+      label: 'Dashboard',
+      onTap: (c) => _go(c, '/admin/dashboard'),
+    ),
+    _NavTile(
+      icon: Icons.assignment_outlined,
+      label: 'Applications',
+      onTap: (c) => _go(c, '/admin/applications'),
+    ),
+    _NavTile(
+      icon: Icons.insights_outlined,
+      label: 'Analytics',
+      onTap: (c) => _push(c, '/admin/analytics'),
+    ),
+  ];
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
   Future<void> _switchMode(
-      BuildContext context, WidgetRef ref, AppMode mode) async {
+    BuildContext context,
+    WidgetRef ref,
+    AppMode mode,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     Navigator.of(context).pop();
 
-    final result =
-        await ref.read(modeControllerProvider.notifier).requestMode(mode);
+    final result = await ref
+        .read(modeControllerProvider.notifier)
+        .requestMode(mode);
 
     switch (result) {
       case ModeSwitched(:final route):
@@ -288,8 +292,9 @@ class _DrawerHeader extends StatelessWidget {
           CircleAvatar(
             radius: 26,
             backgroundColor: palette.brandSubtle,
-            foregroundImage:
-                user?.photoUrl != null ? NetworkImage(user!.photoUrl!) : null,
+            foregroundImage: user?.photoUrl != null
+                ? NetworkImage(user!.photoUrl!)
+                : null,
             child: Text(
               initial,
               style: context.text.titleLarge?.copyWith(color: palette.brand),
@@ -402,19 +407,19 @@ class _ModeTile extends StatelessWidget {
   }
 
   IconData get _icon => switch (mode) {
-        AppMode.customer => Icons.inventory_2_outlined,
-        AppMode.driver => Icons.two_wheeler_outlined,
-        AppMode.investor => Icons.trending_up_rounded,
-        AppMode.admin => Icons.shield_outlined,
-      };
+    AppMode.customer => Icons.inventory_2_outlined,
+    AppMode.driver => Icons.two_wheeler_outlined,
+    AppMode.investor => Icons.trending_up_rounded,
+    AppMode.admin => Icons.shield_outlined,
+  };
 
   String get _subtitle => switch (access) {
-        ModeAccess.approved => 'Tap to switch',
-        ModeAccess.pending => 'Application under review',
-        ModeAccess.none => mode.tagline,
-        ModeAccess.rejected => 'Application declined',
-        ModeAccess.suspended => 'Access suspended',
-      };
+    ModeAccess.approved => 'Tap to switch',
+    ModeAccess.pending => 'Application under review',
+    ModeAccess.none => mode.tagline,
+    ModeAccess.rejected => 'Application declined',
+    ModeAccess.suspended => 'Access suspended',
+  };
 }
 
 class _AccessChip extends StatelessWidget {
@@ -440,8 +445,7 @@ class _AccessChip extends StatelessWidget {
       ModeAccess.pending => (palette.warningSubtle, palette.warning),
       ModeAccess.approved => (palette.successSubtle, palette.success),
       ModeAccess.rejected ||
-      ModeAccess.suspended =>
-        (palette.dangerSubtle, palette.danger),
+      ModeAccess.suspended => (palette.dangerSubtle, palette.danger),
       ModeAccess.none => (palette.surfaceSunken, palette.textMuted),
     };
 
@@ -470,10 +474,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
-      child: Text(
-        title.toUpperCase(),
-        style: context.text.labelSmall,
-      ),
+      child: Text(title.toUpperCase(), style: context.text.labelSmall),
     );
   }
 }
@@ -516,8 +517,11 @@ class _NavTile extends StatelessWidget {
         dense: true,
         visualDensity: const VisualDensity(vertical: -1),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        leading: Icon(icon,
-            size: 21, color: danger ? palette.danger : palette.textSecondary),
+        leading: Icon(
+          icon,
+          size: 21,
+          color: danger ? palette.danger : palette.textSecondary,
+        ),
         title: Text(
           label,
           style: context.text.bodyLarge?.copyWith(

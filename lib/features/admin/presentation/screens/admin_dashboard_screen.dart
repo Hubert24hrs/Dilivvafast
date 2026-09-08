@@ -17,8 +17,10 @@ class AdminDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.palette.surfaceBase,
         elevation: 0,
-        title: Text('Admin Dashboard',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Admin Dashboard',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -34,25 +36,29 @@ class AdminDashboardScreen extends ConsumerWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 1.4,
               children: [
-                _statCard(context, 
+                _statCard(
+                  context,
                   'Total Orders',
                   '${ordersAsync.value?.length ?? 0}',
                   Icons.receipt_long,
                   context.palette.brand,
                 ),
-                _statCard(context, 
+                _statCard(
+                  context,
                   'Active Drivers',
                   '${driversAsync.value?.length ?? 0}',
                   Icons.delivery_dining,
                   const Color(0xFF4CAF50),
                 ),
-                _statCard(context, 
+                _statCard(
+                  context,
                   'Revenue',
                   '₦${_totalRevenue(ordersAsync).toStringAsFixed(0)}',
                   Icons.attach_money,
                   const Color(0xFFFF9800),
                 ),
-                _statCard(context, 
+                _statCard(
+                  context,
                   'Commission',
                   '₦${_totalCommission(ordersAsync).toStringAsFixed(0)}',
                   Icons.trending_up,
@@ -63,75 +69,94 @@ class AdminDashboardScreen extends ConsumerWidget {
             const SizedBox(height: 28),
 
             // Recent orders
-            Text('Recent Orders',
-                style: TextStyle(
-                    color: context.palette.onBrand,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              'Recent Orders',
+              style: TextStyle(
+                color: context.palette.onBrand,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
 
             ordersAsync.when(
               loading: () => Center(
-                  child:
-                      CircularProgressIndicator(color: context.palette.brand)),
-              error: (e, _) => Text('Error: $e',
-                  style: TextStyle(color: context.palette.danger)),
+                child: CircularProgressIndicator(color: context.palette.brand),
+              ),
+              error: (e, _) => Text(
+                'Error: $e',
+                style: TextStyle(color: context.palette.danger),
+              ),
               data: (orders) {
                 if (orders.isEmpty) {
                   return Center(
-                      child: Text('No orders yet',
-                          style: TextStyle(color: context.palette.textSecondary)));
+                    child: Text(
+                      'No orders yet',
+                      style: TextStyle(color: context.palette.textSecondary),
+                    ),
+                  );
                 }
                 return Column(
                   children: orders
                       .take(10)
-                      .map((order) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: context.palette.surfaceRaised,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: context.palette.border),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _statusColor(context, order.status.name),
+                      .map(
+                        (order) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: context.palette.surfaceRaised,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: context.palette.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _statusColor(
+                                    context,
+                                    order.status.name,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(order.trackingCode,
-                                          style: TextStyle(
-                                              color: context.palette.textPrimary,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w500)),
-                                      Text(
-                                          '${order.pickupAddress} → ${order.dropoffAddress}',
-                                          style: TextStyle(
-                                              color: context.palette.textSecondary,
-                                              fontSize: 11),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      order.trackingCode,
+                                      style: TextStyle(
+                                        color: context.palette.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${order.pickupAddress} → ${order.dropoffAddress}',
+                                      style: TextStyle(
+                                        color: context.palette.textSecondary,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                    '₦${order.totalFare.toStringAsFixed(0)}',
-                                    style: TextStyle(
-                                        color: context.palette.brand,
-                                        fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ))
+                              ),
+                              Text(
+                                '₦${order.totalFare.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  color: context.palette.brand,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                       .toList(),
                 );
               },
@@ -142,7 +167,13 @@ class AdminDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _statCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -158,13 +189,21 @@ class AdminDashboardScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value,
-                  style: TextStyle(
-                      color: color,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
-              Text(label,
-                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12)),
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -175,14 +214,19 @@ class AdminDashboardScreen extends ConsumerWidget {
   double _totalRevenue(AsyncValue<dynamic> ordersAsync) {
     final orders = ordersAsync.value;
     if (orders == null) return 0;
-    return (orders as List).fold(0.0, (sum, o) => sum + (o.totalFare as double));
+    return (orders as List).fold(
+      0.0,
+      (sum, o) => sum + (o.totalFare as double),
+    );
   }
 
   double _totalCommission(AsyncValue<dynamic> ordersAsync) {
     final orders = ordersAsync.value;
     if (orders == null) return 0;
-    return (orders as List)
-        .fold(0.0, (sum, o) => sum + (o.platformCommission as double));
+    return (orders as List).fold(
+      0.0,
+      (sum, o) => sum + (o.platformCommission as double),
+    );
   }
 
   Color _statusColor(BuildContext context, String status) {

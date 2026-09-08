@@ -40,8 +40,10 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
     final controller = ref.read(courierBookingControllerProvider.notifier);
 
     // Listen for order creation and navigate to matching screen
-    ref.listen<CourierBookingState>(courierBookingControllerProvider,
-        (prev, next) {
+    ref.listen<CourierBookingState>(courierBookingControllerProvider, (
+      prev,
+      next,
+    ) {
       if (next.createdOrderId != null && prev?.createdOrderId == null) {
         context.push('/matching/${next.createdOrderId}');
       }
@@ -100,8 +102,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
               return Container(
                 decoration: const BoxDecoration(
                   color: Color(0xFF141629),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black38,
@@ -112,8 +113,10 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                 ),
                 child: ListView(
                   controller: scrollController,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   children: [
                     // Handle bar
                     Center(
@@ -161,10 +164,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                     AddressSearchField(
                       label: 'To',
                       icon: Icons.search,
-                      initialAddress:
-                          state.dropoffAddress.isNotEmpty
-                              ? state.dropoffAddress
-                              : null,
+                      initialAddress: state.dropoffAddress.isNotEmpty
+                          ? state.dropoffAddress
+                          : null,
                       onAddressSelected: controller.setDropoff,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -221,8 +223,7 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                         }
                       },
                     ),
-                    SizedBox(
-                        height: MediaQuery.of(context).padding.bottom + 8),
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
                   ],
                 ),
               );
@@ -234,7 +235,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
   }
 
   void _showPickupSearch(
-      BuildContext context, CourierBookingController controller) {
+    BuildContext context,
+    CourierBookingController controller,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -285,7 +288,9 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -320,10 +325,7 @@ class _CircleIconButton extends StatelessWidget {
 }
 
 class _VehicleTypeSelector extends StatelessWidget {
-  const _VehicleTypeSelector({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _VehicleTypeSelector({required this.selected, required this.onChanged});
   final VehicleType selected;
   final ValueChanged<VehicleType> onChanged;
 
@@ -398,8 +400,7 @@ class _VehicleChip extends StatelessWidget {
                     ? context.palette.brand
                     : context.palette.textSecondary,
                 fontSize: 13,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],
@@ -475,7 +476,9 @@ class _PickupLocationRow extends StatelessWidget {
                   : Text(
                       displayText,
                       style: TextStyle(
-                        color: hasLocation ? context.palette.textPrimary : context.palette.textSecondary,
+                        color: hasLocation
+                            ? context.palette.textPrimary
+                            : context.palette.textSecondary,
                         fontSize: 14,
                       ),
                       maxLines: 1,
@@ -496,7 +499,9 @@ class _PickupLocationRow extends StatelessWidget {
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: context.palette.brand.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -559,7 +564,11 @@ class _PackageDetailsSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.tune, color: context.palette.textSecondary, size: 20),
+                Icon(
+                  Icons.tune,
+                  color: context.palette.textSecondary,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -585,9 +594,7 @@ class _PackageDetailsSection extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.chevron_right,
+                  isExpanded ? Icons.keyboard_arrow_up : Icons.chevron_right,
                   color: context.palette.textMuted,
                 ),
               ],
@@ -599,7 +606,8 @@ class _PackageDetailsSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildField(context, 
+                    _buildField(
+                      context,
                       hint: 'What are you sending?',
                       icon: Icons.inventory_2,
                       onChanged: onDescriptionChanged,
@@ -615,11 +623,14 @@ class _PackageDetailsSection extends StatelessWidget {
                           onTap: () => onCategoryChanged(cat),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? context.palette.brand
-                                      .withValues(alpha: 0.15)
+                                  ? context.palette.brand.withValues(
+                                      alpha: 0.15,
+                                    )
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
@@ -629,8 +640,7 @@ class _PackageDetailsSection extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              cat.name[0].toUpperCase() +
-                                  cat.name.substring(1),
+                              cat.name[0].toUpperCase() + cat.name.substring(1),
                               style: TextStyle(
                                 color: isSelected
                                     ? context.palette.brand
@@ -643,14 +653,17 @@ class _PackageDetailsSection extends StatelessWidget {
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
-                    _buildField(context, 
+                    _buildField(
+                      context,
                       hint: 'Weight (kg)',
                       icon: Icons.fitness_center,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,1}')),
+                          RegExp(r'^\d*\.?\d{0,1}'),
+                        ),
                       ],
                       onChanged: (val) {
                         final w = double.tryParse(val) ?? 0.0;
@@ -658,14 +671,16 @@ class _PackageDetailsSection extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 10),
-                    _buildField(context, 
+                    _buildField(
+                      context,
                       hint: 'Recipient name',
                       icon: Icons.person_outline,
                       onChanged: onRecipientNameChanged,
                       textCapitalization: TextCapitalization.words,
                     ),
                     const SizedBox(height: 10),
-                    _buildField(context, 
+                    _buildField(
+                      context,
                       hint: 'Recipient phone',
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
@@ -685,7 +700,8 @@ class _PackageDetailsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildField(BuildContext context, {
+  Widget _buildField(
+    BuildContext context, {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
@@ -701,13 +717,14 @@ class _PackageDetailsSection extends StatelessWidget {
       child: TextField(
         style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
-          prefixIcon:
-              Icon(icon, color: context.palette.brand, size: 18),
+          prefixIcon: Icon(icon, color: context.palette.brand, size: 18),
           hintText: hint,
           hintStyle: TextStyle(color: context.palette.textSecondary),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
@@ -733,8 +750,8 @@ class _ProposePriceRow extends StatelessWidget {
     final displayPrice = currentPrice > 0
         ? '₦${currentPrice.toStringAsFixed(0)}'
         : (fareBreakdown != null
-            ? '₦${fareBreakdown!.totalFare.toStringAsFixed(0)}'
-            : '');
+              ? '₦${fareBreakdown!.totalFare.toStringAsFixed(0)}'
+              : '');
 
     return GestureDetector(
       onTap: () => _showPriceDialog(context),
@@ -747,8 +764,11 @@ class _ProposePriceRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.calculate_outlined,
-                color: context.palette.textSecondary, size: 20),
+            Icon(
+              Icons.calculate_outlined,
+              color: context.palette.textSecondary,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -790,10 +810,11 @@ class _ProposePriceRow extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.palette.surfaceRaised,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Propose your price',
-            style: TextStyle(color: context.palette.textPrimary)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Propose your price',
+          style: TextStyle(color: context.palette.textPrimary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -802,7 +823,10 @@ class _ProposePriceRow extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'Suggested: ₦${fareBreakdown!.totalFare.toStringAsFixed(0)}',
-                  style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
+                  style: TextStyle(
+                    color: context.palette.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             TextField(
@@ -810,14 +834,18 @@ class _ProposePriceRow extends StatelessWidget {
               keyboardType: TextInputType.number,
               autofocus: true,
               style: TextStyle(
-                  color: context.palette.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
+                color: context.palette.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 prefixText: '₦ ',
                 prefixStyle: TextStyle(
-                    color: context.palette.brand,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
+                  color: context.palette.brand,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
                 hintText: '0',
                 hintStyle: TextStyle(color: context.palette.textMuted),
                 enabledBorder: OutlineInputBorder(
@@ -836,23 +864,27 @@ class _ProposePriceRow extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel',
-                style: TextStyle(color: context.palette.textSecondary)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.palette.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
-              final val =
-                  double.tryParse(textController.text) ?? 0.0;
+              final val = double.tryParse(textController.text) ?? 0.0;
               onPriceChanged(val);
               Navigator.of(ctx).pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: Text('Set Price',
-                style: TextStyle(color: context.palette.onBrand)),
+            child: Text(
+              'Set Price',
+              style: TextStyle(color: context.palette.onBrand),
+            ),
           ),
         ],
       ),
@@ -878,10 +910,12 @@ class _FindCourierButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: canSubmit && !isSubmitting ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              canSubmit ? const Color(0xFF00E676) : context.palette.surfaceRaised,
-          foregroundColor:
-              canSubmit ? context.palette.surfaceBase : context.palette.textMuted,
+          backgroundColor: canSubmit
+              ? const Color(0xFF00E676)
+              : context.palette.surfaceRaised,
+          foregroundColor: canSubmit
+              ? context.palette.surfaceBase
+              : context.palette.textMuted,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

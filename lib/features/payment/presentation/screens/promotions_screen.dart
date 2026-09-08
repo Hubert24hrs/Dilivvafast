@@ -14,7 +14,8 @@ class AppliedPromoNotifier extends Notifier<Map<String, dynamic>?> {
 
 final appliedPromoProvider =
     NotifierProvider<AppliedPromoNotifier, Map<String, dynamic>?>(
-        AppliedPromoNotifier.new);
+      AppliedPromoNotifier.new,
+    );
 
 class PromotionsScreen extends ConsumerStatefulWidget {
   const PromotionsScreen({super.key});
@@ -150,7 +151,9 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                           child: TextField(
                             controller: _codeCtrl,
                             textCapitalization: TextCapitalization.characters,
-                            style: TextStyle(color: context.palette.textPrimary),
+                            style: TextStyle(
+                              color: context.palette.textPrimary,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'e.g. DILIVVA10',
                               errorText: _errorText,
@@ -211,7 +214,10 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     style: TextStyle(color: context.palette.textSecondary),
                   ),
                   trailing: IconButton(
-                    icon: Icon(Icons.close, color: context.palette.textSecondary),
+                    icon: Icon(
+                      Icons.close,
+                      color: context.palette.textSecondary,
+                    ),
                     onPressed: () {
                       ref.read(appliedPromoProvider.notifier).set(null);
                     },
@@ -257,7 +263,9 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         child: Text(
                           'No public promo codes available right now.\nCheck back soon!',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: context.palette.textSecondary),
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -278,8 +286,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color:
-                                context.palette.brand.withValues(alpha: 0.2),
+                            color: context.palette.brand.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -296,7 +303,9 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         ),
                         subtitle: Text(
                           '$desc — Save $discount',
-                          style: TextStyle(color: context.palette.textSecondary),
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                          ),
                         ),
                         trailing: OutlinedButton(
                           onPressed: () {

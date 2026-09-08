@@ -48,9 +48,7 @@ class DeliveryMapWidget extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.palette.brand.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: context.palette.brand.withValues(alpha: 0.2)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -98,7 +96,8 @@ class DeliveryMapWidget extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: onPickupTap,
-                            child: _buildLocationPin(context, 
+                            child: _buildLocationPin(
+                              context,
                               label: pickupLabel,
                               color: const Color(0xFF4CAF50),
                               icon: Icons.radio_button_checked,
@@ -120,7 +119,8 @@ class DeliveryMapWidget extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: onDropoffTap,
-                            child: _buildLocationPin(context, 
+                            child: _buildLocationPin(
+                              context,
                               label: dropoffLabel,
                               color: const Color(0xFFFF5252),
                               icon: Icons.flag,
@@ -141,17 +141,14 @@ class DeliveryMapWidget extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.map,
-                      size: 32,
-                      color: context.palette.textMuted),
+                  Icon(Icons.map, size: 32, color: context.palette.textMuted),
                   const SizedBox(height: 8),
                   Text(
-                    interactive
-                        ? 'Tap to select location'
-                        : 'No locations set',
+                    interactive ? 'Tap to select location' : 'No locations set',
                     style: TextStyle(
-                        color: context.palette.textMuted,
-                        fontSize: 12),
+                      color: context.palette.textMuted,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -170,7 +167,9 @@ class DeliveryMapWidget extends StatelessWidget {
               child: Text(
                 '© Mapbox',
                 style: TextStyle(
-                    color: context.palette.textSecondary, fontSize: 8),
+                  color: context.palette.textSecondary,
+                  fontSize: 8,
+                ),
               ),
             ),
           ),
@@ -179,7 +178,8 @@ class DeliveryMapWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationPin(BuildContext context, {
+  Widget _buildLocationPin(
+    BuildContext context, {
     required String label,
     required Color color,
     required IconData icon,
@@ -203,16 +203,20 @@ class DeliveryMapWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label,
-                    style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 Text(
                   '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
                   style: TextStyle(
-                      color: context.palette.textSecondary,
-                      fontSize: 8),
+                    color: context.palette.textSecondary,
+                    fontSize: 8,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -232,7 +236,8 @@ class DeliveryMapWidget extends StatelessWidget {
           color: context.palette.brand.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: context.palette.brand.withValues(alpha: 0.4)),
+            color: context.palette.brand.withValues(alpha: 0.4),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -246,16 +251,21 @@ class DeliveryMapWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            Text('Driver Location',
-                style: TextStyle(
-                    color: context.palette.brand,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              'Driver Location',
+              style: TextStyle(
+                color: context.palette.brand,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(width: 4),
             Text(
               '${driverLat!.toStringAsFixed(3)}, ${driverLng!.toStringAsFixed(3)}',
               style: TextStyle(
-                  color: context.palette.textSecondary, fontSize: 9),
+                color: context.palette.textSecondary,
+                fontSize: 9,
+              ),
             ),
           ],
         ),
@@ -325,8 +335,7 @@ class _RoutePainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       while (distance < metric.length) {
         final end = (distance + dashLength).clamp(0.0, metric.length);
-        dashPath.addPath(
-            metric.extractPath(distance, end), Offset.zero);
+        dashPath.addPath(metric.extractPath(distance, end), Offset.zero);
         distance += dashLength + dashGap;
       }
     }

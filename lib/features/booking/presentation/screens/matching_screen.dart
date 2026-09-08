@@ -96,16 +96,19 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         .collection(FirestoreConstants.couriers)
         .doc(orderId)
         .snapshots()
-        .listen((snapshot) {
-      if (!mounted || _driverFound) return;
+        .listen(
+          (snapshot) {
+            if (!mounted || _driverFound) return;
 
-      final data = snapshot.data();
-      if (data != null && data['driverId'] != null) {
-        _onDriverFound(data);
-      }
-    }, onError: (error) {
-      debugPrint('MatchingScreen: Firestore listener error: $error');
-    });
+            final data = snapshot.data();
+            if (data != null && data['driverId'] != null) {
+              _onDriverFound(data);
+            }
+          },
+          onError: (error) {
+            debugPrint('MatchingScreen: Firestore listener error: $error');
+          },
+        );
   }
 
   /// Called when a driver has been assigned to this order.
@@ -134,8 +137,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       builder: (context) => AlertDialog(
         backgroundColor: context.palette.surfaceRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('No Couriers Available',
-            style: TextStyle(color: context.palette.textPrimary)),
+        title: Text(
+          'No Couriers Available',
+          style: TextStyle(color: context.palette.textPrimary),
+        ),
         content: Text(
           'We couldn\'t find a courier right now. This might be due to high demand or limited availability in your area.',
           style: TextStyle(color: context.palette.textSecondary, height: 1.5),
@@ -149,8 +154,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                 if (mounted && !_driverFound) _showTimeoutDialog();
               });
             },
-            child: Text('Keep Waiting',
-                style: TextStyle(color: context.palette.brand)),
+            child: Text(
+              'Keep Waiting',
+              style: TextStyle(color: context.palette.brand),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -160,10 +167,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: context.palette.brand,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: Text('Cancel',
-                style: TextStyle(color: context.palette.onBrand)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.palette.onBrand),
+            ),
           ),
         ],
       ),
@@ -201,13 +211,23 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                 children: [
                   TextButton.icon(
                     onPressed: () => context.go('/customer/home'),
-                    icon: Icon(Icons.close, color: context.palette.textSecondary, size: 20),
-                    label: Text('Cancel',
-                        style: TextStyle(color: context.palette.textSecondary)),
+                    icon: Icon(
+                      Icons.close,
+                      color: context.palette.textSecondary,
+                      size: 20,
+                    ),
+                    label: Text(
+                      'Cancel',
+                      style: TextStyle(color: context.palette.textSecondary),
+                    ),
                   ),
-                  Text(_formattedTime,
-                      style:
-                          TextStyle(color: context.palette.textMuted, fontSize: 14)),
+                  Text(
+                    _formattedTime,
+                    style: TextStyle(
+                      color: context.palette.textMuted,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -233,8 +253,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: context.palette.brand
-                                  .withValues(alpha: 0.15),
+                              color: context.palette.brand.withValues(
+                                alpha: 0.15,
+                              ),
                               width: 2,
                             ),
                           ),
@@ -251,8 +272,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                                     color: context.palette.brand,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: context.palette.brand
-                                            .withValues(alpha: 0.6),
+                                        color: context.palette.brand.withValues(
+                                          alpha: 0.6,
+                                        ),
                                         blurRadius: 8,
                                       ),
                                     ],
@@ -279,8 +301,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: context.palette.brand
-                                  .withValues(alpha: 0.1),
+                              color: context.palette.brand.withValues(
+                                alpha: 0.1,
+                              ),
                               width: 1.5,
                             ),
                           ),
@@ -306,8 +329,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                       gradient: AppTheme.primaryGradient,
                       boxShadow: [
                         BoxShadow(
-                          color: context.palette.brand
-                              .withValues(alpha: 0.4),
+                          color: context.palette.brand.withValues(alpha: 0.4),
                           blurRadius: 24,
                           spreadRadius: -4,
                         ),
@@ -329,17 +351,18 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
             // Status text
             Text(
-              _statusText,
-              style: TextStyle(
-                color: context.palette.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            )
+                  _statusText,
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                )
                 .animate(
-                    target: _driverFound ? 1 : 0,
-                    onPlay: (c) => c.repeat(reverse: true))
+                  target: _driverFound ? 1 : 0,
+                  onPlay: (c) => c.repeat(reverse: true),
+                )
                 .fadeIn(duration: 400.ms),
 
             const SizedBox(height: 12),
@@ -373,11 +396,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                           : context.palette.textMuted,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                  )
-                      .animate()
-                      .fadeIn(
-                          delay: Duration(milliseconds: 200 * index),
-                          duration: 300.ms);
+                  ).animate().fadeIn(
+                    delay: Duration(milliseconds: 200 * index),
+                    duration: 300.ms,
+                  );
                 }),
               ),
 
@@ -394,8 +416,11 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.lightbulb_outline,
-                      color: context.palette.brand, size: 20),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: context.palette.brand,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -409,9 +434,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                   ),
                 ],
               ),
-            )
-                .animate()
-                .fadeIn(delay: 1.seconds, duration: 600.ms),
+            ).animate().fadeIn(delay: 1.seconds, duration: 600.ms),
 
             const SizedBox(height: 32),
           ],
@@ -466,8 +489,9 @@ class _AnimatedRippleState extends State<_AnimatedRipple>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: widget.color
-                  .withValues(alpha: 0.3 * (1 - _controller.value)),
+              color: widget.color.withValues(
+                alpha: 0.3 * (1 - _controller.value),
+              ),
               width: 1.5,
             ),
           ),

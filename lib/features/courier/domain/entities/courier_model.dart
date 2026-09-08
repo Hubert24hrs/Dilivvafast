@@ -12,7 +12,8 @@ class CourierModel {
   final String receiverName;
   final String receiverPhone;
   final double price;
-  final String status; // 'pending', 'accepted', 'picked_up', 'delivered', 'cancelled'
+  final String
+  status; // 'pending', 'accepted', 'picked_up', 'delivered', 'cancelled'
   final DateTime createdAt;
 
   CourierModel({

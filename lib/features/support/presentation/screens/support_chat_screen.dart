@@ -37,11 +37,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
         .doc(threadId)
         .collection('messages')
         .add({
-      'senderId': uid,
-      'senderName': 'Customer',
-      'text': text,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+          'senderId': uid,
+          'senderName': 'Customer',
+          'text': text,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 
   @override
@@ -69,8 +69,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(
                           child: CircularProgressIndicator(
                             color: context.palette.brand,
@@ -104,7 +103,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                                 Text(
                                   'Send a message below and a Dilivvafast support agent will respond shortly.',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: context.palette.textSecondary),
+                                  style: TextStyle(
+                                    color: context.palette.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -145,7 +146,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                               ),
                               child: Text(
                                 text,
-                                style: TextStyle(color: context.palette.onBrand),
+                                style: TextStyle(
+                                  color: context.palette.onBrand,
+                                ),
                               ),
                             ),
                           );

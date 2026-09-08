@@ -76,7 +76,10 @@ class Validators {
   }
 
   static String? positiveNumber(String? value) {
-    if (value == null || value.isEmpty) return null; // Let required() handle empty check if needed
+    // Let required() handle the empty check if the field is mandatory.
+    if (value == null || value.isEmpty) {
+      return null;
+    }
     final num = double.tryParse(value);
     if (num == null) {
       return 'This field must be a valid number';
@@ -98,7 +101,10 @@ class Validators {
     return null;
   }
 
-  static String? combine(String? value, List<String? Function(String?)> validators) {
+  static String? combine(
+    String? value,
+    List<String? Function(String?)> validators,
+  ) {
     for (final validator in validators) {
       final result = validator(value);
       if (result != null) {

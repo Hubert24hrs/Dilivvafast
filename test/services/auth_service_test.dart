@@ -31,10 +31,12 @@ void main() {
       when(mockUser.email).thenReturn('test@example.com');
       when(mockUserCredential.user).thenReturn(mockUser);
 
-      when(mockFirebaseAuth.signInWithEmailAndPassword(
-        email: 'test@example.com',
-        password: 'password123',
-      )).thenAnswer((_) async => mockUserCredential);
+      when(
+        mockFirebaseAuth.signInWithEmailAndPassword(
+          email: 'test@example.com',
+          password: 'password123',
+        ),
+      ).thenAnswer((_) async => mockUserCredential);
 
       final result = await authService.signIn(
         email: 'test@example.com',

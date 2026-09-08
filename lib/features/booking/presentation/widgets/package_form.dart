@@ -43,8 +43,10 @@ class PackageForm extends StatelessWidget {
               onTap: () => onCategoryChanged(category),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? context.palette.brand.withValues(alpha: 0.15)
@@ -71,10 +73,13 @@ class PackageForm extends StatelessWidget {
                     Text(
                       _categoryLabel(category),
                       style: TextStyle(
-                        color: isSelected ? context.palette.brand : context.palette.textSecondary,
+                        color: isSelected
+                            ? context.palette.brand
+                            : context.palette.textSecondary,
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -89,7 +94,8 @@ class PackageForm extends StatelessWidget {
         // Package weight
         const _SectionLabel('Estimated Weight (kg)'),
         const SizedBox(height: 8),
-        _buildTextField(context, 
+        _buildTextField(
+          context,
           hint: 'e.g. 2.5',
           icon: Icons.fitness_center,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -107,7 +113,8 @@ class PackageForm extends StatelessWidget {
         // Package description
         const _SectionLabel('Package Description'),
         const SizedBox(height: 8),
-        _buildTextField(context, 
+        _buildTextField(
+          context,
           hint: 'What are you sending?',
           icon: Icons.inventory_2,
           onChanged: onDescriptionChanged,
@@ -118,14 +125,16 @@ class PackageForm extends StatelessWidget {
         // Recipient info
         const _SectionLabel('Recipient Details'),
         const SizedBox(height: 8),
-        _buildTextField(context, 
+        _buildTextField(
+          context,
           hint: 'Recipient name',
           icon: Icons.person_outline,
           onChanged: onRecipientNameChanged,
           textCapitalization: TextCapitalization.words,
         ),
         const SizedBox(height: 12),
-        _buildTextField(context, 
+        _buildTextField(
+          context,
           hint: 'Recipient phone (e.g. 08012345678)',
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
@@ -141,7 +150,8 @@ class PackageForm extends StatelessWidget {
         // Notes
         const _SectionLabel('Delivery Notes (Optional)'),
         const SizedBox(height: 8),
-        _buildTextField(context, 
+        _buildTextField(
+          context,
           hint: 'e.g. Call before delivery, fragile item...',
           icon: Icons.note_outlined,
           maxLines: 3,
@@ -151,7 +161,8 @@ class PackageForm extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(BuildContext context, {
+  Widget _buildTextField(
+    BuildContext context, {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
@@ -173,8 +184,10 @@ class PackageForm extends StatelessWidget {
           hintText: hint,
           hintStyle: TextStyle(color: context.palette.textSecondary),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,

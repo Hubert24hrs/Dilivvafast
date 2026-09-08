@@ -17,8 +17,7 @@ class GlassCard extends StatelessWidget {
     this.borderRadius = AppTheme.radiusLarge,
     @Deprecated('The blur was removed with the frosted-glass treatment.')
     this.blur = 0.0,
-    @Deprecated('Surface colour now comes from the theme.')
-    this.opacity = 0.0,
+    @Deprecated('Surface colour now comes from the theme.') this.opacity = 0.0,
     this.onTap,
   });
 

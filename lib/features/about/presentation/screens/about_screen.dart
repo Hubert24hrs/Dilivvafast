@@ -98,7 +98,10 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 32),
               Text(
                 '© 2026 Dilivvafast Inc. All rights reserved.',
-                style: TextStyle(color: context.palette.textMuted, fontSize: 12),
+                style: TextStyle(
+                  color: context.palette.textMuted,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

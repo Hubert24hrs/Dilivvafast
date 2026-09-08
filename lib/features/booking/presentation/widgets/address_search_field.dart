@@ -95,7 +95,10 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
   void _selectSuggestion(GeocodedAddress suggestion) {
     _controller.text = suggestion.address;
     widget.onAddressSelected(
-        suggestion.address, suggestion.lat, suggestion.lng);
+      suggestion.address,
+      suggestion.lat,
+      suggestion.lng,
+    );
     _focusNode.unfocus();
     setState(() => _showSuggestions = false);
   }
@@ -123,43 +126,51 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  style:
-                      TextStyle(color: context.palette.onBrand, fontSize: 15),
+                  style: TextStyle(
+                    color: context.palette.onBrand,
+                    fontSize: 15,
+                  ),
                   decoration: InputDecoration(
-                    prefixIcon: Icon(widget.icon,
-                        color: context.palette.brand, size: 20),
+                    prefixIcon: Icon(
+                      widget.icon,
+                      color: context.palette.brand,
+                      size: 20,
+                    ),
                     hintText: widget.label,
-                    hintStyle:
-                        TextStyle(color: context.palette.textSecondary),
+                    hintStyle: TextStyle(color: context.palette.textSecondary),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     suffixIcon: _controller.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear,
-                                color: context.palette.textMuted, size: 18),
+                            icon: Icon(
+                              Icons.clear,
+                              color: context.palette.textMuted,
+                              size: 18,
+                            ),
                             onPressed: () {
                               _controller.clear();
                               _onTextChanged('');
                             },
                           )
                         : (_isSearching
-                            ? Padding(
-                                padding: EdgeInsets.all(14),
-                                child: SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: context.palette.brand,
+                              ? Padding(
+                                  padding: EdgeInsets.all(14),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.palette.brand,
+                                    ),
                                   ),
-                                ),
-                              )
-                            : null),
+                                )
+                              : null),
                   ),
                   onChanged: _onTextChanged,
-                  inputFormatters: [
-                      LengthLimitingTextInputFormatter(200)],
+                  inputFormatters: [LengthLimitingTextInputFormatter(200)],
                 ),
               ),
               if (widget.trailing != null)
@@ -198,12 +209,17 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                 final suggestion = _suggestions[index];
                 return ListTile(
                   dense: true,
-                  leading: Icon(Icons.location_on,
-                      color: context.palette.brand, size: 18),
+                  leading: Icon(
+                    Icons.location_on,
+                    color: context.palette.brand,
+                    size: 18,
+                  ),
                   title: Text(
                     suggestion.address,
                     style: TextStyle(
-                        color: context.palette.onBrand, fontSize: 13),
+                      color: context.palette.onBrand,
+                      fontSize: 13,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

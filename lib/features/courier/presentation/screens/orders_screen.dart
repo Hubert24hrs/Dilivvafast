@@ -21,34 +21,50 @@ class OrdersScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.palette.surfaceBase,
         elevation: 0,
-        title: Text(isDriver ? 'Delivery History' : 'My Orders',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          isDriver ? 'Delivery History' : 'My Orders',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: ordersAsync.when(
         loading: () => Center(
-            child: CircularProgressIndicator(color: context.palette.brand)),
+          child: CircularProgressIndicator(color: context.palette.brand),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: TextStyle(color: context.palette.danger))),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long,
-                      size: 64,
-                      color: context.palette.textMuted),
+                  Icon(
+                    Icons.receipt_long,
+                    size: 64,
+                    color: context.palette.textMuted,
+                  ),
                   const SizedBox(height: 16),
-                  Text('No orders yet',
-                      style: TextStyle(color: context.palette.textSecondary, fontSize: 16)),
+                  Text(
+                    'No orders yet',
+                    style: TextStyle(
+                      color: context.palette.textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                      isDriver
-                          ? 'Accept deliveries to see them here'
-                          : 'Book a delivery to get started',
-                      style: TextStyle(
-                          color: context.palette.textMuted, fontSize: 13)),
+                    isDriver
+                        ? 'Accept deliveries to see them here'
+                        : 'Book a delivery to get started',
+                    style: TextStyle(
+                      color: context.palette.textMuted,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -84,11 +100,14 @@ class OrdersScreen extends ConsumerWidget {
               children: [
                 _statusChip(order.status),
                 const Spacer(),
-                Text('₦${order.totalFare.toStringAsFixed(0)}',
-                    style: TextStyle(
-                        color: context.palette.brand,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16)),
+                Text(
+                  '₦${order.totalFare.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: context.palette.brand,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -96,15 +115,19 @@ class OrdersScreen extends ConsumerWidget {
             // Route
             Row(
               children: [
-                Icon(Icons.location_on,
-                    color: context.palette.brand, size: 16),
+                Icon(Icons.location_on, color: context.palette.brand, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: Text(order.pickupAddress,
-                        style:
-                            TextStyle(color: context.palette.onBrand, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                  child: Text(
+                    order.pickupAddress,
+                    style: TextStyle(
+                      color: context.palette.onBrand,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -113,11 +136,16 @@ class OrdersScreen extends ConsumerWidget {
                 Icon(Icons.flag, color: context.palette.brand, size: 16),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: Text(order.dropoffAddress,
-                        style: TextStyle(
-                            color: context.palette.textSecondary, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
+                  child: Text(
+                    order.dropoffAddress,
+                    style: TextStyle(
+                      color: context.palette.textSecondary,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -125,19 +153,28 @@ class OrdersScreen extends ConsumerWidget {
             // Bottom row
             Row(
               children: [
-                Icon(Icons.access_time,
-                    color: context.palette.textSecondary, size: 14),
+                Icon(
+                  Icons.access_time,
+                  color: context.palette.textSecondary,
+                  size: 14,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(order.createdAt),
-                  style: TextStyle(color: context.palette.textMuted, fontSize: 12),
+                  style: TextStyle(
+                    color: context.palette.textMuted,
+                    fontSize: 12,
+                  ),
                 ),
                 const Spacer(),
-                Text(order.trackingCode,
-                    style: TextStyle(
-                        color: context.palette.textSecondary,
-                        fontSize: 11,
-                        letterSpacing: 1)),
+                Text(
+                  order.trackingCode,
+                  style: TextStyle(
+                    color: context.palette.textSecondary,
+                    fontSize: 11,
+                    letterSpacing: 1,
+                  ),
+                ),
               ],
             ),
           ],
@@ -164,9 +201,14 @@ class OrdersScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(label,
-          style:
-              TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 

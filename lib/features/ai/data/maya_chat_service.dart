@@ -7,23 +7,17 @@ class MayaMessage {
   final String content;
   final DateTime timestamp;
 
-  MayaMessage({
-    required this.role,
-    required this.content,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  MayaMessage({required this.role, required this.content, DateTime? timestamp})
+    : timestamp = timestamp ?? DateTime.now();
 
-  Map<String, dynamic> toApiFormat() => {
-        'role': role,
-        'content': content,
-      };
+  Map<String, dynamic> toApiFormat() => {'role': role, 'content': content};
 }
 
 /// Maya — Dilivvafast's AI Support Agent
 /// Powered by Claude (Anthropic) API
 class MayaChatService {
   MayaChatService({FirebaseFunctions? functions})
-      : _functions = functions ?? FirebaseFunctions.instance;
+    : _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFunctions _functions;
 
@@ -82,17 +76,13 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
   /// never reaches the device, and the endpoint is rate-limited per user.
   Future<String> sendMessage(String userMessage) async {
     // Add user message to history
-    _conversationHistory.add(MayaMessage(
-      role: 'user',
-      content: userMessage,
-    ));
+    _conversationHistory.add(MayaMessage(role: 'user', content: userMessage));
 
     try {
       final callable = _functions.httpsCallable('askMaya');
       final result = await callable.call<Map<String, dynamic>>({
         'system': _systemPrompt,
-        'messages':
-            _conversationHistory.map((m) => m.toApiFormat()).toList(),
+        'messages': _conversationHistory.map((m) => m.toApiFormat()).toList(),
       });
 
       final assistantMessage = result.data['reply'] as String?;
@@ -100,16 +90,14 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
         return _getFallbackResponse(userMessage);
       }
 
-      _conversationHistory.add(MayaMessage(
-        role: 'assistant',
-        content: assistantMessage,
-      ));
+      _conversationHistory.add(
+        MayaMessage(role: 'assistant', content: assistantMessage),
+      );
 
       // Keep history manageable (last 20 messages) — also the cap the
       // backend enforces on the request it will accept.
       if (_conversationHistory.length > 20) {
-        _conversationHistory.removeRange(
-            0, _conversationHistory.length - 20);
+        _conversationHistory.removeRange(0, _conversationHistory.length - 20);
       }
 
       return assistantMessage;
@@ -133,7 +121,10 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
     if (lower.contains('track') || lower.contains('where')) {
       return "📦 To track your delivery, go to the **Orders** tab and tap on your active order. You'll see real-time location updates on the map!\n\nIf you have a tracking code, enter it in the search bar on the home screen.";
     }
-    if (lower.contains('price') || lower.contains('cost') || lower.contains('fare') || lower.contains('how much')) {
+    if (lower.contains('price') ||
+        lower.contains('cost') ||
+        lower.contains('fare') ||
+        lower.contains('how much')) {
       return "💰 Delivery pricing depends on:\n• **Distance** between pickup and dropoff\n• **Vehicle type** (Bike, Car, or Van)\n• **Delivery speed** (Express, Standard, Economy)\n\nYou can get an instant quote by entering your pickup and dropoff addresses in the booking screen!";
     }
     if (lower.contains('cancel')) {
@@ -142,13 +133,17 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
     if (lower.contains('driver') || lower.contains('become')) {
       return "🚗 **Want to drive with Dilivvafast?**\n\nRequirements:\n1. Valid Nigerian driver's license\n2. NIN verification\n3. Own a bike, car, or van\n4. Smartphone with data plan\n5. Pass background check\n\nApply in the app: **Profile → Become a Driver**!";
     }
-    if (lower.contains('payment') || lower.contains('wallet') || lower.contains('pay')) {
+    if (lower.contains('payment') ||
+        lower.contains('wallet') ||
+        lower.contains('pay')) {
       return "💳 **Payment Options:**\n• Debit/Credit card (Visa, Mastercard)\n• Bank transfer\n• USSD payment\n• Wallet balance\n\nTop up your wallet: **Profile → Wallet → Top Up**\n\nAll payments are processed securely via Paystack.";
     }
     if (lower.contains('refund')) {
       return "💵 Refunds are processed within 3-5 business days to your original payment method. For wallet payments, refunds are instant.\n\nIf you haven't received your refund, contact support@dilivvafast.ng.";
     }
-    if (lower.contains('hello') || lower.contains('hi') || lower.contains('hey')) {
+    if (lower.contains('hello') ||
+        lower.contains('hi') ||
+        lower.contains('hey')) {
       return "Hey there! 👋 I'm Maya, your Dilivvafast assistant. How can I help you today?\n\nI can help with:\n• 📦 Tracking deliveries\n• 💰 Pricing questions\n• ❌ Cancellations & refunds\n• 🚗 Becoming a driver\n• 💳 Payment issues";
     }
 

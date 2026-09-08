@@ -25,11 +25,7 @@ class ReferEarnScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(
-              Icons.card_giftcard,
-              size: 80,
-              color: context.palette.brand,
-            ),
+            Icon(Icons.card_giftcard, size: 80, color: context.palette.brand),
             const SizedBox(height: 16),
             Text(
               'Earn ₦500 per Friend!',
@@ -88,12 +84,17 @@ class ReferEarnScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       IconButton(
-                        icon: Icon(Icons.copy, color: context.palette.textSecondary),
+                        icon: Icon(
+                          Icons.copy,
+                          color: context.palette.textSecondary,
+                        ),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: referralCode));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Referral code copied to clipboard!'),
+                              content: Text(
+                                'Referral code copied to clipboard!',
+                              ),
                             ),
                           );
                         },
@@ -168,7 +169,9 @@ class ReferEarnScreen extends ConsumerWidget {
                       child: Center(
                         child: Text(
                           'No referrals yet. Start sharing to earn rewards!',
-                          style: TextStyle(color: context.palette.textSecondary),
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -187,7 +190,10 @@ class ReferEarnScreen extends ConsumerWidget {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: context.palette.brand,
-                          child: Icon(Icons.person, color: context.palette.onBrand),
+                          child: Icon(
+                            Icons.person,
+                            color: context.palette.onBrand,
+                          ),
                         ),
                         title: Text(
                           'Referral #${d.id.substring(0, 6)}',
@@ -195,7 +201,9 @@ class ReferEarnScreen extends ConsumerWidget {
                         ),
                         subtitle: Text(
                           'Status: $status',
-                          style: TextStyle(color: context.palette.textSecondary),
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                          ),
                         ),
                         trailing: Text(
                           bonusPaid ? '+₦500' : 'Pending',

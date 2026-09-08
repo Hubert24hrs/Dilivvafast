@@ -17,13 +17,17 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.palette.surfaceBase,
         elevation: 0,
-        title: Text('Notifications',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Notifications',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
         actions: [
           TextButton(
             onPressed: () => _markAllRead(ref),
-            child: Text('Mark all read',
-                style: TextStyle(color: context.palette.brand, fontSize: 12)),
+            child: Text(
+              'Mark all read',
+              style: TextStyle(color: context.palette.brand, fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -34,12 +38,19 @@ class NotificationsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_none,
-                      size: 56,
-                      color: context.palette.textMuted),
+                  Icon(
+                    Icons.notifications_none,
+                    size: 56,
+                    color: context.palette.textMuted,
+                  ),
                   const SizedBox(height: 12),
-                  Text('No notifications yet',
-                      style: TextStyle(color: context.palette.textMuted, fontSize: 15)),
+                  Text(
+                    'No notifications yet',
+                    style: TextStyle(
+                      color: context.palette.textMuted,
+                      fontSize: 15,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -56,7 +67,8 @@ class NotificationsScreen extends ConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (i == 0 || grouped[i].dateLabel != grouped[i - 1].dateLabel)
+                  if (i == 0 ||
+                      grouped[i].dateLabel != grouped[i - 1].dateLabel)
                     Padding(
                       padding: const EdgeInsets.only(top: 16, bottom: 8),
                       child: Text(
@@ -78,14 +90,20 @@ class NotificationsScreen extends ConsumerWidget {
           child: CircularProgressIndicator(color: context.palette.brand),
         ),
         error: (e, _) => Center(
-          child:
-              Text('Error: $e', style: TextStyle(color: context.palette.danger)),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNotificationTile(BuildContext context, WidgetRef ref, NotificationModel n) {
+  Widget _buildNotificationTile(
+    BuildContext context,
+    WidgetRef ref,
+    NotificationModel n,
+  ) {
     final icon = _iconForType(n.type);
     final color = _colorForType(context, n.type);
 
@@ -101,7 +119,9 @@ class NotificationsScreen extends ConsumerWidget {
               : context.palette.surfaceRaised.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: n.isRead ? context.palette.border : color.withValues(alpha: 0.3),
+            color: n.isRead
+                ? context.palette.border
+                : color.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -131,8 +151,9 @@ class NotificationsScreen extends ConsumerWidget {
                           style: TextStyle(
                             color: context.palette.textPrimary,
                             fontSize: 14,
-                            fontWeight:
-                                n.isRead ? FontWeight.w400 : FontWeight.w600,
+                            fontWeight: n.isRead
+                                ? FontWeight.w400
+                                : FontWeight.w600,
                           ),
                         ),
                       ),

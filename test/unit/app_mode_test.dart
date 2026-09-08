@@ -109,7 +109,10 @@ void main() {
     });
 
     test('admins always land on the admin surface', () {
-      final user = buildUser(role: UserRole.admin, activeMode: AppMode.customer);
+      final user = buildUser(
+        role: UserRole.admin,
+        activeMode: AppMode.customer,
+      );
       expect(user.effectiveMode, AppMode.admin);
     });
   });
@@ -117,8 +120,11 @@ void main() {
   group('AppMode metadata', () {
     test('admin is not offered as a switchable mode', () {
       expect(AppMode.switchable, isNot(contains(AppMode.admin)));
-      expect(AppMode.switchable,
-          [AppMode.customer, AppMode.driver, AppMode.investor]);
+      expect(AppMode.switchable, [
+        AppMode.customer,
+        AppMode.driver,
+        AppMode.investor,
+      ]);
     });
 
     test('every mode has a home route under its own prefix', () {

@@ -9,8 +9,8 @@ class RateLimiter {
   RateLimiter({
     Duration window = const Duration(minutes: 1),
     int maxRequests = 60,
-  })  : _window = window,
-        _maxRequests = maxRequests;
+  }) : _window = window,
+       _maxRequests = maxRequests;
 
   /// Check if request is allowed
   bool isAllowed(String identifier) {
@@ -35,10 +35,10 @@ class RateLimiter {
   int getRemainingRequests(String identifier) {
     final now = DateTime.now();
     final history = _requestHistory[identifier] ?? [];
-    
+
     // Remove old requests
     history.removeWhere((time) => now.difference(time) > _window);
-    
+
     return _maxRequests - history.length;
   }
 
@@ -46,18 +46,18 @@ class RateLimiter {
   Duration? getTimeUntilNextRequest(String identifier) {
     final now = DateTime.now();
     final history = _requestHistory[identifier] ?? [];
-    
+
     if (history.isEmpty) return null;
     if (history.length < _maxRequests) return null;
 
     // Find oldest request
     final oldest = history.reduce((a, b) => a.isBefore(b) ? a : b);
     final resetTime = oldest.add(_window);
-    
+
     if (resetTime.isAfter(now)) {
       return resetTime.difference(now);
     }
-    
+
     return null;
   }
 

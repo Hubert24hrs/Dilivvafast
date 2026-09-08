@@ -101,8 +101,8 @@ class _Greeting extends StatelessWidget {
     final salutation = hour < 12
         ? 'Good morning'
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
     final firstName = (name == null || name!.trim().isEmpty)
         ? null
         : name!.trim().split(' ').first;
@@ -112,10 +112,7 @@ class _Greeting extends StatelessWidget {
       children: [
         Text(salutation, style: context.text.bodyMedium),
         const SizedBox(height: 2),
-        Text(
-          firstName ?? 'Welcome back',
-          style: context.text.headlineMedium,
-        ),
+        Text(firstName ?? 'Welcome back', style: context.text.headlineMedium),
       ],
     );
   }
@@ -171,8 +168,9 @@ class _SendPackageCta extends StatelessWidget {
                   children: [
                     Text(
                       'Send a package',
-                      style: context.text.titleLarge
-                          ?.copyWith(color: palette.onBrand),
+                      style: context.text.titleLarge?.copyWith(
+                        color: palette.onBrand,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -223,8 +221,7 @@ class _ActiveDeliveryCard extends StatelessWidget {
                 children: [
                   _StatusPill(status: order.status),
                   const Spacer(),
-                  Text('#${order.trackingCode}',
-                      style: context.text.bodySmall),
+                  Text('#${order.trackingCode}', style: context.text.bodySmall),
                 ],
               ),
               const SizedBox(height: 14),
@@ -248,13 +245,18 @@ class _ActiveDeliveryCard extends StatelessWidget {
                     style: context.text.titleMedium,
                   ),
                   const Spacer(),
-                  Text('Track delivery',
-                      style: context.text.bodyMedium?.copyWith(
-                        color: palette.brand,
-                        fontWeight: FontWeight.w600,
-                      )),
-                  Icon(Icons.chevron_right_rounded,
-                      size: 20, color: palette.brand),
+                  Text(
+                    'Track delivery',
+                    style: context.text.bodyMedium?.copyWith(
+                      color: palette.brand,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: palette.brand,
+                  ),
                 ],
               ),
             ],
@@ -290,12 +292,13 @@ class _RoutePoint extends StatelessWidget {
                 width: 10,
                 height: 10,
                 margin: const EdgeInsets.only(top: 5),
-                decoration: BoxDecoration(color: colour, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: colour,
+                  shape: BoxShape.circle,
+                ),
               ),
               if (!isLast)
-                Expanded(
-                  child: Container(width: 1.5, color: palette.border),
-                ),
+                Expanded(child: Container(width: 1.5, color: palette.border)),
             ],
           ),
           const SizedBox(width: 12),
@@ -304,8 +307,9 @@ class _RoutePoint extends StatelessWidget {
               padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
               child: Text(
                 label,
-                style: context.text.bodyMedium
-                    ?.copyWith(color: palette.textPrimary),
+                style: context.text.bodyMedium?.copyWith(
+                  color: palette.textPrimary,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -339,8 +343,10 @@ class _StatusPill extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration:
-          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
       child: Text(
         label[0].toUpperCase() + label.substring(1),
         style: context.text.labelSmall?.copyWith(color: fg),
@@ -388,8 +394,9 @@ class _WalletCard extends StatelessWidget {
                   loading: () => Text('₦—', style: context.text.headlineSmall),
                   error: (_, _) => Text(
                     'Unavailable',
-                    style: context.text.titleMedium
-                        ?.copyWith(color: palette.textMuted),
+                    style: context.text.titleMedium?.copyWith(
+                      color: palette.textMuted,
+                    ),
                   ),
                 ),
               ],

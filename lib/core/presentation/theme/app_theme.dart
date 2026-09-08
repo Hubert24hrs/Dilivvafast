@@ -151,10 +151,10 @@ class AppTheme {
       surfaceContainerLowest: p.surfaceBase,
       surfaceContainerLow: p.surfaceSunken,
       surfaceContainer: p.surfaceRaised,
-      surfaceContainerHigh:
-          isDark ? cardColor : const Color(0xFFF5F6F8),
-      surfaceContainerHighest:
-          isDark ? const Color(0xFF232838) : const Color(0xFFEDEFF3),
+      surfaceContainerHigh: isDark ? cardColor : const Color(0xFFF5F6F8),
+      surfaceContainerHighest: isDark
+          ? const Color(0xFF232838)
+          : const Color(0xFFEDEFF3),
       onSurfaceVariant: p.textSecondary,
       outline: p.border,
       outlineVariant: p.border,
@@ -164,70 +164,82 @@ class AppTheme {
       scrim: p.scrim,
     );
 
-    final baseText =
-        isDark ? Typography.whiteMountainView : Typography.blackMountainView;
+    final baseText = isDark
+        ? Typography.whiteMountainView
+        : Typography.blackMountainView;
     final textTheme = GoogleFonts.outfitTextTheme(baseText)
         .apply(bodyColor: p.textPrimary, displayColor: p.textPrimary)
         .copyWith(
           displayLarge: GoogleFonts.outfit(
-              fontSize: 40,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-              letterSpacing: -0.8,
-              color: p.textPrimary),
+            fontSize: 40,
+            fontWeight: FontWeight.w700,
+            height: 1.1,
+            letterSpacing: -0.8,
+            color: p.textPrimary,
+          ),
           displaySmall: GoogleFonts.outfit(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              height: 1.15,
-              letterSpacing: -0.5,
-              color: p.textPrimary),
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+            letterSpacing: -0.5,
+            color: p.textPrimary,
+          ),
           headlineMedium: GoogleFonts.outfit(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-              letterSpacing: -0.4,
-              color: p.textPrimary),
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+            letterSpacing: -0.4,
+            color: p.textPrimary,
+          ),
           headlineSmall: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              height: 1.25,
-              letterSpacing: -0.2,
-              color: p.textPrimary),
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            height: 1.25,
+            letterSpacing: -0.2,
+            color: p.textPrimary,
+          ),
           titleLarge: GoogleFonts.outfit(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-              color: p.textPrimary),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+            color: p.textPrimary,
+          ),
           titleMedium: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              height: 1.35,
-              color: p.textPrimary),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+            color: p.textPrimary,
+          ),
           bodyLarge: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-              color: p.textPrimary),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
+            color: p.textPrimary,
+          ),
           bodyMedium: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-              color: p.textSecondary),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
+            color: p.textSecondary,
+          ),
           bodySmall: GoogleFonts.outfit(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 1.45,
-              color: p.textMuted),
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            height: 1.45,
+            color: p.textMuted,
+          ),
           labelLarge: GoogleFonts.outfit(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.1,
-              color: p.textPrimary),
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
+            color: p.textPrimary,
+          ),
           labelSmall: GoogleFonts.outfit(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.6,
-              color: p.textMuted),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.6,
+            color: p.textMuted,
+          ),
         );
 
     return ThemeData(
@@ -255,8 +267,9 @@ class AppTheme {
           letterSpacing: -0.2,
           color: p.textPrimary,
         ),
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -271,8 +284,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMedium),
           ),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
+          textStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
       ),
 
@@ -284,8 +299,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMedium),
           ),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
+          textStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
       ),
 
@@ -298,8 +315,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMedium),
           ),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
+          textStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
       ),
 
@@ -307,16 +326,20 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: p.brand,
           minimumSize: const Size(0, 44),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 15),
+          textStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
         ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: p.surfaceSunken,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
           borderSide: BorderSide(color: p.border),
@@ -374,8 +397,9 @@ class AppTheme {
         showDragHandle: true,
         dragHandleColor: p.borderStrong,
         shape: const RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(radiusXLarge)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(radiusXLarge),
+          ),
         ),
       ),
 
@@ -389,8 +413,9 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 24,
-            color:
-                states.contains(WidgetState.selected) ? p.brand : p.textMuted,
+            color: states.contains(WidgetState.selected)
+                ? p.brand
+                : p.textMuted,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
@@ -399,8 +424,9 @@ class AppTheme {
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w600
                 : FontWeight.w500,
-            color:
-                states.contains(WidgetState.selected) ? p.brand : p.textMuted,
+            color: states.contains(WidgetState.selected)
+                ? p.brand
+                : p.textMuted,
           ),
         ),
       ),
@@ -411,10 +437,14 @@ class AppTheme {
         unselectedItemColor: p.textMuted,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle:
-            GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle:
-            GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.outfit(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.outfit(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
 
       drawerTheme: DrawerThemeData(
@@ -423,8 +453,9 @@ class AppTheme {
         elevation: 0,
         width: 312,
         shape: const RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.horizontal(right: Radius.circular(radiusXLarge)),
+          borderRadius: BorderRadius.horizontal(
+            right: Radius.circular(radiusXLarge),
+          ),
         ),
       ),
 
@@ -449,8 +480,10 @@ class AppTheme {
 
       snackBarTheme: SnackBarThemeData(
         backgroundColor: p.surfaceInverse,
-        contentTextStyle:
-            GoogleFonts.outfit(color: p.textInverse, fontSize: 14),
+        contentTextStyle: GoogleFonts.outfit(
+          color: p.textInverse,
+          fontSize: 14,
+        ),
         actionTextColor: p.brand,
         behavior: SnackBarBehavior.floating,
         insetPadding: const EdgeInsets.all(16),
@@ -467,16 +500,22 @@ class AppTheme {
         checkmarkColor: p.brand,
         side: BorderSide(color: p.border),
         labelStyle: GoogleFonts.outfit(
-            color: p.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
+          color: p.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: const StadiumBorder(),
       ),
 
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? Colors.white : p.surfaceBase),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) =>
+              s.contains(WidgetState.selected) ? Colors.white : p.surfaceBase,
+        ),
         trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected) ? p.brand : p.borderStrong),
+          (s) => s.contains(WidgetState.selected) ? p.brand : p.borderStrong,
+        ),
         trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
       ),
 
@@ -492,10 +531,14 @@ class AppTheme {
         indicatorColor: p.brand,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: p.border,
-        labelStyle:
-            GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w600),
-        unselectedLabelStyle:
-            GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w500),
+        labelStyle: GoogleFonts.outfit(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.outfit(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
       ),
 
       tooltipTheme: TooltipThemeData(

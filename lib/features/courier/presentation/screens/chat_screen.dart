@@ -8,16 +8,19 @@ import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 /// Streams chat messages for a specific order
 final chatMessagesProvider =
     StreamProvider.family<List<ChatMessageModel>, String>((ref, orderId) {
-  return ref
-      .watch(firestoreProvider)
-      .collection('couriers')
-      .doc(orderId)
-      .collection('messages')
-      .orderBy('timestamp', descending: false)
-      .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => ChatMessageModel.fromFirestore(d)).toList());
-});
+      return ref
+          .watch(firestoreProvider)
+          .collection('couriers')
+          .doc(orderId)
+          .collection('messages')
+          .orderBy('timestamp', descending: false)
+          .snapshots()
+          .map(
+            (snap) => snap.docs
+                .map((d) => ChatMessageModel.fromFirestore(d))
+                .toList(),
+          );
+    });
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.orderId});
@@ -66,18 +69,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .collection('couriers')
           .doc(widget.orderId)
           .collection('messages')
-          .add(ChatMessageModel(
-            id: '',
-            senderId: userId,
-            senderRole: user?.role.name ?? 'customer',
-            text: text,
-            timestamp: DateTime.now(),
-          ).toFirestore());
+          .add(
+            ChatMessageModel(
+              id: '',
+              senderId: userId,
+              senderRole: user?.role.name ?? 'customer',
+              text: text,
+              timestamp: DateTime.now(),
+            ).toFirestore(),
+          );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
     }
   }
@@ -94,10 +99,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Chat',
-                style: TextStyle(color: context.palette.textPrimary, fontSize: 16)),
-            Text('Order: ${widget.orderId.substring(0, 8)}...',
-                style: TextStyle(color: context.palette.textMuted, fontSize: 11)),
+            Text(
+              'Chat',
+              style: TextStyle(
+                color: context.palette.textPrimary,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              'Order: ${widget.orderId.substring(0, 8)}...',
+              style: TextStyle(color: context.palette.textMuted, fontSize: 11),
+            ),
           ],
         ),
       ),
@@ -112,23 +124,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.chat_bubble_outline,
-                            size: 48,
-                            color: context.palette.textMuted),
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 48,
+                          color: context.palette.textMuted,
+                        ),
                         const SizedBox(height: 12),
-                        Text('No messages yet',
-                            style: TextStyle(color: context.palette.textMuted)),
+                        Text(
+                          'No messages yet',
+                          style: TextStyle(color: context.palette.textMuted),
+                        ),
                         const SizedBox(height: 4),
-                        Text('Start the conversation!',
-                            style:
-                                TextStyle(color: context.palette.textMuted, fontSize: 12)),
+                        Text(
+                          'Start the conversation!',
+                          style: TextStyle(
+                            color: context.palette.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   );
                 }
 
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _scrollToBottom());
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _scrollToBottom(),
+                );
 
                 return ListView.builder(
                   controller: _scrollController,
@@ -139,12 +160,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 );
               },
               loading: () => Center(
-                child:
-                    CircularProgressIndicator(color: context.palette.brand),
+                child: CircularProgressIndicator(color: context.palette.brand),
               ),
               error: (e, _) => Center(
-                child: Text('Error: $e',
-                    style: TextStyle(color: context.palette.danger)),
+                child: Text(
+                  'Error: $e',
+                  style: TextStyle(color: context.palette.danger),
+                ),
               ),
             ),
           ),
@@ -154,9 +176,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: context.palette.surfaceRaised,
-              border: Border(
-                  top: BorderSide(
-                      color: context.palette.border)),
+              border: Border(top: BorderSide(color: context.palette.border)),
             ),
             child: SafeArea(
               child: Row(
@@ -171,11 +191,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       child: TextField(
                         controller: _controller,
                         style: TextStyle(
-                            color: context.palette.textPrimary, fontSize: 14),
+                          color: context.palette.textPrimary,
+                          fontSize: 14,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Type a message...',
                           hintStyle: TextStyle(
-                              color: context.palette.textMuted),
+                            color: context.palette.textMuted,
+                          ),
                           border: InputBorder.none,
                         ),
                         onSubmitted: (_) => _sendMessage(),
@@ -192,8 +215,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       color: context.palette.brand,
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.send,
-                          color: context.palette.surfaceBase, size: 20),
+                      icon: Icon(
+                        Icons.send,
+                        color: context.palette.surfaceBase,
+                        size: 20,
+                      ),
                       onPressed: _sendMessage,
                     ),
                   ),
@@ -214,8 +240,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isMine
@@ -234,8 +261,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
         child: Column(
-          crossAxisAlignment:
-              isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             if (!isMine)
               Text(
@@ -253,10 +281,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(height: 2),
             Text(
               time,
-              style: TextStyle(
-                color: context.palette.textMuted,
-                fontSize: 10,
-              ),
+              style: TextStyle(color: context.palette.textMuted, fontSize: 10),
             ),
           ],
         ),

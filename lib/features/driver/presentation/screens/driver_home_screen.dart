@@ -19,9 +19,10 @@ class DriverHomeScreen extends ConsumerWidget {
     final earnings = ref.watch(driverOrdersProvider).value ?? [];
 
     final todayEarnings = earnings
-        .where((o) =>
-            o.deliveredAt != null &&
-            o.deliveredAt!.day == DateTime.now().day)
+        .where(
+          (o) =>
+              o.deliveredAt != null && o.deliveredAt!.day == DateTime.now().day,
+        )
         .fold(0.0, (sum, o) => sum + o.driverEarnings);
 
     return Scaffold(
@@ -31,7 +32,12 @@ class DriverHomeScreen extends ConsumerWidget {
         child: Column(
           children: [
             // Top bar with greeting + online toggle
-            _buildTopBar(context, user?.fullName ?? 'Driver', routeState, routeCtrl),
+            _buildTopBar(
+              context,
+              user?.fullName ?? 'Driver',
+              routeState,
+              routeCtrl,
+            ),
 
             Expanded(
               child: SingleChildScrollView(
@@ -40,7 +46,12 @@ class DriverHomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Stats row
-                    _buildStatsRow(context, todayEarnings, earnings.length, user?.rating ?? 0),
+                    _buildStatsRow(
+                      context,
+                      todayEarnings,
+                      earnings.length,
+                      user?.rating ?? 0,
+                    ),
                     const SizedBox(height: 24),
 
                     // Route setup section
@@ -53,13 +64,19 @@ class DriverHomeScreen extends ConsumerWidget {
 
                       // En-route orders
                       if (routeState.enRouteOrders.isNotEmpty) ...[
-                        _buildSectionHeader(context, 
+                        _buildSectionHeader(
+                          context,
                           'Orders Along Your Route',
                           '${routeState.enRouteCount} available',
                         ),
                         const SizedBox(height: 12),
-                        ...routeState.enRouteOrders.map((enRoute) =>
-                            _buildEnRouteOrderCard(context, enRoute, routeCtrl)),
+                        ...routeState.enRouteOrders.map(
+                          (enRoute) => _buildEnRouteOrderCard(
+                            context,
+                            enRoute,
+                            routeCtrl,
+                          ),
+                        ),
                       ] else
                         _buildEmptyState(context),
                     ],
@@ -79,7 +96,11 @@ class DriverHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildTopBar(
-      BuildContext context, String name, DriverRouteState state, DriverRouteController ctrl) {
+    BuildContext context,
+    String name,
+    DriverRouteState state,
+    DriverRouteController ctrl,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -196,22 +217,48 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, double earnings, int deliveries, double rating) {
+  Widget _buildStatsRow(
+    BuildContext context,
+    double earnings,
+    int deliveries,
+    double rating,
+  ) {
     return Row(
       children: [
-        _statCard(context, 'Today', '₦${earnings.toStringAsFixed(0)}',
-            Icons.attach_money, const Color(0xFF4CAF50)),
+        _statCard(
+          context,
+          'Today',
+          '₦${earnings.toStringAsFixed(0)}',
+          Icons.attach_money,
+          const Color(0xFF4CAF50),
+        ),
         const SizedBox(width: 12),
-        _statCard(context, 'Deliveries', '$deliveries', Icons.local_shipping,
-            context.palette.brand),
+        _statCard(
+          context,
+          'Deliveries',
+          '$deliveries',
+          Icons.local_shipping,
+          context.palette.brand,
+        ),
         const SizedBox(width: 12),
-        _statCard(context, 'Rating', rating.toStringAsFixed(1), Icons.star,
-            const Color(0xFFFFAB00)),
+        _statCard(
+          context,
+          'Rating',
+          rating.toStringAsFixed(1),
+          Icons.star,
+          const Color(0xFFFFAB00),
+        ),
       ],
     );
   }
 
-  Widget _statCard(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _statCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -224,18 +271,32 @@ class DriverHomeScreen extends ConsumerWidget {
           children: [
             Icon(icon, color: color, size: 22),
             const SizedBox(height: 6),
-            Text(value,
-                style: TextStyle(
-                    color: color, fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(label,
-                style: TextStyle(color: context.palette.textSecondary, fontSize: 11)),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: context.palette.textSecondary,
+                fontSize: 11,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRouteSetup(BuildContext context, DriverRouteState state, DriverRouteController ctrl) {
+  Widget _buildRouteSetup(
+    BuildContext context,
+    DriverRouteState state,
+    DriverRouteController ctrl,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -248,8 +309,9 @@ class DriverHomeScreen extends ConsumerWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: context.palette.brand.withValues(alpha: 0.15)),
+        border: Border.all(
+          color: context.palette.brand.withValues(alpha: 0.15),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,8 +333,7 @@ class DriverHomeScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             'Tell us where you\'re heading and we\'ll find deliveries along your path',
-            style: TextStyle(
-                color: context.palette.textPrimary, fontSize: 13),
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
           ),
           const SizedBox(height: 16),
           AddressSearchField(
@@ -298,7 +359,9 @@ class DriverHomeScreen extends ConsumerWidget {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: context.palette.surfaceBase),
+                        strokeWidth: 2,
+                        color: context.palette.surfaceBase,
+                      ),
                     )
                   : const Icon(Icons.search, size: 18),
               label: Text(state.isLoading ? 'Searching...' : 'Find Deliveries'),
@@ -307,7 +370,8 @@ class DriverHomeScreen extends ConsumerWidget {
                 foregroundColor: context.palette.surfaceBase,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -316,14 +380,19 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveRouteBanner(BuildContext context, 
-      DriverRouteState state, DriverRouteController ctrl) {
+  Widget _buildActiveRouteBanner(
+    BuildContext context,
+    DriverRouteState state,
+    DriverRouteController ctrl,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -333,14 +402,20 @@ class DriverHomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Active Route',
-                    style: TextStyle(
-                        color: Color(0xFF4CAF50),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14)),
+                const Text(
+                  'Active Route',
+                  style: TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
                 Text(
                   '${state.originAddress} → ${state.destinationAddress}',
-                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12),
+                  style: TextStyle(
+                    color: context.palette.textSecondary,
+                    fontSize: 12,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -348,7 +423,11 @@ class DriverHomeScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.close, color: context.palette.textSecondary, size: 20),
+            icon: Icon(
+              Icons.close,
+              color: context.palette.textSecondary,
+              size: 20,
+            ),
             onPressed: ctrl.clearRoute,
           ),
         ],
@@ -357,7 +436,10 @@ class DriverHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildEnRouteOrderCard(
-      BuildContext context, EnRouteOrder enRoute, DriverRouteController ctrl) {
+    BuildContext context,
+    EnRouteOrder enRoute,
+    DriverRouteController ctrl,
+  ) {
     final order = enRoute.order;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -365,9 +447,7 @@ class DriverHomeScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.palette.brand.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: context.palette.brand.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,8 +456,10 @@ class DriverHomeScreen extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: context.palette.brand.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -393,8 +475,7 @@ class DriverHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -402,35 +483,54 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: Text(
                   '+${enRoute.detourKm.toStringAsFixed(1)}km detour',
                   style: const TextStyle(
-                      color: Color(0xFF4CAF50), fontSize: 11),
+                    color: Color(0xFF4CAF50),
+                    fontSize: 11,
+                  ),
                 ),
               ),
               const Spacer(),
               Text(
                 '${enRoute.distanceFromRoute.toStringAsFixed(1)}km away',
-                style: TextStyle(color: context.palette.textSecondary, fontSize: 11),
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 11,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
           // Route
-          _orderRouteRow(context, Icons.location_on, order.pickupAddress,
-              context.palette.brand),
+          _orderRouteRow(
+            context,
+            Icons.location_on,
+            order.pickupAddress,
+            context.palette.brand,
+          ),
           const SizedBox(height: 6),
-          _orderRouteRow(context, 
-              Icons.flag, order.dropoffAddress, context.palette.brand),
+          _orderRouteRow(
+            context,
+            Icons.flag,
+            order.dropoffAddress,
+            context.palette.brand,
+          ),
           const SizedBox(height: 6),
 
           // Package info
           Row(
             children: [
-              Icon(Icons.inventory_2,
-                  color: context.palette.textSecondary, size: 14),
+              Icon(
+                Icons.inventory_2,
+                color: context.palette.textSecondary,
+                size: 14,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${order.packageCategory.name} • ${order.packageWeight}kg',
-                style: TextStyle(color: context.palette.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -446,7 +546,8 @@ class DriverHomeScreen extends ConsumerWidget {
                     foregroundColor: context.palette.textSecondary,
                     side: BorderSide(color: context.palette.textMuted),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text('Decline'),
@@ -461,11 +562,14 @@ class DriverHomeScreen extends ConsumerWidget {
                     backgroundColor: context.palette.brand,
                     foregroundColor: context.palette.surfaceBase,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text('Accept Delivery',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Accept Delivery',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],
@@ -475,16 +579,23 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _orderRouteRow(BuildContext context, IconData icon, String address, Color color) {
+  Widget _orderRouteRow(
+    BuildContext context,
+    IconData icon,
+    String address,
+    Color color,
+  ) {
     return Row(
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(address,
-              style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
+          child: Text(
+            address,
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
@@ -500,13 +611,23 @@ class DriverHomeScreen extends ConsumerWidget {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.local_shipping_outlined,
-                size: 48, color: context.palette.textMuted),
+            Icon(
+              Icons.local_shipping_outlined,
+              size: 48,
+              color: context.palette.textMuted,
+            ),
             const SizedBox(height: 12),
-            Text('No deliveries along your route yet',
-                style: TextStyle(color: context.palette.textSecondary, fontSize: 14)),
-            Text('We\'ll notify you when orders become available',
-                style: TextStyle(color: context.palette.textMuted, fontSize: 12)),
+            Text(
+              'No deliveries along your route yet',
+              style: TextStyle(
+                color: context.palette.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'We\'ll notify you when orders become available',
+              style: TextStyle(color: context.palette.textMuted, fontSize: 12),
+            ),
           ],
         ),
       ),
@@ -516,11 +637,14 @@ class DriverHomeScreen extends ConsumerWidget {
   Widget _buildSectionHeader(BuildContext context, String title, String badge) {
     return Row(
       children: [
-        Text(title,
-            style: TextStyle(
-                color: context.palette.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600)),
+        Text(
+          title,
+          style: TextStyle(
+            color: context.palette.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -528,8 +652,10 @@ class DriverHomeScreen extends ConsumerWidget {
             color: context.palette.brand.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(badge,
-              style: TextStyle(color: context.palette.brand, fontSize: 11)),
+          child: Text(
+            badge,
+            style: TextStyle(color: context.palette.brand, fontSize: 11),
+          ),
         ),
       ],
     );
@@ -540,7 +666,8 @@ class DriverHomeScreen extends ConsumerWidget {
 
     return pendingAsync.when(
       loading: () => Center(
-          child: CircularProgressIndicator(color: context.palette.brand)),
+        child: CircularProgressIndicator(color: context.palette.brand),
+      ),
       error: (e, _) =>
           Text('Error: $e', style: const TextStyle(color: Colors.red)),
       data: (orders) {
@@ -548,45 +675,61 @@ class DriverHomeScreen extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader(context, 'All Pending Orders', '${orders.length}'),
+            _buildSectionHeader(
+              context,
+              'All Pending Orders',
+              '${orders.length}',
+            ),
             const SizedBox(height: 12),
-            ...orders.take(5).map((order) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: context.palette.surfaceRaised,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.palette.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(order.pickupAddress,
+            ...orders
+                .take(5)
+                .map(
+                  (order) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: context.palette.surfaceRaised,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.palette.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                order.pickupAddress,
                                 style: TextStyle(
-                                    color: context.palette.textPrimary, fontSize: 13),
+                                  color: context.palette.textPrimary,
+                                  fontSize: 13,
+                                ),
                                 maxLines: 1,
-                                overflow: TextOverflow.ellipsis),
-                            Text(
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
                                 '→ ${order.dropoffAddress}',
                                 style: TextStyle(
-                                    color: context.palette.textSecondary, fontSize: 12),
+                                  color: context.palette.textSecondary,
+                                  fontSize: 12,
+                                ),
                                 maxLines: 1,
-                                overflow: TextOverflow.ellipsis),
-                          ],
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        '₦${order.driverEarnings.toStringAsFixed(0)}',
-                        style: TextStyle(
+                        Text(
+                          '₦${order.driverEarnings.toStringAsFixed(0)}',
+                          style: TextStyle(
                             color: context.palette.brand,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ),
           ],
         );
       },

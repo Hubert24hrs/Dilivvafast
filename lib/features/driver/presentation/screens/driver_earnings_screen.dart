@@ -16,8 +16,7 @@ class DriverEarningsScreen extends ConsumerStatefulWidget {
       _DriverEarningsScreenState();
 }
 
-class _DriverEarningsScreenState
-    extends ConsumerState<DriverEarningsScreen> {
+class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
   int _selectedPeriod = 0; // 0=week, 1=month, 2=all
   final _currencyFormat = NumberFormat.currency(
     locale: 'en_NG',
@@ -39,22 +38,33 @@ class _DriverEarningsScreenState
           icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Earnings',
-            style: TextStyle(color: context.palette.textPrimary, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Earnings',
+          style: TextStyle(
+            color: context.palette.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.account_balance_wallet_outlined,
-                color: context.palette.brand),
+            icon: Icon(
+              Icons.account_balance_wallet_outlined,
+              color: context.palette.brand,
+            ),
             onPressed: () => context.push('/wallet/top-up'),
           ),
         ],
       ),
       body: ordersAsync.when(
         loading: () => Center(
-            child: CircularProgressIndicator(color: context.palette.brand)),
+          child: CircularProgressIndicator(color: context.palette.brand),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: TextStyle(color: context.palette.danger))),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
+        ),
         data: (orders) {
           final walletBalance = walletAsync.value ?? 0.0;
           final deliveredOrders = orders
@@ -67,25 +77,32 @@ class _DriverEarningsScreenState
     );
   }
 
-  Widget _buildBody(List<CourierOrderModel> deliveredOrders, double walletBalance) {
+  Widget _buildBody(
+    List<CourierOrderModel> deliveredOrders,
+    double walletBalance,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final weekStart = today.subtract(Duration(days: now.weekday - 1));
 
     // Today's earnings
-    final todayOrders = deliveredOrders.where((o) =>
-        o.deliveredAt != null &&
-        o.deliveredAt!.isAfter(today));
-    final todayEarnings =
-        todayOrders.fold(0.0, (sum, o) => sum + o.driverEarnings);
+    final todayOrders = deliveredOrders.where(
+      (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(today),
+    );
+    final todayEarnings = todayOrders.fold(
+      0.0,
+      (sum, o) => sum + o.driverEarnings,
+    );
     final todayTrips = todayOrders.length;
 
     // Weekly earnings
-    final weekOrders = deliveredOrders.where((o) =>
-        o.deliveredAt != null &&
-        o.deliveredAt!.isAfter(weekStart));
-    final weeklyEarnings =
-        weekOrders.fold(0.0, (sum, o) => sum + o.driverEarnings);
+    final weekOrders = deliveredOrders.where(
+      (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(weekStart),
+    );
+    final weeklyEarnings = weekOrders.fold(
+      0.0,
+      (sum, o) => sum + o.driverEarnings,
+    );
     final weeklyTrips = weekOrders.length;
 
     // Build per-day data for chart
@@ -93,17 +110,22 @@ class _DriverEarningsScreenState
       final day = weekStart.add(Duration(days: dayIndex));
       final nextDay = day.add(const Duration(days: 1));
       return deliveredOrders
-          .where((o) =>
-              o.deliveredAt != null &&
-              o.deliveredAt!.isAfter(day) &&
-              o.deliveredAt!.isBefore(nextDay))
+          .where(
+            (o) =>
+                o.deliveredAt != null &&
+                o.deliveredAt!.isAfter(day) &&
+                o.deliveredAt!.isBefore(nextDay),
+          )
           .fold(0.0, (sum, o) => sum + o.driverEarnings);
     });
 
     // Recent trips (last 10)
     final recentTrips = deliveredOrders.toList()
-      ..sort((a, b) => (b.deliveredAt ?? DateTime(2000))
-          .compareTo(a.deliveredAt ?? DateTime(2000)));
+      ..sort(
+        (a, b) => (b.deliveredAt ?? DateTime(2000)).compareTo(
+          a.deliveredAt ?? DateTime(2000),
+        ),
+      );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -111,10 +133,10 @@ class _DriverEarningsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Wallet balance card
-          _buildWalletCard(walletBalance, todayEarnings)
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.1, end: 0),
+          _buildWalletCard(
+            walletBalance,
+            todayEarnings,
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
 
           const SizedBox(height: 20),
 
@@ -139,9 +161,7 @@ class _DriverEarningsScreenState
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
@@ -151,18 +171,21 @@ class _DriverEarningsScreenState
           const SizedBox(height: 16),
 
           // Bar chart
-          _buildEarningsChart(weeklyData)
-              .animate()
-              .fadeIn(delay: 400.ms, duration: 400.ms),
+          _buildEarningsChart(
+            weeklyData,
+          ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
           const SizedBox(height: 24),
 
           // Recent trips
-          Text('Recent Trips',
-              style: TextStyle(
-                  color: context.palette.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            'Recent Trips',
+            style: TextStyle(
+              color: context.palette.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 12),
 
           if (recentTrips.isEmpty)
@@ -173,8 +196,10 @@ class _DriverEarningsScreenState
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
-                child: Text('No completed deliveries yet',
-                    style: TextStyle(color: context.palette.textSecondary)),
+                child: Text(
+                  'No completed deliveries yet',
+                  style: TextStyle(color: context.palette.textSecondary),
+                ),
               ),
             )
           else
@@ -182,8 +207,9 @@ class _DriverEarningsScreenState
               return _buildTripItem(recentTrips[index])
                   .animate()
                   .fadeIn(
-                      delay: Duration(milliseconds: 500 + (index * 100)),
-                      duration: 300.ms)
+                    delay: Duration(milliseconds: 500 + (index * 100)),
+                    duration: 300.ms,
+                  )
                   .slideX(begin: 0.05, end: 0);
             }),
         ],
@@ -213,23 +239,31 @@ class _DriverEarningsScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Wallet Balance',
-                  style: TextStyle(
-                      color: context.palette.textSecondary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
+              Text(
+                'Wallet Balance',
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: context.palette.textMuted,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('Withdraw',
-                    style: TextStyle(
-                        color: context.palette.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Withdraw',
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -246,11 +280,18 @@ class _DriverEarningsScreenState
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.trending_up, color: context.palette.textSecondary, size: 16),
+              Icon(
+                Icons.trending_up,
+                color: context.palette.textSecondary,
+                size: 16,
+              ),
               const SizedBox(width: 4),
               Text(
                 '+${_currencyFormat.format(todayEarnings)} today',
-                style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -260,7 +301,11 @@ class _DriverEarningsScreenState
   }
 
   Widget _buildStatCard(
-      String label, String value, String subtitle, IconData icon) {
+    String label,
+    String value,
+    String subtitle,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -275,19 +320,29 @@ class _DriverEarningsScreenState
             children: [
               Icon(icon, color: context.palette.brand, size: 18),
               const SizedBox(width: 8),
-              Text(label,
-                  style: TextStyle(color: context.palette.textSecondary, fontSize: 12)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(value,
-              style: TextStyle(
-                  color: context.palette.onBrand,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: context.palette.onBrand,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle,
-              style: TextStyle(color: context.palette.textMuted, fontSize: 11)),
+          Text(
+            subtitle,
+            style: TextStyle(color: context.palette.textMuted, fontSize: 11),
+          ),
         ],
       ),
     );
@@ -306,7 +361,9 @@ class _DriverEarningsScreenState
             selectedColor: context.palette.brand,
             backgroundColor: context.palette.surfaceRaised,
             labelStyle: TextStyle(
-              color: isSelected ? context.palette.onBrand : context.palette.textSecondary,
+              color: isSelected
+                  ? context.palette.onBrand
+                  : context.palette.textSecondary,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -350,9 +407,10 @@ class _DriverEarningsScreenState
                 return BarTooltipItem(
                   _currencyFormat.format(rod.toY),
                   TextStyle(
-                      color: context.palette.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12),
+                    color: context.palette.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 );
               },
             ),
@@ -367,9 +425,13 @@ class _DriverEarningsScreenState
                   if (idx >= 0 && idx < weekDays.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text(weekDays[idx],
-                          style: TextStyle(
-                              color: context.palette.textMuted, fontSize: 10)),
+                      child: Text(
+                        weekDays[idx],
+                        style: TextStyle(
+                          color: context.palette.textMuted,
+                          fontSize: 10,
+                        ),
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -377,20 +439,20 @@ class _DriverEarningsScreenState
               ),
             ),
             leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
             rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: context.palette.border,
-                strokeWidth: 1,
-              );
+              return FlLine(color: context.palette.border, strokeWidth: 1);
             },
           ),
           borderData: FlBorderData(show: false),
@@ -406,7 +468,8 @@ class _DriverEarningsScreenState
                       : context.palette.brand.withValues(alpha: 0.4),
                   width: 24,
                   borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(6)),
+                    top: Radius.circular(6),
+                  ),
                 ),
               ],
             );
@@ -438,25 +501,35 @@ class _DriverEarningsScreenState
               color: context.palette.brand.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.local_shipping_outlined,
-                color: context.palette.brand, size: 20),
+            child: Icon(
+              Icons.local_shipping_outlined,
+              color: context.palette.brand,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(route,
-                    style: TextStyle(
-                        color: context.palette.onBrand,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  route,
+                  style: TextStyle(
+                    color: context.palette.onBrand,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
-                Text(timeFormat.format(time),
-                    style:
-                        TextStyle(color: context.palette.textMuted, fontSize: 11)),
+                Text(
+                  timeFormat.format(time),
+                  style: TextStyle(
+                    color: context.palette.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),

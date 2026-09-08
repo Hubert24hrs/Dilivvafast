@@ -79,8 +79,10 @@ class _InvestorJoinScreenState extends ConsumerState<InvestorJoinScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Fund a bike, earn a share',
-                      style: context.text.headlineMedium),
+                  Text(
+                    'Fund a bike, earn a share',
+                    style: context.text.headlineMedium,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'You fund a delivery bike. A vetted rider runs it under a '
@@ -103,8 +105,10 @@ class _InvestorJoinScreenState extends ConsumerState<InvestorJoinScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
                       labelText: 'Bank name',
-                      prefixIcon:
-                          Icon(Icons.account_balance_outlined, size: 20),
+                      prefixIcon: Icon(
+                        Icons.account_balance_outlined,
+                        size: 20,
+                      ),
                     ),
                     validator: (v) => Validators.required(v, 'Bank name'),
                   ),
@@ -202,29 +206,29 @@ class _InvestorJoinScreenState extends ConsumerState<InvestorJoinScreen> {
           .collection(FirestoreConstants.investors)
           .doc(user.uid)
           .set({
-        'userId': user.uid,
-        'totalInvested': 0.0,
-        'totalEarned': 0.0,
-        'activeBikes': 0,
-        'pendingWithdrawal': 0.0,
-        'payoutBankName': _bankNameController.text.trim(),
-        'payoutAccountNumber': _accountNumberController.text.trim(),
-        'payoutAccountName': _accountNameController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+            'userId': user.uid,
+            'totalInvested': 0.0,
+            'totalEarned': 0.0,
+            'activeBikes': 0,
+            'pendingWithdrawal': 0.0,
+            'payoutBankName': _bankNameController.text.trim(),
+            'payoutAccountNumber': _accountNumberController.text.trim(),
+            'payoutAccountName': _accountNameController.text.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
 
       // Requesting access only ever writes `pending`; approval is an admin
       // action, enforced by the Firestore rules.
-      final update = await ref
-          .read(userRepositoryProvider)
-          .updateUser(user.uid, {'investorStatus': ModeAccess.pending.name});
+      final update = await ref.read(userRepositoryProvider).updateUser(
+        user.uid,
+        {'investorStatus': ModeAccess.pending.name},
+      );
 
       if (!mounted) return;
 
       update.fold(
-        (failure) => messenger.showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        ),
+        (failure) =>
+            messenger.showSnackBar(SnackBar(content: Text(failure.message))),
         (_) => setState(() {}),
       );
     } catch (e) {
@@ -246,12 +250,12 @@ class _HowItWorks extends StatelessWidget {
     (
       Icons.two_wheeler_outlined,
       'A rider takes it on',
-      'We match it to a vetted rider on a hire-purchase agreement.'
+      'We match it to a vetted rider on a hire-purchase agreement.',
     ),
     (
       Icons.trending_up_rounded,
       'Earn weekly',
-      'Your share is credited as the bike completes deliveries.'
+      'Your share is credited as the bike completes deliveries.',
     ),
   ];
 
@@ -278,17 +282,21 @@ class _HowItWorks extends StatelessWidget {
                     color: palette.investorAccent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   ),
-                  child: Icon(_steps[i].$1,
-                      size: 18, color: palette.investorAccent),
+                  child: Icon(
+                    _steps[i].$1,
+                    size: 18,
+                    color: palette.investorAccent,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_steps[i].$2,
-                          style: context.text.titleMedium
-                              ?.copyWith(fontSize: 15)),
+                      Text(
+                        _steps[i].$2,
+                        style: context.text.titleMedium?.copyWith(fontSize: 15),
+                      ),
                       const SizedBox(height: 2),
                       Text(_steps[i].$3, style: context.text.bodySmall),
                     ],
@@ -325,8 +333,9 @@ class _RiskNotice extends StatelessWidget {
               'Investing carries risk. Bikes can be damaged, stolen or idle, '
               'and earnings vary with demand. Never invest money you cannot '
               'afford to lose.',
-              style: context.text.bodySmall
-                  ?.copyWith(color: palette.textSecondary),
+              style: context.text.bodySmall?.copyWith(
+                color: palette.textSecondary,
+              ),
             ),
           ),
         ],
@@ -354,13 +363,18 @@ class _PendingState extends StatelessWidget {
                 color: palette.warningSubtle,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.hourglass_top_rounded,
-                  size: 34, color: palette.warning),
+              child: Icon(
+                Icons.hourglass_top_rounded,
+                size: 34,
+                color: palette.warning,
+              ),
             ),
             const SizedBox(height: 20),
-            Text('Application received',
-                style: context.text.headlineSmall,
-                textAlign: TextAlign.center),
+            Text(
+              'Application received',
+              style: context.text.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(
               'We are reviewing your details. Once approved, Investor will '

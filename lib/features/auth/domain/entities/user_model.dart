@@ -120,12 +120,12 @@ extension UserModelX on UserModel {
   /// Customer is granted to everyone at registration. Admin follows the
   /// backend-controlled [role] and is never selectable from the client.
   ModeAccess accessFor(AppMode mode) => switch (mode) {
-        AppMode.customer => ModeAccess.approved,
-        AppMode.driver => driverStatus,
-        AppMode.investor => investorStatus,
-        AppMode.admin =>
-          role == UserRole.admin ? ModeAccess.approved : ModeAccess.none,
-      };
+    AppMode.customer => ModeAccess.approved,
+    AppMode.driver => driverStatus,
+    AppMode.investor => investorStatus,
+    AppMode.admin =>
+      role == UserRole.admin ? ModeAccess.approved : ModeAccess.none,
+  };
 
   /// Whether [mode] can be entered right now.
   bool canEnter(AppMode mode) => accessFor(mode).isApproved;

@@ -7,7 +7,9 @@ class EmailService {
     required String subject,
     required String body,
   }) async {
-    debugPrint('EmailService.sendEmail called (stub): to=$to, subject=$subject');
+    debugPrint(
+      'EmailService.sendEmail called (stub): to=$to, subject=$subject',
+    );
     return true;
   }
 }

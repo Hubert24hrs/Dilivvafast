@@ -66,7 +66,9 @@ class ModeController extends AsyncNotifier<void> {
   Future<ModeSwitchResult> requestMode(AppMode mode) async {
     final user = ref.read(currentUserProvider).value;
     if (user == null) {
-      return const ModeSwitchFailed('You need to be signed in to switch modes.');
+      return const ModeSwitchFailed(
+        'You need to be signed in to switch modes.',
+      );
     }
 
     if (mode == AppMode.admin) {
@@ -81,19 +83,19 @@ class ModeController extends AsyncNotifier<void> {
       ModeAccess.approved => _activate(user, mode),
       ModeAccess.pending => ModeAwaitingReview(mode),
       ModeAccess.none => ModeEnrollmentRequired(
-          mode,
-          _enrollmentRoutes[mode] ?? mode.homeRoute,
-        ),
+        mode,
+        _enrollmentRoutes[mode] ?? mode.homeRoute,
+      ),
       ModeAccess.rejected => ModeUnavailable(
-          mode,
-          'Your ${mode.label.toLowerCase()} application was declined. '
-              'Contact support if you think this is a mistake.',
-        ),
+        mode,
+        'Your ${mode.label.toLowerCase()} application was declined. '
+        'Contact support if you think this is a mistake.',
+      ),
       ModeAccess.suspended => ModeUnavailable(
-          mode,
-          'Your ${mode.label.toLowerCase()} access is suspended. '
-              'Contact support to restore it.',
-        ),
+        mode,
+        'Your ${mode.label.toLowerCase()} access is suspended. '
+        'Contact support to restore it.',
+      ),
     };
   }
 
@@ -103,9 +105,9 @@ class ModeController extends AsyncNotifier<void> {
     }
 
     state = const AsyncLoading();
-    final result = await ref
-        .read(userRepositoryProvider)
-        .updateUser(user.uid, {'activeMode': mode.name});
+    final result = await ref.read(userRepositoryProvider).updateUser(user.uid, {
+      'activeMode': mode.name,
+    });
 
     return result.fold(
       (failure) {
@@ -120,8 +122,9 @@ class ModeController extends AsyncNotifier<void> {
   }
 }
 
-final modeControllerProvider =
-    AsyncNotifierProvider<ModeController, void>(ModeController.new);
+final modeControllerProvider = AsyncNotifierProvider<ModeController, void>(
+  ModeController.new,
+);
 
 /// The surface the signed-in user is currently looking at.
 ///

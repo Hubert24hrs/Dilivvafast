@@ -39,8 +39,11 @@ void main() {
     test('toFirestore writes the wire value for every status', () {
       for (final status in OrderStatus.values) {
         final map = buildOrder(status: status).toFirestore();
-        expect(map['status'], status.wireValue,
-            reason: '$status must serialise to its @JsonValue');
+        expect(
+          map['status'],
+          status.wireValue,
+          reason: '$status must serialise to its @JsonValue',
+        );
       }
     });
 
@@ -84,20 +87,25 @@ void main() {
         expect(
           order.canTransitionTo(target),
           allowed.contains(target),
-          reason: '$from -> $target should be '
+          reason:
+              '$from -> $target should be '
               '${allowed.contains(target) ? "allowed" : "rejected"}',
         );
       }
     }
 
     test('pending may only be accepted or cancelled', () {
-      expectAllowed(OrderStatus.pending,
-          [OrderStatus.accepted, OrderStatus.cancelled]);
+      expectAllowed(OrderStatus.pending, [
+        OrderStatus.accepted,
+        OrderStatus.cancelled,
+      ]);
     });
 
     test('accepted may only be picked up or cancelled', () {
-      expectAllowed(OrderStatus.accepted,
-          [OrderStatus.pickedUp, OrderStatus.cancelled]);
+      expectAllowed(OrderStatus.accepted, [
+        OrderStatus.pickedUp,
+        OrderStatus.cancelled,
+      ]);
     });
 
     test('picked up may only move to in transit', () {
@@ -105,8 +113,10 @@ void main() {
     });
 
     test('in transit may only be delivered or failed', () {
-      expectAllowed(OrderStatus.inTransit,
-          [OrderStatus.delivered, OrderStatus.failed]);
+      expectAllowed(OrderStatus.inTransit, [
+        OrderStatus.delivered,
+        OrderStatus.failed,
+      ]);
     });
 
     test('terminal states admit no further transition', () {
@@ -122,13 +132,15 @@ void main() {
     test('a customer cannot short-circuit straight to delivered', () {
       // The fraud case the rules also block server-side.
       expect(
-        buildOrder(status: OrderStatus.pending)
-            .canTransitionTo(OrderStatus.delivered),
+        buildOrder(
+          status: OrderStatus.pending,
+        ).canTransitionTo(OrderStatus.delivered),
         isFalse,
       );
       expect(
-        buildOrder(status: OrderStatus.accepted)
-            .canTransitionTo(OrderStatus.delivered),
+        buildOrder(
+          status: OrderStatus.accepted,
+        ).canTransitionTo(OrderStatus.delivered),
         isFalse,
       );
     });

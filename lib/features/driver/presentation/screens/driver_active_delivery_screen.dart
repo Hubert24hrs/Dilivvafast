@@ -23,20 +23,29 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
           icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Active Delivery',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Active Delivery',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: orderAsync.when(
         loading: () => Center(
-            child: CircularProgressIndicator(color: context.palette.brand)),
+          child: CircularProgressIndicator(color: context.palette.brand),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: TextStyle(color: context.palette.danger))),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
+        ),
         data: (order) {
           if (order == null) {
             return Center(
-                child: Text('Order not found',
-                    style: TextStyle(color: context.palette.textSecondary)));
+              child: Text(
+                'Order not found',
+                style: TextStyle(color: context.palette.textSecondary),
+              ),
+            );
           }
           return _buildBody(context, ref, order);
         },
@@ -45,7 +54,10 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(
-      BuildContext context, WidgetRef ref, CourierOrderModel order) {
+    BuildContext context,
+    WidgetRef ref,
+    CourierOrderModel order,
+  ) {
     return Column(
       children: [
         // Map placeholder
@@ -62,18 +74,25 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.navigation,
-                      color: context.palette.brand, size: 48),
+                  Icon(
+                    Icons.navigation,
+                    color: context.palette.brand,
+                    size: 48,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
-                      style: TextStyle(color: context.palette.textSecondary)),
+                  Text(
+                    'Navigate to ${order.status == OrderStatus.accepted ? 'pickup' : 'dropoff'}',
+                    style: TextStyle(color: context.palette.textSecondary),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     order.status == OrderStatus.accepted
                         ? order.pickupAddress
                         : order.dropoffAddress,
                     style: TextStyle(
-                        color: context.palette.onBrand, fontSize: 14),
+                      color: context.palette.onBrand,
+                      fontSize: 14,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -87,13 +106,13 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: context.palette.surfaceRaised,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4)),
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
             ],
           ),
           child: Column(
@@ -117,14 +136,21 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(order.recipientName,
-                            style: TextStyle(
-                                color: context.palette.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600)),
-                        Text(order.recipientPhone,
-                            style: TextStyle(
-                                color: context.palette.textSecondary, fontSize: 13)),
+                        Text(
+                          order.recipientName,
+                          style: TextStyle(
+                            color: context.palette.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          order.recipientPhone,
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -136,8 +162,11 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                       shape: BoxShape.circle,
                       color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.phone,
-                        color: Color(0xFF4CAF50), size: 20),
+                    child: const Icon(
+                      Icons.phone,
+                      color: Color(0xFF4CAF50),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Container(
@@ -147,8 +176,11 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                       shape: BoxShape.circle,
                       color: context.palette.brand.withValues(alpha: 0.15),
                     ),
-                    child: Icon(Icons.chat_bubble,
-                        color: context.palette.brand, size: 20),
+                    child: Icon(
+                      Icons.chat_bubble,
+                      color: context.palette.brand,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -163,18 +195,28 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.inventory_2,
-                        color: context.palette.brand, size: 18),
+                    Icon(
+                      Icons.inventory_2,
+                      color: context.palette.brand,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(order.packageDescription,
-                          style: TextStyle(
-                              color: context.palette.onBrand, fontSize: 13)),
+                      child: Text(
+                        order.packageDescription,
+                        style: TextStyle(
+                          color: context.palette.onBrand,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
-                    Text('₦${order.driverEarnings.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            color: Color(0xFF4CAF50),
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      '₦${order.driverEarnings.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -187,15 +229,21 @@ class DriverActiveDeliveryScreen extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () => _updateStatus(ref, order),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _getStatusButtonColor(context, order.status),
+                    backgroundColor: _getStatusButtonColor(
+                      context,
+                      order.status,
+                    ),
                     foregroundColor: context.palette.textPrimary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: Text(
                     _getStatusButtonLabel(order.status),
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

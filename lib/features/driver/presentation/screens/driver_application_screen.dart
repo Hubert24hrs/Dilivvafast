@@ -95,8 +95,10 @@ class _DriverApplicationScreenState
             }
           },
         ),
-        title: Text('Become a Rider',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Become a Rider',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
@@ -108,9 +110,10 @@ class _DriverApplicationScreenState
             child: Text(
               'Step ${_step + 1}/3',
               style: TextStyle(
-                  color: context.palette.brand,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600),
+                color: context.palette.brand,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -149,8 +152,8 @@ class _DriverApplicationScreenState
                   child: _step == 0
                       ? _buildPersonalStep()
                       : _step == 1
-                          ? _buildVehicleStep()
-                          : _buildBankStep(),
+                      ? _buildVehicleStep()
+                      : _buildBankStep(),
                 ),
               ),
             ),
@@ -203,16 +206,27 @@ class _DriverApplicationScreenState
       key: const ValueKey('personal'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(Icons.person, 'Personal Information',
-            'Tell us about yourself'),
+        _buildHeader(
+          Icons.person,
+          'Personal Information',
+          'Tell us about yourself',
+        ),
         const SizedBox(height: 24),
         _buildField(_nameController, 'Full Name', Icons.person_outline),
         const SizedBox(height: 14),
-        _buildField(_emailController, 'Email', Icons.email_outlined,
-            keyboard: TextInputType.emailAddress),
+        _buildField(
+          _emailController,
+          'Email',
+          Icons.email_outlined,
+          keyboard: TextInputType.emailAddress,
+        ),
         const SizedBox(height: 14),
-        _buildField(_phoneController, 'Phone Number', Icons.phone_outlined,
-            keyboard: TextInputType.phone),
+        _buildField(
+          _phoneController,
+          'Phone Number',
+          Icons.phone_outlined,
+          keyboard: TextInputType.phone,
+        ),
       ],
     );
   }
@@ -222,8 +236,11 @@ class _DriverApplicationScreenState
       key: const ValueKey('vehicle'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(Icons.two_wheeler, 'Vehicle Details',
-            'Select your vehicle type and enter plate number'),
+        _buildHeader(
+          Icons.two_wheeler,
+          'Vehicle Details',
+          'Select your vehicle type and enter plate number',
+        ),
         const SizedBox(height: 24),
 
         // Vehicle type selector
@@ -252,20 +269,24 @@ class _DriverApplicationScreenState
                 ),
                 child: Column(
                   children: [
-                    Icon(v.$2,
+                    Icon(
+                      v.$2,
+                      color: isSelected
+                          ? const Color(0xFF4CAF50)
+                          : context.palette.textSecondary,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      v.$3,
+                      style: TextStyle(
                         color: isSelected
                             ? const Color(0xFF4CAF50)
                             : context.palette.textSecondary,
-                        size: 32),
-                    const SizedBox(height: 8),
-                    Text(v.$3,
-                        style: TextStyle(
-                          color: isSelected
-                              ? const Color(0xFF4CAF50)
-                              : context.palette.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        )),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -273,8 +294,12 @@ class _DriverApplicationScreenState
           }).toList(),
         ),
         const SizedBox(height: 20),
-        _buildField(_plateController, 'Plate Number', Icons.confirmation_num,
-            capitalize: TextCapitalization.characters),
+        _buildField(
+          _plateController,
+          'Plate Number',
+          Icons.confirmation_num,
+          capitalize: TextCapitalization.characters,
+        ),
 
         const SizedBox(height: 20),
         // Documents upload section
@@ -288,11 +313,14 @@ class _DriverApplicationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Required Documents',
-                  style: TextStyle(
-                      color: context.palette.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                'Required Documents',
+                style: TextStyle(
+                  color: context.palette.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 12),
               _buildDocRow('Driver\'s License', Icons.credit_card),
               _buildDocRow('Vehicle Photo', Icons.photo_camera),
@@ -309,18 +337,30 @@ class _DriverApplicationScreenState
       key: const ValueKey('bank'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(Icons.account_balance, 'Bank Details',
-            'Where should we send your earnings?'),
+        _buildHeader(
+          Icons.account_balance,
+          'Bank Details',
+          'Where should we send your earnings?',
+        ),
         const SizedBox(height: 24),
         _buildField(
-            _bankNameController, 'Bank Name', Icons.account_balance_outlined),
+          _bankNameController,
+          'Bank Name',
+          Icons.account_balance_outlined,
+        ),
         const SizedBox(height: 14),
         _buildField(
-            _accountNumberController, 'Account Number', Icons.numbers,
-            keyboard: TextInputType.number),
+          _accountNumberController,
+          'Account Number',
+          Icons.numbers,
+          keyboard: TextInputType.number,
+        ),
         const SizedBox(height: 14),
         _buildField(
-            _accountNameController, 'Account Name', Icons.person_outline),
+          _accountNameController,
+          'Account Name',
+          Icons.person_outline,
+        ),
       ],
     );
   }
@@ -337,7 +377,8 @@ class _DriverApplicationScreenState
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.15)),
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+        ),
       ),
       child: Row(
         children: [
@@ -355,16 +396,22 @@ class _DriverApplicationScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        color: context.palette.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle,
-                    style: TextStyle(
-                        color: context.palette.textSecondary,
-                        fontSize: 12)),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: context.palette.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -396,8 +443,10 @@ class _DriverApplicationScreenState
           hintText: label,
           hintStyle: TextStyle(color: context.palette.textMuted),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
         validator: (v) =>
             (v == null || v.trim().isEmpty) ? '$label is required' : null,
@@ -414,38 +463,50 @@ class _DriverApplicationScreenState
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon,
-              color: isUploaded ? const Color(0xFF4CAF50) : context.palette.textMuted,
-              size: 20),
+          Icon(
+            icon,
+            color: isUploaded
+                ? const Color(0xFF4CAF50)
+                : context.palette.textMuted,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    color: isUploaded
-                        ? const Color(0xFF4CAF50)
-                        : context.palette.textSecondary,
-                    fontSize: 13)),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isUploaded
+                    ? const Color(0xFF4CAF50)
+                    : context.palette.textSecondary,
+                fontSize: 13,
+              ),
+            ),
           ),
           if (isUploaded)
-            const Icon(Icons.check_circle,
-                color: Color(0xFF4CAF50), size: 20)
+            const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 20)
           else
             GestureDetector(
               onTap: () => _pickAndUploadDocument(key, label),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: context.palette.brand.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: context.palette.brand.withValues(alpha: 0.3)),
+                    color: context.palette.brand.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Text('Upload',
-                    style: TextStyle(
-                        color: context.palette.brand,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Upload',
+                  style: TextStyle(
+                    color: context.palette.brand,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
         ],
@@ -547,9 +608,9 @@ class _DriverApplicationScreenState
 
       // Move the account to "under review" so the drawer's mode switcher
       // reflects the application. Only an admin can take it to approved.
-      await ref
-          .read(userRepositoryProvider)
-          .updateUser(userId, {'driverStatus': ModeAccess.pending.name});
+      await ref.read(userRepositoryProvider).updateUser(userId, {
+        'driverStatus': ModeAccess.pending.name,
+      });
 
       if (mounted) {
         _showSuccessDialog();
@@ -558,8 +619,9 @@ class _DriverApplicationScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: context.palette.danger),
+            content: Text('Error: $e'),
+            backgroundColor: context.palette.danger,
+          ),
         );
       }
     } finally {
@@ -586,21 +648,29 @@ class _DriverApplicationScreenState
                   shape: BoxShape.circle,
                   color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                 ),
-                child: const Icon(Icons.check,
-                    color: Color(0xFF4CAF50), size: 40),
+                child: const Icon(
+                  Icons.check,
+                  color: Color(0xFF4CAF50),
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 20),
-              Text('Application Submitted!',
-                  style: TextStyle(
-                      color: context.palette.textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                'Application Submitted!',
+                style: TextStyle(
+                  color: context.palette.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'We\'ll review your application and get back to you within 24-48 hours.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: context.palette.textPrimary, fontSize: 14),
+                  color: context.palette.textPrimary,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -615,10 +685,13 @@ class _DriverApplicationScreenState
                     foregroundColor: context.palette.textPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: const Text('Done',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

@@ -10,18 +10,21 @@ import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/driver/domain/entities/driver_application_model.dart';
 
 /// Pending driver applications, newest first.
-final driverApplicationsProvider =
-    StreamProvider<List<DriverApplicationModel>>((ref) {
-  return ref
-      .watch(firestoreProvider)
-      .collection(FirestoreConstants.driverApplications)
-      .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
-      .limit(100)
-      .snapshots()
-      .map((snap) => snap.docs
-          .map(DriverApplicationModel.fromFirestore)
-          .toList(growable: false));
-});
+final driverApplicationsProvider = StreamProvider<List<DriverApplicationModel>>(
+  (ref) {
+    return ref
+        .watch(firestoreProvider)
+        .collection(FirestoreConstants.driverApplications)
+        .orderBy(FirestoreConstants.fieldCreatedAt, descending: true)
+        .limit(100)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map(DriverApplicationModel.fromFirestore)
+              .toList(growable: false),
+        );
+  },
+);
 
 /// Accounts waiting on investor approval.
 final investorApplicantsProvider = StreamProvider<List<UserModel>>((ref) {
@@ -31,8 +34,10 @@ final investorApplicantsProvider = StreamProvider<List<UserModel>>((ref) {
       .where('investorStatus', isEqualTo: ModeAccess.pending.name)
       .limit(100)
       .snapshots()
-      .map((snap) =>
-          snap.docs.map(UserModel.fromFirestore).toList(growable: false));
+      .map(
+        (snap) =>
+            snap.docs.map(UserModel.fromFirestore).toList(growable: false),
+      );
 });
 
 /// The approval queue.
@@ -57,12 +62,7 @@ class AdminApplicationsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            _DriverQueue(),
-            _InvestorQueue(),
-          ],
-        ),
+        body: const TabBarView(children: [_DriverQueue(), _InvestorQueue()]),
       ),
     );
   }
@@ -106,7 +106,8 @@ class _DriverCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = context.palette;
-    final decided = application.status == ApplicationStatus.approved ||
+    final decided =
+        application.status == ApplicationStatus.approved ||
         application.status == ApplicationStatus.rejected;
 
     return Container(
@@ -143,7 +144,8 @@ class _DriverCard extends ConsumerWidget {
           if (application.bankName != null)
             _DetailRow(
               label: 'Payout',
-              value: '${application.bankName} · '
+              value:
+                  '${application.bankName} · '
                   '${application.accountNumber ?? '—'}',
             ),
           _DocumentRow(application: application),
@@ -202,8 +204,9 @@ class _DriverCard extends ConsumerWidget {
       batch.update(
         firestore.collection(FirestoreConstants.users).doc(application.userId),
         {
-          'driverStatus':
-              approved ? ModeAccess.approved.name : ModeAccess.rejected.name,
+          'driverStatus': approved
+              ? ModeAccess.approved.name
+              : ModeAccess.rejected.name,
           if (approved) 'vehicleType': application.vehicleType,
           if (approved) 'vehiclePlate': application.vehiclePlate,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -214,9 +217,11 @@ class _DriverCard extends ConsumerWidget {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text(approved
-              ? '${application.fullName} can now drive.'
-              : 'Application declined.'),
+          content: Text(
+            approved
+                ? '${application.fullName} can now drive.'
+                : 'Application declined.',
+          ),
         ),
       );
     } catch (e) {
@@ -381,16 +386,19 @@ class _InvestorCard extends ConsumerWidget {
           .collection(FirestoreConstants.users)
           .doc(user.uid)
           .update({
-        'investorStatus':
-            approved ? ModeAccess.approved.name : ModeAccess.rejected.name,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'investorStatus': approved
+                ? ModeAccess.approved.name
+                : ModeAccess.rejected.name,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text(approved
-              ? '${user.fullName} can now invest.'
-              : 'Application declined.'),
+          content: Text(
+            approved
+                ? '${user.fullName} can now invest.'
+                : 'Application declined.',
+          ),
         ),
       );
     } catch (e) {
@@ -411,25 +419,25 @@ class _StatusChip extends StatelessWidget {
     final palette = context.palette;
     final (bg, fg, label) = switch (status) {
       ApplicationStatus.approved => (
-          palette.successSubtle,
-          palette.success,
-          'Approved'
-        ),
+        palette.successSubtle,
+        palette.success,
+        'Approved',
+      ),
       ApplicationStatus.rejected => (
-          palette.dangerSubtle,
-          palette.danger,
-          'Declined'
-        ),
+        palette.dangerSubtle,
+        palette.danger,
+        'Declined',
+      ),
       ApplicationStatus.underReview => (
-          palette.infoSubtle,
-          palette.info,
-          'In review'
-        ),
+        palette.infoSubtle,
+        palette.info,
+        'In review',
+      ),
       ApplicationStatus.submitted => (
-          palette.warningSubtle,
-          palette.warning,
-          'New'
-        ),
+        palette.warningSubtle,
+        palette.warning,
+        'New',
+      ),
     };
 
     return Container(
@@ -438,10 +446,7 @@ class _StatusChip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        label,
-        style: context.text.labelSmall?.copyWith(color: fg),
-      ),
+      child: Text(label, style: context.text.labelSmall?.copyWith(color: fg)),
     );
   }
 }
@@ -466,8 +471,9 @@ class _DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: context.text.bodyMedium
-                  ?.copyWith(color: context.palette.textPrimary),
+              style: context.text.bodyMedium?.copyWith(
+                color: context.palette.textPrimary,
+              ),
             ),
           ),
         ],
@@ -511,8 +517,9 @@ class _QueueError extends StatelessWidget {
         child: Text(
           'Could not load applications.\n$message',
           textAlign: TextAlign.center,
-          style: context.text.bodyMedium
-              ?.copyWith(color: context.palette.danger),
+          style: context.text.bodyMedium?.copyWith(
+            color: context.palette.danger,
+          ),
         ),
       ),
     );

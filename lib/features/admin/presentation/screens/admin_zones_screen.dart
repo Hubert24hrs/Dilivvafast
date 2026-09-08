@@ -12,8 +12,7 @@ final zonesProvider = StreamProvider<List<ZoneModel>>((ref) {
       .collection('zones')
       .orderBy('createdAt', descending: true)
       .snapshots()
-      .map(
-          (snap) => snap.docs.map((d) => ZoneModel.fromFirestore(d)).toList());
+      .map((snap) => snap.docs.map((d) => ZoneModel.fromFirestore(d)).toList());
 });
 
 class AdminZonesScreen extends ConsumerWidget {
@@ -27,8 +26,10 @@ class AdminZonesScreen extends ConsumerWidget {
       backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         backgroundColor: context.palette.surfaceBase,
-        title: Text('Delivery Zones',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Delivery Zones',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.palette.brand,
@@ -42,12 +43,12 @@ class AdminZonesScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.map,
-                      size: 48,
-                      color: context.palette.textMuted),
+                  Icon(Icons.map, size: 48, color: context.palette.textMuted),
                   const SizedBox(height: 12),
-                  Text('No delivery zones configured',
-                      style: TextStyle(color: context.palette.textMuted)),
+                  Text(
+                    'No delivery zones configured',
+                    style: TextStyle(color: context.palette.textMuted),
+                  ),
                 ],
               ),
             );
@@ -60,16 +61,19 @@ class AdminZonesScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(
-            child: CircularProgressIndicator(color: context.palette.brand)),
+          child: CircularProgressIndicator(color: context.palette.brand),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: TextStyle(color: context.palette.danger))),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildZoneCard(
-      BuildContext context, WidgetRef ref, ZoneModel zone) {
+  Widget _buildZoneCard(BuildContext context, WidgetRef ref, ZoneModel zone) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
@@ -94,23 +98,32 @@ class AdminZonesScreen extends ConsumerWidget {
                   shape: BoxShape.circle,
                   color: context.palette.brand.withValues(alpha: 0.15),
                 ),
-                child: Icon(Icons.place,
-                    color: context.palette.brand, size: 20),
+                child: Icon(
+                  Icons.place,
+                  color: context.palette.brand,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(zone.name,
-                        style: TextStyle(
-                            color: context.palette.onBrand,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600)),
-                    Text(zone.city,
-                        style: TextStyle(
-                            color: context.palette.textSecondary,
-                            fontSize: 12)),
+                    Text(
+                      zone.name,
+                      style: TextStyle(
+                        color: context.palette.onBrand,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      zone.city,
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -132,17 +145,25 @@ class AdminZonesScreen extends ConsumerWidget {
           // Rate info
           Row(
             children: [
-              _rateBadge(context, 'Base Fare',
-                  '₦${zone.baseFare.toStringAsFixed(0)}'),
+              _rateBadge(
+                context,
+                'Base Fare',
+                '₦${zone.baseFare.toStringAsFixed(0)}',
+              ),
               const SizedBox(width: 10),
-              _rateBadge(context, 'Per KM',
-                  '₦${zone.perKmRate.toStringAsFixed(0)}'),
+              _rateBadge(
+                context,
+                'Per KM',
+                '₦${zone.perKmRate.toStringAsFixed(0)}',
+              ),
               const SizedBox(width: 10),
-              _rateBadge(context, 'Surge ×',
-                  zone.currentSurgeMultiplier.toStringAsFixed(1)),
+              _rateBadge(
+                context,
+                'Surge ×',
+                zone.currentSurgeMultiplier.toStringAsFixed(1),
+              ),
               const SizedBox(width: 10),
-              _rateBadge(context, 'Surge at',
-                  '${zone.surgeThreshold} orders'),
+              _rateBadge(context, 'Surge at', '${zone.surgeThreshold} orders'),
             ],
           ),
         ],
@@ -160,16 +181,19 @@ class AdminZonesScreen extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Text(value,
-                style: TextStyle(
-                    color: context.palette.brand,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              value,
+              style: TextStyle(
+                color: context.palette.brand,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    color: context.palette.textMuted,
-                    fontSize: 9)),
+            Text(
+              label,
+              style: TextStyle(color: context.palette.textMuted, fontSize: 9),
+            ),
           ],
         ),
       ),
@@ -190,38 +214,52 @@ class AdminZonesScreen extends ConsumerWidget {
       builder: (_) => StatefulBuilder(
         builder: (ctx, setDialogState) => Dialog(
           backgroundColor: context.palette.surfaceRaised,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Add Delivery Zone',
-                    style: TextStyle(
-                        color: context.palette.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  'Add Delivery Zone',
+                  style: TextStyle(
+                    color: context.palette.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 20),
-                _dialogField(context, nameC, 'Zone Name (e.g. Victoria Island)'),
+                _dialogField(
+                  context,
+                  nameC,
+                  'Zone Name (e.g. Victoria Island)',
+                ),
                 const SizedBox(height: 12),
                 // City dropdown
                 Row(
                   children: [
-                    Text('City:',
-                        style: TextStyle(
-                            color: context.palette.textSecondary,
-                            fontSize: 13)),
+                    Text(
+                      'City:',
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: selectedCity,
                       dropdownColor: context.palette.surfaceRaised,
                       style: TextStyle(
-                          color: context.palette.textPrimary, fontSize: 13),
+                        color: context.palette.textPrimary,
+                        fontSize: 13,
+                      ),
                       items: cities
-                          .map((c) =>
-                              DropdownMenuItem(value: c, child: Text(c)))
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
                           .toList(),
                       onChanged: (v) =>
                           setDialogState(() => selectedCity = v ?? 'Lagos'),
@@ -229,15 +267,26 @@ class AdminZonesScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _dialogField(context, baseFareC, 'Base Fare (₦)',
-                    keyboard: TextInputType.number),
+                _dialogField(
+                  context,
+                  baseFareC,
+                  'Base Fare (₦)',
+                  keyboard: TextInputType.number,
+                ),
                 const SizedBox(height: 12),
-                _dialogField(context, perKmC, 'Per KM Rate (₦)',
-                    keyboard: TextInputType.number),
+                _dialogField(
+                  context,
+                  perKmC,
+                  'Per KM Rate (₦)',
+                  keyboard: TextInputType.number,
+                ),
                 const SizedBox(height: 12),
-                _dialogField(context, surgeThresholdC,
-                    'Surge Threshold (concurrent orders)',
-                    keyboard: TextInputType.number),
+                _dialogField(
+                  context,
+                  surgeThresholdC,
+                  'Surge Threshold (concurrent orders)',
+                  keyboard: TextInputType.number,
+                ),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -248,21 +297,21 @@ class AdminZonesScreen extends ConsumerWidget {
                       await ref
                           .read(firestoreProvider)
                           .collection('zones')
-                          .add(ZoneModel(
-                            id: '',
-                            name: nameC.text.trim(),
-                            city: selectedCity,
-                            baseFare: double.tryParse(
-                                    baseFareC.text.trim()) ??
-                                500,
-                            perKmRate: double.tryParse(
-                                    perKmC.text.trim()) ??
-                                100,
-                            surgeThreshold: int.tryParse(
-                                    surgeThresholdC.text.trim()) ??
-                                5,
-                            createdAt: DateTime.now(),
-                          ).toFirestore());
+                          .add(
+                            ZoneModel(
+                              id: '',
+                              name: nameC.text.trim(),
+                              city: selectedCity,
+                              baseFare:
+                                  double.tryParse(baseFareC.text.trim()) ?? 500,
+                              perKmRate:
+                                  double.tryParse(perKmC.text.trim()) ?? 100,
+                              surgeThreshold:
+                                  int.tryParse(surgeThresholdC.text.trim()) ??
+                                  5,
+                              createdAt: DateTime.now(),
+                            ).toFirestore(),
+                          );
 
                       if (ctx.mounted) Navigator.of(ctx).pop();
                     },
@@ -271,10 +320,13 @@ class AdminZonesScreen extends ConsumerWidget {
                       foregroundColor: context.palette.onBrand,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Add Zone',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text(
+                      'Add Zone',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
               ],
@@ -285,8 +337,12 @@ class AdminZonesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _dialogField(BuildContext context, TextEditingController c, String hint,
-      {TextInputType keyboard = TextInputType.text}) {
+  Widget _dialogField(
+    BuildContext context,
+    TextEditingController c,
+    String hint, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: context.palette.surfaceBase,
@@ -298,11 +354,12 @@ class AdminZonesScreen extends ConsumerWidget {
         style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle:
-              TextStyle(color: context.palette.textMuted),
+          hintStyle: TextStyle(color: context.palette.textMuted),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 14,
+          ),
         ),
       ),
     );

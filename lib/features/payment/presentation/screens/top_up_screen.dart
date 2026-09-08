@@ -38,8 +38,10 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
           icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Fund Wallet',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Fund Wallet',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -64,10 +66,13 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
               ),
               child: Column(
                 children: [
-                  Text('Current Balance',
-                      style: TextStyle(
-                          color: context.palette.textSecondary,
-                          fontSize: 13)),
+                  Text(
+                    'Current Balance',
+                    style: TextStyle(
+                      color: context.palette.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   // Was hardcoded to ₦0.00, so the screen told every customer
                   // their wallet was empty regardless of the real balance.
@@ -85,11 +90,14 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
             const SizedBox(height: 28),
 
             // Amount input
-            Text('Enter Amount',
-                style: TextStyle(
-                    color: context.palette.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              'Enter Amount',
+              style: TextStyle(
+                color: context.palette.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
@@ -101,20 +109,23 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 style: TextStyle(
-                    color: context.palette.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold),
+                  color: context.palette.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
                 onChanged: (_) => setState(() => _selectedPreset = null),
                 decoration: InputDecoration(
                   prefixText: '₦ ',
                   prefixStyle: TextStyle(
-                      color: context.palette.textSecondary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold),
+                    color: context.palette.textSecondary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                   hintText: '0',
                   hintStyle: TextStyle(
-                      color: context.palette.textMuted,
-                      fontSize: 24),
+                    color: context.palette.textMuted,
+                    fontSize: 24,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(20),
                 ),
@@ -123,11 +134,14 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
             const SizedBox(height: 20),
 
             // Preset amounts
-            Text('Quick Select',
-                style: TextStyle(
-                    color: context.palette.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
+            Text(
+              'Quick Select',
+              style: TextStyle(
+                color: context.palette.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
@@ -144,7 +158,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 12),
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? context.palette.brand.withValues(alpha: 0.15)
@@ -190,28 +206,40 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                       shape: BoxShape.circle,
                       color: const Color(0xFF00C853).withValues(alpha: 0.15),
                     ),
-                    child: const Icon(Icons.credit_card,
-                        color: Color(0xFF00C853), size: 22),
+                    child: const Icon(
+                      Icons.credit_card,
+                      color: Color(0xFF00C853),
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Paystack',
-                            style: TextStyle(
-                                color: context.palette.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600)),
-                        Text('Card, Bank Transfer, USSD',
-                            style: TextStyle(
-                                color: context.palette.textSecondary,
-                                fontSize: 11)),
+                        Text(
+                          'Paystack',
+                          style: TextStyle(
+                            color: context.palette.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Card, Bank Transfer, USSD',
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.check_circle,
-                      color: Color(0xFF00C853), size: 22),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF00C853),
+                    size: 22,
+                  ),
                 ],
               ),
             ),
@@ -226,8 +254,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.palette.brand,
                   foregroundColor: context.palette.surfaceBase,
-                  disabledBackgroundColor:
-                      context.palette.brand.withValues(alpha: 0.4),
+                  disabledBackgroundColor: context.palette.brand.withValues(
+                    alpha: 0.4,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -258,15 +287,14 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock,
-                      size: 14,
-                      color: context.palette.textMuted),
+                  Icon(Icons.lock, size: 14, color: context.palette.textMuted),
                   const SizedBox(width: 4),
                   Text(
                     'Secured by Paystack',
                     style: TextStyle(
-                        color: context.palette.textMuted,
-                        fontSize: 11),
+                      color: context.palette.textMuted,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -303,7 +331,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
       final user = ref.read(currentUserProvider).value;
       if (user == null) throw Exception('Not authenticated');
 
-      final result = await ref.read(paymentRepositoryProvider).initializePayment(
+      final result = await ref
+          .read(paymentRepositoryProvider)
+          .initializePayment(
             amount: amount,
             email: user.email,
             reference: '', // minted server-side
@@ -365,8 +395,9 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
 
   Future<void> _confirmPayment(String reference) async {
     setState(() => _isProcessing = true);
-    final result =
-        await ref.read(paymentRepositoryProvider).verifyPayment(reference);
+    final result = await ref
+        .read(paymentRepositoryProvider)
+        .verifyPayment(reference);
     if (!mounted) return;
     setState(() => _isProcessing = false);
 
@@ -407,23 +438,30 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                   shape: BoxShape.circle,
                   color: context.palette.brand.withValues(alpha: 0.15),
                 ),
-                child: Icon(Icons.hourglass_top,
-                    color: context.palette.brand, size: 36),
+                child: Icon(
+                  Icons.hourglass_top,
+                  color: context.palette.brand,
+                  size: 36,
+                ),
               ),
               const SizedBox(height: 20),
-              Text('Payment Processing',
-                  style: TextStyle(
-                      color: context.palette.onBrand,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                'Payment Processing',
+                style: TextStyle(
+                  color: context.palette.onBrand,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Finish paying in the browser, then come back and tap '
                 '"I have paid" to credit your wallet straight away.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: context.palette.textPrimary,
-                    fontSize: 13),
+                  color: context.palette.textPrimary,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -438,10 +476,13 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                     foregroundColor: context.palette.surfaceBase,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: const Text('I have paid',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'I have paid',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

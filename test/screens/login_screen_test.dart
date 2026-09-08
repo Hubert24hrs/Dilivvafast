@@ -13,8 +13,10 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.widgetWithText(TextFormField, 'Email address'),
-          findsOneWidget);
+      expect(
+        find.widgetWithText(TextFormField, 'Email address'),
+        findsOneWidget,
+      );
       expect(find.widgetWithText(TextFormField, 'Password'), findsOneWidget);
     });
 
@@ -40,8 +42,9 @@ void main() {
       expect(find.byKey(const Key('toggle_btn')), findsOneWidget);
     });
 
-    testWidgets('validates an empty form instead of submitting',
-        (tester) async {
+    testWidgets('validates an empty form instead of submitting', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrapScreen(const LoginScreen()));
       await tester.pump();
 
@@ -52,20 +55,21 @@ void main() {
       expect(find.text('Enter your password'), findsOneWidget);
     });
 
-    testWidgets('password is obscured until the reveal toggle is used',
-        (tester) async {
+    testWidgets('password is obscured until the reveal toggle is used', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrapScreen(const LoginScreen()));
       await tester.pump();
 
       EditableText passwordField() => tester.widget<EditableText>(
-            find.descendant(
-              of: find.ancestor(
-                of: find.text('Password'),
-                matching: find.byType(TextFormField),
-              ),
-              matching: find.byType(EditableText),
-            ),
-          );
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('Password'),
+            matching: find.byType(TextFormField),
+          ),
+          matching: find.byType(EditableText),
+        ),
+      );
 
       expect(passwordField().obscureText, isTrue);
 
@@ -96,6 +100,5 @@ void main() {
       expect(context.palette.surfaceBase, AppTheme.darkPalette.surfaceBase);
       expect(context.palette.textPrimary, AppTheme.darkPalette.textPrimary);
     });
-
   });
 }

@@ -16,7 +16,7 @@ import 'package:dilivvafast/core/constants/firestore_constants.dart';
 /// rejects any write to it containing an identifying field.
 class LocationTrackingService {
   LocationTrackingService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
   StreamSubscription<Position>? _positionSubscription;
@@ -42,24 +42,25 @@ class LocationTrackingService {
 
     _isTracking = true;
 
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 20, // metres
-      ),
-    ).listen(
-      (position) {
-        if (!_shouldWrite()) return;
-        // Fire-and-forget by design, but errors are surfaced in debug rather
-        // than swallowed silently.
-        unawaited(_publishLocation(userId, position));
-      },
-      onError: (Object e) {
-        debugPrint('LocationTrackingService: position stream error: $e');
-        _isTracking = false;
-      },
-      cancelOnError: false,
-    );
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 20, // metres
+          ),
+        ).listen(
+          (position) {
+            if (!_shouldWrite()) return;
+            // Fire-and-forget by design, but errors are surfaced in debug rather
+            // than swallowed silently.
+            unawaited(_publishLocation(userId, position));
+          },
+          onError: (Object e) {
+            debugPrint('LocationTrackingService: position stream error: $e');
+            _isTracking = false;
+          },
+          cancelOnError: false,
+        );
   }
 
   /// Stop tracking and take the driver off the live map.

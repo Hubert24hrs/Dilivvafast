@@ -77,8 +77,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: context.text.bodyLarge,
                             decoration: const InputDecoration(
                               labelText: 'Email address',
-                              prefixIcon: Icon(Icons.mail_outline_rounded,
-                                  size: 20),
+                              prefixIcon: Icon(
+                                Icons.mail_outline_rounded,
+                                size: 20,
+                              ),
                             ),
                             validator: Validators.email,
                           ),
@@ -92,8 +94,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onFieldSubmitted: (_) => _handleSignIn(),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline_rounded,
-                                  size: 20),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                                size: 20,
+                              ),
                               suffixIcon: IconButton(
                                 tooltip: _obscurePassword
                                     ? 'Show password'
@@ -105,7 +109,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   size: 20,
                                 ),
                                 onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword),
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                               ),
                             ),
                             validator: (v) => (v == null || v.isEmpty)
@@ -146,8 +151,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: authState.isLoading
                           ? null
                           : () => ref
-                              .read(authControllerProvider.notifier)
-                              .signInWithGoogle(),
+                                .read(authControllerProvider.notifier)
+                                .signInWithGoogle(),
                     ),
                     if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                       const SizedBox(height: 12),
@@ -157,8 +162,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: authState.isLoading
                             ? null
                             : () => ref
-                                .read(authControllerProvider.notifier)
-                                .signInWithApple(),
+                                  .read(authControllerProvider.notifier)
+                                  .signInWithApple(),
                       ),
                     ],
                     const SizedBox(height: 28),
@@ -199,10 +204,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    ref.read(authControllerProvider.notifier).signIn(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+    ref
+        .read(authControllerProvider.notifier)
+        .signIn(_emailController.text.trim(), _passwordController.text);
   }
 
   Future<void> _handleForgotPassword() async {
@@ -261,8 +265,11 @@ class _Wordmark extends StatelessWidget {
             color: palette.brandSubtle,
             borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           ),
-          child: Icon(Icons.delivery_dining_rounded,
-              size: 34, color: palette.brand),
+          child: Icon(
+            Icons.delivery_dining_rounded,
+            size: 34,
+            color: palette.brand,
+          ),
         ),
         const SizedBox(height: 14),
         Text(

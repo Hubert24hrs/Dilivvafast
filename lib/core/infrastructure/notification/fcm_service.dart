@@ -14,11 +14,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 /// Service for Firebase Cloud Messaging push notifications.
 class FCMService {
-  FCMService({
-    FirebaseFirestore? firestore,
-    FirebaseMessaging? messaging,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _messaging = messaging ?? FirebaseMessaging.instance;
+  FCMService({FirebaseFirestore? firestore, FirebaseMessaging? messaging})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _messaging = messaging ?? FirebaseMessaging.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseMessaging _messaging;
@@ -81,8 +79,9 @@ class FCMService {
 
   /// Initialize flutter_local_notifications
   Future<void> _initializeLocalNotifications() async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -106,7 +105,8 @@ class FCMService {
     // Create Android notification channel
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
   }
 

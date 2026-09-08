@@ -57,7 +57,11 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.wifi_off, color: context.palette.onBrand, size: 16),
+                      Icon(
+                        Icons.wifi_off,
+                        color: context.palette.onBrand,
+                        size: 16,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'No internet connection',

@@ -29,72 +29,77 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Wrap entire app in error zone.
-  runZonedGuarded(() async {
-    // Initialise Hive for local storage.
-    await Hive.initFlutter();
+  runZonedGuarded(
+    () async {
+      // Initialise Hive for local storage.
+      await Hive.initFlutter();
 
-    // Set up global error handlers (Crashlytics wired in later after Firebase init).
-    _setupPreFirebaseErrorHandlers();
+      // Set up global error handlers (Crashlytics wired in later after Firebase init).
+      _setupPreFirebaseErrorHandlers();
 
-    // Load environment variables.
-    try {
-      await dotenv.load(fileName: '.env');
-    } catch (e) {
-      debugPrint('Could not load .env file: $e');
-    }
-
-    // MUST run after dotenv.load() — the Mapbox token is read from .env, and
-    // initialising earlier silently registers an empty token.
-    MapboxInit.init();
-
-    // -----------------------------------------------------------------------
-    // Firebase initialisation — MUST NOT be silent on failure.
-    // If this fails the app has no auth, Firestore, or FCM backend.
-    // We show a blocking error screen instead of proceeding silently.
-    // -----------------------------------------------------------------------
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      _firebaseReady = true;
-
-      // REMOVE AFTER VERIFYING iOS AUTH — temporary diagnostic log
-      // ignore: avoid_print
-      if (kDebugMode) {
-        debugPrint(
-          '[Dilivvafast] Firebase ready — iOS options: '
-          '${DefaultFirebaseOptions.currentPlatform.appId}',
-        );
+      // Load environment variables.
+      try {
+        await dotenv.load(fileName: '.env');
+      } catch (e) {
+        debugPrint('Could not load .env file: $e');
       }
 
-      // Register FCM background message handler AFTER Firebase is ready.
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      // MUST run after dotenv.load() — the Mapbox token is read from .env, and
+      // initialising earlier silently registers an empty token.
+      MapboxInit.init();
 
-      // Request FCM notification permissions.
-      final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
+      // -----------------------------------------------------------------------
+      // Firebase initialisation — MUST NOT be silent on failure.
+      // If this fails the app has no auth, Firestore, or FCM backend.
+      // We show a blocking error screen instead of proceeding silently.
+      // -----------------------------------------------------------------------
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        _firebaseReady = true;
+
+        // REMOVE AFTER VERIFYING iOS AUTH — temporary diagnostic log
+        // ignore: avoid_print
+        if (kDebugMode) {
+          debugPrint(
+            '[Dilivvafast] Firebase ready — iOS options: '
+            '${DefaultFirebaseOptions.currentPlatform.appId}',
+          );
+        }
+
+        // Register FCM background message handler AFTER Firebase is ready.
+        FirebaseMessaging.onBackgroundMessage(
+          firebaseMessagingBackgroundHandler,
+        );
+
+        // Request FCM notification permissions.
+        final messaging = FirebaseMessaging.instance;
+        await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+      } catch (e, stack) {
+        // Firebase init failed — do NOT proceed with a broken backend.
+        // Log the error then show a non-dismissable error screen.
+        debugPrint('[Dilivvafast] Firebase initialization FAILED: $e\n$stack');
+        _firebaseReady = false;
+      }
+
+      runApp(
+        ProviderScope(
+          child: _firebaseReady
+              ? const DilivvafastApp()
+              : const _FirebaseInitErrorApp(),
+        ),
       );
-    } catch (e, stack) {
-      // Firebase init failed — do NOT proceed with a broken backend.
-      // Log the error then show a non-dismissable error screen.
-      debugPrint('[Dilivvafast] Firebase initialization FAILED: $e\n$stack');
-      _firebaseReady = false;
-    }
-
-    runApp(
-      ProviderScope(
-        child: _firebaseReady
-            ? const DilivvafastApp()
-            : const _FirebaseInitErrorApp(),
-      ),
-    );
-  }, (error, stackTrace) {
-    debugPrint('[Dilivvafast] Uncaught async error: $error');
-  });
+    },
+    (error, stackTrace) {
+      debugPrint('[Dilivvafast] Uncaught async error: $error');
+    },
+  );
 }
 
 /// Set up Flutter and platform error handlers before Firebase is available.
@@ -148,9 +153,7 @@ class _DilivvafastAppState extends ConsumerState<DilivvafastApp> {
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         return ErrorBoundary(
-          child: ConnectivityWrapper(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          child: ConnectivityWrapper(child: child ?? const SizedBox.shrink()),
         );
       },
     );

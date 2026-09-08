@@ -9,11 +9,7 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           theme: AppTheme.futuristicTheme,
-          home: const Scaffold(
-            body: Center(
-              child: Text('Dilivvafast'),
-            ),
-          ),
+          home: const Scaffold(body: Center(child: Text('Dilivvafast'))),
         ),
       ),
     );

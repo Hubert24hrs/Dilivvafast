@@ -135,10 +135,7 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
                       style: TextStyle(color: context.palette.textPrimary),
                       items: _vehicleTypes
                           .map(
-                            (v) => DropdownMenuItem(
-                              value: v,
-                              child: Text(v),
-                            ),
+                            (v) => DropdownMenuItem(value: v, child: Text(v)),
                           )
                           .toList(),
                       onChanged: (val) {

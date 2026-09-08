@@ -30,26 +30,34 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
       backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
         backgroundColor: context.palette.surfaceBase,
-        title: Text('Rate Delivery',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Rate Delivery',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.delivery_dining,
-                color: context.palette.brand, size: 64),
+            Icon(Icons.delivery_dining, color: context.palette.brand, size: 64),
             const SizedBox(height: 20),
-            Text('How was your delivery?',
-                style: TextStyle(
-                    color: context.palette.onBrand,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              'How was your delivery?',
+              style: TextStyle(
+                color: context.palette.onBrand,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Your feedback helps us improve',
-                style: TextStyle(
-                    color: context.palette.textPrimary, fontSize: 14)),
+            Text(
+              'Your feedback helps us improve',
+              style: TextStyle(
+                color: context.palette.textPrimary,
+                fontSize: 14,
+              ),
+            ),
             const SizedBox(height: 32),
 
             // Stars
@@ -74,9 +82,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             Text(
               _ratingLabel(),
               style: const TextStyle(
-                  color: Color(0xFFFFAB00),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500),
+                color: Color(0xFFFFAB00),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -89,12 +98,14 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               ),
               child: TextField(
                 controller: _commentController,
-                style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
+                style: TextStyle(
+                  color: context.palette.textPrimary,
+                  fontSize: 14,
+                ),
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Add a comment (optional)',
-                  hintStyle:
-                      TextStyle(color: context.palette.textMuted),
+                  hintStyle: TextStyle(color: context.palette.textMuted),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
                 ),
@@ -107,26 +118,32 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _rating > 0 && !_isSubmitting
-                    ? _submitRating
-                    : null,
+                onPressed: _rating > 0 && !_isSubmitting ? _submitRating : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _rating > 0
                       ? context.palette.brand
                       : context.palette.surfaceRaised,
                   foregroundColor: context.palette.surfaceBase,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 child: _isSubmitting
                     ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                            color: context.palette.surfaceBase, strokeWidth: 2.5))
-                    : const Text('Submit Rating',
+                          color: context.palette.surfaceBase,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Rating',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
           ],

@@ -23,7 +23,8 @@ void main() {
       // Should show balance-related text
       expect(
         find.byWidgetPredicate(
-            (w) => w is Text && w.data?.contains('Balance') == true),
+          (w) => w is Text && w.data?.contains('Balance') == true,
+        ),
         findsAtLeast(1),
       );
     });

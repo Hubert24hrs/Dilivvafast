@@ -23,8 +23,9 @@ void main() {
       expect(find.byType(AppBar), findsOneWidget);
     });
 
-    testWidgets('exposes the drawer that hosts the mode switcher',
-        (tester) async {
+    testWidgets('exposes the drawer that hosts the mode switcher', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrapScreen(const HomeScreen()));
       await tester.pump();
 

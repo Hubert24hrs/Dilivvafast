@@ -61,8 +61,14 @@ void main() {
         ),
       );
 
-      await tester.enterText(find.byKey(const Key('email_field')), 'test@example.com');
-      await tester.enterText(find.byKey(const Key('password_field')), 'Password123!');
+      await tester.enterText(
+        find.byKey(const Key('email_field')),
+        'test@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('password_field')),
+        'Password123!',
+      );
 
       expect(emailController.text, 'test@example.com');
       expect(passwordController.text, 'Password123!');
@@ -100,7 +106,9 @@ void main() {
       expect(appleTapped, isTrue);
     });
 
-    testWidgets('login button shows loading indicator when pressed', (tester) async {
+    testWidgets('login button shows loading indicator when pressed', (
+      tester,
+    ) async {
       bool isLoading = false;
 
       await tester.pumpWidget(
@@ -110,7 +118,9 @@ void main() {
               return Scaffold(
                 body: ElevatedButton(
                   key: const Key('login_btn'),
-                  onPressed: isLoading ? null : () => setState(() => isLoading = true),
+                  onPressed: isLoading
+                      ? null
+                      : () => setState(() => isLoading = true),
                   child: isLoading
                       ? const SizedBox(
                           width: 20,
@@ -150,7 +160,9 @@ void main() {
                     TextButton(
                       key: const Key('toggle_btn'),
                       onPressed: () => setState(() => isLogin = !isLogin),
-                      child: Text(isLogin ? 'Create Account' : 'Already have an account?'),
+                      child: Text(
+                        isLogin ? 'Create Account' : 'Already have an account?',
+                      ),
                     ),
                   ],
                 ),

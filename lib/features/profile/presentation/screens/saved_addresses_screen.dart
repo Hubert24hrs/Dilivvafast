@@ -41,10 +41,10 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
           .doc(uid)
           .collection('saved_addresses')
           .add({
-        'label': label,
-        'address': address,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+            'label': label,
+            'address': address,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
       _labelCtrl.clear();
       _addressCtrl.clear();
       if (mounted) {
@@ -108,9 +108,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                 controller: _addressCtrl,
                 style: TextStyle(color: context.palette.textPrimary),
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Full Address',
-                ),
+                decoration: const InputDecoration(labelText: 'Full Address'),
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -247,8 +245,9 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor:
-                              context.palette.brand.withValues(alpha: 0.15),
+                          backgroundColor: context.palette.brand.withValues(
+                            alpha: 0.15,
+                          ),
                           child: Icon(
                             _getLabelIcon(label),
                             color: context.palette.brand,
@@ -263,7 +262,9 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                         ),
                         subtitle: Text(
                           address,
-                          style: TextStyle(color: context.palette.textSecondary),
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                          ),
                         ),
                         trailing: IconButton(
                           icon: Icon(

@@ -8,8 +8,9 @@ import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Provider for referral stats
-final _referralStatsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+final _referralStatsProvider = FutureProvider<Map<String, dynamic>>((
+  ref,
+) async {
   final user = ref.watch(currentUserProvider).value;
   if (user == null) return {'referred': 0, 'earned': 0.0};
 
@@ -42,8 +43,10 @@ class ReferralScreen extends ConsumerWidget {
           icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Refer & Earn',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Refer & Earn',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -65,7 +68,8 @@ class ReferralScreen extends ConsumerWidget {
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: context.palette.brand.withValues(alpha: 0.2)),
+                  color: context.palette.brand.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 children: [
@@ -76,23 +80,30 @@ class ReferralScreen extends ConsumerWidget {
                       shape: BoxShape.circle,
                       color: context.palette.brand.withValues(alpha: 0.15),
                     ),
-                    child: Icon(Icons.card_giftcard,
-                        color: context.palette.brand, size: 36),
+                    child: Icon(
+                      Icons.card_giftcard,
+                      color: context.palette.brand,
+                      size: 36,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Earn ₦500 per referral!',
-                      style: TextStyle(
-                          color: context.palette.onBrand,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    'Earn ₦500 per referral!',
+                    style: TextStyle(
+                      color: context.palette.onBrand,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     'Share your code with friends. You both earn ₦500 when they complete their first delivery.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: context.palette.textSecondary,
-                        fontSize: 13,
-                        height: 1.4),
+                      color: context.palette.textSecondary,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -114,20 +125,26 @@ class ReferralScreen extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      Text('Your Referral Code',
-                          style: TextStyle(
-                              color: context.palette.textSecondary, fontSize: 12)),
+                      Text(
+                        'Your Referral Code',
+                        style: TextStyle(
+                          color: context.palette.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       // Code display
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 14),
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: context.palette.surfaceBase,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: context.palette.brand
-                                  .withValues(alpha: 0.3)),
+                            color: context.palette.brand.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -143,15 +160,20 @@ class ReferralScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             IconButton(
-                              icon: Icon(Icons.copy,
-                                  color: context.palette.textMuted, size: 20),
+                              icon: Icon(
+                                Icons.copy,
+                                color: context.palette.textMuted,
+                                size: 20,
+                              ),
                               onPressed: () {
                                 Clipboard.setData(
-                                    ClipboardData(text: user.referralCode));
+                                  ClipboardData(text: user.referralCode),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text('Code copied!'),
-                                      backgroundColor: Color(0xFF4CAF50)),
+                                    content: Text('Code copied!'),
+                                    backgroundColor: Color(0xFF4CAF50),
+                                  ),
                                 );
                               },
                             ),
@@ -167,20 +189,23 @@ class ReferralScreen extends ConsumerWidget {
                           onPressed: () {
                             SharePlus.instance.share(
                               ShareParams(
-                                text: 'Join Dilivvafast and get ₦500! Use my referral code: '
+                                text:
+                                    'Join Dilivvafast and get ₦500! Use my referral code: '
                                     '${user.referralCode}\n\nDownload now: https://dilivvafast.com/download',
                               ),
                             );
                           },
                           icon: const Icon(Icons.share, size: 18),
-                          label: const Text('Share with Friends',
-                              style:
-                                  TextStyle(fontWeight: FontWeight.w700)),
+                          label: const Text(
+                            'Share with Friends',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: context.palette.brand,
                             foregroundColor: context.palette.surfaceBase,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
@@ -197,38 +222,67 @@ class ReferralScreen extends ConsumerWidget {
               error: (_, _) => const SizedBox.shrink(),
               data: (stats) => Row(
                 children: [
-                  _statCard(context, 'Friends Referred',
-                      '${stats['referred']}', Icons.people, context.palette.brand),
+                  _statCard(
+                    context,
+                    'Friends Referred',
+                    '${stats['referred']}',
+                    Icons.people,
+                    context.palette.brand,
+                  ),
                   const SizedBox(width: 12),
-                  _statCard(context, 'Total Earned',
-                      '₦${(stats['earned'] as double).toStringAsFixed(0)}',
-                      Icons.monetization_on, const Color(0xFF4CAF50)),
+                  _statCard(
+                    context,
+                    'Total Earned',
+                    '₦${(stats['earned'] as double).toStringAsFixed(0)}',
+                    Icons.monetization_on,
+                    const Color(0xFF4CAF50),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 28),
 
             // How it works
-            Text('How it works',
-                style: TextStyle(
-                    color: context.palette.onBrand,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600)),
+            Text(
+              'How it works',
+              style: TextStyle(
+                color: context.palette.onBrand,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
-            _stepCard(context, '1', 'Share your code',
-                'Send your referral code to friends via any app'),
-            _stepCard(context, '2', 'Friend signs up',
-                'They create an account using your code'),
-            _stepCard(context, '3', 'Both earn ₦500',
-                'When they complete their 1st delivery, you both earn!'),
+            _stepCard(
+              context,
+              '1',
+              'Share your code',
+              'Send your referral code to friends via any app',
+            ),
+            _stepCard(
+              context,
+              '2',
+              'Friend signs up',
+              'They create an account using your code',
+            ),
+            _stepCard(
+              context,
+              '3',
+              'Both earn ₦500',
+              'When they complete their 1st delivery, you both earn!',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _statCard(BuildContext context, 
-      String label, String value, IconData icon, Color color) {
+  Widget _statCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(18),
@@ -241,24 +295,35 @@ class ReferralScreen extends ConsumerWidget {
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
-            Text(value,
-                style: TextStyle(
-                    color: color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(
-                    color: context.palette.textSecondary,
-                    fontSize: 11),
-                textAlign: TextAlign.center),
+            Text(
+              label,
+              style: TextStyle(
+                color: context.palette.textSecondary,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _stepCard(BuildContext context, String number, String title, String subtitle) {
+  Widget _stepCard(
+    BuildContext context,
+    String number,
+    String title,
+    String subtitle,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -277,11 +342,14 @@ class ReferralScreen extends ConsumerWidget {
               color: context.palette.brand.withValues(alpha: 0.12),
             ),
             child: Center(
-              child: Text(number,
-                  style: TextStyle(
-                      color: context.palette.brand,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14)),
+              child: Text(
+                number,
+                style: TextStyle(
+                  color: context.palette.brand,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 14),
@@ -289,15 +357,21 @@ class ReferralScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        color: context.palette.onBrand,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500)),
-                Text(subtitle,
-                    style: TextStyle(
-                        color: context.palette.textMuted,
-                        fontSize: 11)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: context.palette.onBrand,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: context.palette.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),

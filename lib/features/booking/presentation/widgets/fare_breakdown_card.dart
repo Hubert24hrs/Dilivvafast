@@ -57,17 +57,27 @@ class FareBreakdownCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           _fareRow(context, 'Base fare', '₦${b.baseFare.toStringAsFixed(0)}'),
-          _fareRow(context, 'Distance', '₦${b.distanceFare.toStringAsFixed(0)}'),
+          _fareRow(
+            context,
+            'Distance',
+            '₦${b.distanceFare.toStringAsFixed(0)}',
+          ),
           if (b.weightSurcharge > 0)
-            _fareRow(context, 'Weight surcharge', '₦${b.weightSurcharge.toStringAsFixed(0)}'),
+            _fareRow(
+              context,
+              'Weight surcharge',
+              '₦${b.weightSurcharge.toStringAsFixed(0)}',
+            ),
           if (b.surgeMultiplier > 1.0)
-            _fareRow(context, 
+            _fareRow(
+              context,
               'Surge (${b.surgeMultiplier.toStringAsFixed(1)}x)',
               '',
               highlight: true,
             ),
           if (b.promoDiscount > 0)
-            _fareRow(context, 
+            _fareRow(
+              context,
               'Promo discount',
               '-₦${b.promoDiscount.toStringAsFixed(0)}',
               isDiscount: true,
@@ -120,8 +130,13 @@ class FareBreakdownCard extends StatelessWidget {
     );
   }
 
-  Widget _fareRow(BuildContext context, String label, String value,
-      {bool highlight = false, bool isDiscount = false}) {
+  Widget _fareRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool highlight = false,
+    bool isDiscount = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -142,8 +157,8 @@ class FareBreakdownCard extends StatelessWidget {
               color: isDiscount
                   ? const Color(0xFF4CAF50)
                   : highlight
-                      ? const Color(0xFFFF9800)
-                      : context.palette.textPrimary,
+                  ? const Color(0xFFFF9800)
+                  : context.palette.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),

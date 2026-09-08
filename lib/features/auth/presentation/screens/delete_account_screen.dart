@@ -126,7 +126,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       '• Your order history and saved addresses will be purged.\n'
                       '• Unused wallet balances will be forfeited.\n'
                       '• You will be immediately logged out of all devices.',
-                      style: TextStyle(color: context.palette.textSecondary, height: 1.5),
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),

@@ -51,7 +51,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: context.palette.textPrimary,
+                ),
                 onPressed: () => context.go('/login'),
               ),
               const SizedBox(height: 24),
@@ -112,11 +115,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(color: context.palette.textPrimary, fontSize: 15),
+                        style: TextStyle(
+                          color: context.palette.textPrimary,
+                          fontSize: 15,
+                        ),
                         decoration: InputDecoration(
                           labelText: 'Email Address',
-                          prefixIcon: Icon(Icons.email_outlined,
-                              color: context.palette.textMuted, size: 20),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: context.palette.textMuted,
+                            size: 20,
+                          ),
                         ),
                         validator: (v) {
                           if (v == null || !v.contains('@')) {
@@ -137,8 +146,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.palette.brand,
                       foregroundColor: context.palette.surfaceBase,
-                      disabledBackgroundColor:
-                          context.palette.brand.withValues(alpha: 0.4),
+                      disabledBackgroundColor: context.palette.brand.withValues(
+                        alpha: 0.4,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),

@@ -25,20 +25,29 @@ class TrackingScreen extends ConsumerWidget {
           icon: Icon(Icons.arrow_back, color: context.palette.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Track Delivery',
-            style: TextStyle(color: context.palette.textPrimary, fontSize: 18)),
+        title: Text(
+          'Track Delivery',
+          style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
+        ),
       ),
       body: orderAsync.when(
         loading: () => Center(
-            child: CircularProgressIndicator(color: context.palette.brand)),
+          child: CircularProgressIndicator(color: context.palette.brand),
+        ),
         error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: TextStyle(color: context.palette.danger))),
+          child: Text(
+            'Error: $e',
+            style: TextStyle(color: context.palette.danger),
+          ),
+        ),
         data: (order) {
           if (order == null) {
             return Center(
-                child: Text('Order not found',
-                    style: TextStyle(color: context.palette.textSecondary)));
+              child: Text(
+                'Order not found',
+                style: TextStyle(color: context.palette.textSecondary),
+              ),
+            );
           }
           return _buildTrackingBody(context, order);
         },
@@ -70,7 +79,9 @@ class TrackingScreen extends ConsumerWidget {
                 right: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(12),
@@ -81,19 +92,25 @@ class TrackingScreen extends ConsumerWidget {
                       Text(
                         '${order.estimatedDistanceKm.toStringAsFixed(1)} km',
                         style: TextStyle(
-                            color: context.palette.brand,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
+                          color: context.palette.brand,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       if (order.estimatedDurationMin > 0) ...[
-                        Text(' · ',
-                            style: TextStyle(
-                                color: context.palette.textSecondary,
-                                fontSize: 12)),
+                        Text(
+                          ' · ',
+                          style: TextStyle(
+                            color: context.palette.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
                         Text(
                           '~${order.estimatedDurationMin} min',
                           style: TextStyle(
-                              color: context.palette.textSecondary, fontSize: 12),
+                            color: context.palette.textSecondary,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ],
@@ -112,7 +129,8 @@ class TrackingScreen extends ConsumerWidget {
                 color: context.palette.brand.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: context.palette.brand.withValues(alpha: 0.3)),
+                  color: context.palette.brand.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 '📦 ${order.trackingCode}',
@@ -141,23 +159,34 @@ class TrackingScreen extends ConsumerWidget {
             ),
             child: Column(
               children: [
-                _routeRow(context, Icons.location_on, 'Pickup', order.pickupAddress,
-                    context.palette.brand),
+                _routeRow(
+                  context,
+                  Icons.location_on,
+                  'Pickup',
+                  order.pickupAddress,
+                  context.palette.brand,
+                ),
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: Column(
                     children: List.generate(
-                        3,
-                        (_) => Container(
-                              width: 2,
-                              height: 6,
-                              margin: const EdgeInsets.symmetric(vertical: 1),
-                              color: context.palette.textMuted,
-                            )),
+                      3,
+                      (_) => Container(
+                        width: 2,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(vertical: 1),
+                        color: context.palette.textMuted,
+                      ),
+                    ),
                   ),
                 ),
-                _routeRow(context, Icons.flag, 'Dropoff', order.dropoffAddress,
-                    context.palette.brand),
+                _routeRow(
+                  context,
+                  Icons.flag,
+                  'Dropoff',
+                  order.dropoffAddress,
+                  context.palette.brand,
+                ),
               ],
             ),
           ),
@@ -181,15 +210,21 @@ class TrackingScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Fare',
-                        style: TextStyle(
-                            color: context.palette.textPrimary,
-                            fontWeight: FontWeight.bold)),
-                    Text('₦${order.totalFare.toStringAsFixed(0)}',
-                        style: TextStyle(
-                            color: context.palette.brand,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      'Total Fare',
+                      style: TextStyle(
+                        color: context.palette.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₦${order.totalFare.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: context.palette.brand,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -213,7 +248,8 @@ class TrackingScreen extends ConsumerWidget {
                       foregroundColor: context.palette.brand,
                       side: BorderSide(color: context.palette.brand),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -224,7 +260,8 @@ class TrackingScreen extends ConsumerWidget {
                     onPressed: () {
                       SharePlus.instance.share(
                         ShareParams(
-                          text: 'Track my Dilivvafast delivery!\n'
+                          text:
+                              'Track my Dilivvafast delivery!\n'
                               'Tracking Code: ${order.trackingCode}\n'
                               'Status: ${order.status.name}',
                         ),
@@ -236,7 +273,8 @@ class TrackingScreen extends ConsumerWidget {
                       foregroundColor: context.palette.brand,
                       side: BorderSide(color: context.palette.brand),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
@@ -269,11 +307,14 @@ class TrackingScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Delivery Status',
-              style: TextStyle(
-                  color: context.palette.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600)),
+          Text(
+            'Delivery Status',
+            style: TextStyle(
+              color: context.palette.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 16),
           ...steps.asMap().entries.map((entry) {
             final i = entry.key;
@@ -294,8 +335,8 @@ class TrackingScreen extends ConsumerWidget {
                         shape: BoxShape.circle,
                         color: isCompleted
                             ? (isCurrent
-                                ? context.palette.brand
-                                : const Color(0xFF4CAF50))
+                                  ? context.palette.brand
+                                  : const Color(0xFF4CAF50))
                             : context.palette.surfaceRaised,
                         border: Border.all(
                           color: isCompleted
@@ -306,17 +347,20 @@ class TrackingScreen extends ConsumerWidget {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: context.palette.brand
-                                      .withValues(alpha: 0.3),
+                                  color: context.palette.brand.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 8,
-                                )
+                                ),
                               ]
                             : null,
                       ),
                       child: Icon(
                         step.icon,
                         size: 16,
-                        color: isCompleted ? context.palette.onBrand : context.palette.textMuted,
+                        color: isCompleted
+                            ? context.palette.onBrand
+                            : context.palette.textMuted,
                       ),
                     ),
                     if (!isLast)
@@ -338,18 +382,25 @@ class TrackingScreen extends ConsumerWidget {
                       Text(
                         step.label,
                         style: TextStyle(
-                          color: isCompleted ? context.palette.textPrimary : context.palette.textMuted,
+                          color: isCompleted
+                              ? context.palette.textPrimary
+                              : context.palette.textMuted,
                           fontSize: 14,
-                          fontWeight:
-                              isCurrent ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isCurrent
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                       if (isCurrent)
                         Padding(
                           padding: EdgeInsets.only(top: 2),
-                          child: Text('Current status',
-                              style: TextStyle(
-                                  color: context.palette.brand, fontSize: 11)),
+                          child: Text(
+                            'Current status',
+                            style: TextStyle(
+                              color: context.palette.brand,
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
                       SizedBox(height: isLast ? 0 : 20),
                     ],
@@ -363,7 +414,13 @@ class TrackingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _routeRow(BuildContext context, IconData icon, String label, String addr, Color color) {
+  Widget _routeRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String addr,
+    Color color,
+  ) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -372,14 +429,22 @@ class TrackingScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: TextStyle(
-                      color: context.palette.textSecondary,
-                      fontSize: 11)),
-              Text(addr,
-                  style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                addr,
+                style: TextStyle(
+                  color: context.palette.textPrimary,
+                  fontSize: 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -393,13 +458,19 @@ class TrackingScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: context.palette.textPrimary, fontSize: 13)),
+          Text(
+            label,
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
+          ),
           Flexible(
-            child: Text(value,
-                style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
-                textAlign: TextAlign.right),
+            child: Text(
+              value,
+              style: TextStyle(
+                color: context.palette.textPrimary,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

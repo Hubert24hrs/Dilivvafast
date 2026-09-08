@@ -16,6 +16,7 @@ class EarningsChart extends StatelessWidget {
   /// Map of DateTime → earnings amount
   final Map<DateTime, double> data;
   final double height;
+
   /// Defaults to the brand colour resolved from the active theme.
   final Color? lineColor;
   final List<Color>? gradientColors;
@@ -32,9 +33,10 @@ class EarningsChart extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Center(
-          child: Text('No earnings data',
-              style: TextStyle(
-                  color: context.palette.textMuted, fontSize: 13)),
+          child: Text(
+            'No earnings data',
+            style: TextStyle(color: context.palette.textMuted, fontSize: 13),
+          ),
         ),
       );
     }
@@ -46,8 +48,7 @@ class EarningsChart extends StatelessWidget {
       return FlSpot(entry.key.toDouble(), entry.value.value);
     }).toList();
 
-    final maxY =
-        spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.2;
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.2;
 
     return Container(
       height: height,
@@ -63,11 +64,14 @@ class EarningsChart extends StatelessWidget {
           if (title != null)
             Padding(
               padding: const EdgeInsets.only(left: 8, bottom: 8),
-              child: Text(title!,
-                  style: TextStyle(
-                      color: context.palette.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
+              child: Text(
+                title!,
+                style: TextStyle(
+                  color: context.palette.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           Expanded(
             child: LineChart(
@@ -76,10 +80,8 @@ class EarningsChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: maxY > 0 ? maxY / 4 : 1,
-                  getDrawingHorizontalLine: (v) => FlLine(
-                    color: context.palette.border,
-                    strokeWidth: 1,
-                  ),
+                  getDrawingHorizontalLine: (v) =>
+                      FlLine(color: context.palette.border, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
@@ -89,8 +91,9 @@ class EarningsChart extends StatelessWidget {
                       getTitlesWidget: (v, meta) => Text(
                         _formatValue(v),
                         style: TextStyle(
-                            color: context.palette.textMuted,
-                            fontSize: 9),
+                          color: context.palette.textMuted,
+                          fontSize: 9,
+                        ),
                       ),
                     ),
                   ),
@@ -107,16 +110,19 @@ class EarningsChart extends StatelessWidget {
                         return Text(
                           '${date.day}/${date.month}',
                           style: TextStyle(
-                              color: context.palette.textMuted,
-                              fontSize: 9),
+                            color: context.palette.textMuted,
+                            fontSize: 9,
+                          ),
                         );
                       },
                     ),
                   ),
                   topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
@@ -134,18 +140,19 @@ class EarningsChart extends StatelessWidget {
                       show: true,
                       getDotPainter: (spot, percent, bar, index) =>
                           FlDotCirclePainter(
-                        radius: 3,
-                        color: line,
-                        strokeWidth: 1,
-                        strokeColor: context.palette.textMuted,
-                      ),
+                            radius: 3,
+                            color: line,
+                            strokeWidth: 1,
+                            strokeColor: context.palette.textMuted,
+                          ),
                     ),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: gradientColors ??
+                        colors:
+                            gradientColors ??
                             [
                               line.withValues(alpha: 0.2),
                               line.withValues(alpha: 0.0),

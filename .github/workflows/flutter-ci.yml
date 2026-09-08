@@ -83,12 +83,7 @@ jobs:
         run: flutter pub get
 
       - name: Verify formatting
-        # Reported, not enforced. 105 files predate this workflow and are
-        # unformatted; gating on it would fail every PR until a repo-wide
-        # `dart format lib test` lands as its own commit. Flip to a hard
-        # failure once that has happened.
         run: dart format --output=none --set-exit-if-changed lib test
-        continue-on-error: true
 
       - name: Analyze code
         # Fails on any analyzer diagnostic, including infos.

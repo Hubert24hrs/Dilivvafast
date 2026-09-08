@@ -65,7 +65,6 @@ import 'package:dilivvafast/features/auth/presentation/screens/delete_account_sc
 import 'package:dilivvafast/features/driver/presentation/screens/driver_documents_screen.dart';
 import 'package:dilivvafast/features/driver/presentation/screens/driver_vehicle_screen.dart';
 
-
 // ==================== SCAFFOLD WITH BOTTOM NAV ====================
 
 /// Destination descriptor for the mode shells' bottom navigation.
@@ -144,32 +143,117 @@ int _indexFor(String location, List<_Destination> destinations) {
 }
 
 const _customerDestinations = [
-  _Destination(Icons.home_outlined, Icons.home_rounded, 'Home', '/customer/home'),
-  _Destination(Icons.add_box_outlined, Icons.add_box_rounded, 'Send', '/customer/book'),
-  _Destination(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Orders', '/customer/orders'),
-  _Destination(Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Wallet', '/customer/wallet'),
-  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/customer/profile'),
+  _Destination(
+    Icons.home_outlined,
+    Icons.home_rounded,
+    'Home',
+    '/customer/home',
+  ),
+  _Destination(
+    Icons.add_box_outlined,
+    Icons.add_box_rounded,
+    'Send',
+    '/customer/book',
+  ),
+  _Destination(
+    Icons.receipt_long_outlined,
+    Icons.receipt_long_rounded,
+    'Orders',
+    '/customer/orders',
+  ),
+  _Destination(
+    Icons.account_balance_wallet_outlined,
+    Icons.account_balance_wallet_rounded,
+    'Wallet',
+    '/customer/wallet',
+  ),
+  _Destination(
+    Icons.person_outline_rounded,
+    Icons.person_rounded,
+    'Profile',
+    '/customer/profile',
+  ),
 ];
 
 const _driverDestinations = [
-  _Destination(Icons.explore_outlined, Icons.explore_rounded, 'Jobs', '/driver/home'),
-  _Destination(Icons.history_rounded, Icons.history_rounded, 'History', '/driver/history'),
-  _Destination(Icons.payments_outlined, Icons.payments_rounded, 'Earnings', '/driver/earnings'),
-  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/driver/profile'),
+  _Destination(
+    Icons.explore_outlined,
+    Icons.explore_rounded,
+    'Jobs',
+    '/driver/home',
+  ),
+  _Destination(
+    Icons.history_rounded,
+    Icons.history_rounded,
+    'History',
+    '/driver/history',
+  ),
+  _Destination(
+    Icons.payments_outlined,
+    Icons.payments_rounded,
+    'Earnings',
+    '/driver/earnings',
+  ),
+  _Destination(
+    Icons.person_outline_rounded,
+    Icons.person_rounded,
+    'Profile',
+    '/driver/profile',
+  ),
 ];
 
 const _adminDestinations = [
-  _Destination(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Dashboard', '/admin/dashboard'),
-  _Destination(Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Orders', '/admin/orders'),
-  _Destination(Icons.people_outline_rounded, Icons.people_rounded, 'Users', '/admin/users'),
-  _Destination(Icons.assignment_outlined, Icons.assignment_rounded, 'Applications', '/admin/applications'),
-  _Destination(Icons.attach_money_rounded, Icons.attach_money_rounded, 'Finance', '/admin/finance'),
+  _Destination(
+    Icons.dashboard_outlined,
+    Icons.dashboard_rounded,
+    'Dashboard',
+    '/admin/dashboard',
+  ),
+  _Destination(
+    Icons.receipt_long_outlined,
+    Icons.receipt_long_rounded,
+    'Orders',
+    '/admin/orders',
+  ),
+  _Destination(
+    Icons.people_outline_rounded,
+    Icons.people_rounded,
+    'Users',
+    '/admin/users',
+  ),
+  _Destination(
+    Icons.assignment_outlined,
+    Icons.assignment_rounded,
+    'Applications',
+    '/admin/applications',
+  ),
+  _Destination(
+    Icons.attach_money_rounded,
+    Icons.attach_money_rounded,
+    'Finance',
+    '/admin/finance',
+  ),
 ];
 
 const _investorDestinations = [
-  _Destination(Icons.pedal_bike_outlined, Icons.pedal_bike_rounded, 'Bikes', '/investor/home'),
-  _Destination(Icons.trending_up_outlined, Icons.trending_up_rounded, 'Earnings', '/investor/earnings'),
-  _Destination(Icons.person_outline_rounded, Icons.person_rounded, 'Profile', '/investor/profile'),
+  _Destination(
+    Icons.pedal_bike_outlined,
+    Icons.pedal_bike_rounded,
+    'Bikes',
+    '/investor/home',
+  ),
+  _Destination(
+    Icons.trending_up_outlined,
+    Icons.trending_up_rounded,
+    'Earnings',
+    '/investor/earnings',
+  ),
+  _Destination(
+    Icons.person_outline_rounded,
+    Icons.person_rounded,
+    'Profile',
+    '/investor/profile',
+  ),
 ];
 
 // ==================== ROUTER PROVIDER ====================
@@ -185,10 +269,7 @@ const _authRoutes = {
 
 /// Onboarding flows that deliberately sit under a mode's path prefix but must
 /// stay reachable by people who have not been granted that mode yet.
-const _enrollmentRoutes = {
-  '/driver/apply',
-  '/investor/join',
-};
+const _enrollmentRoutes = {'/driver/apply', '/investor/join'};
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -226,7 +307,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         AppMode.investor,
         AppMode.admin,
       ]) {
-        if (location.startsWith(guarded.routePrefix) && !user.canEnter(guarded)) {
+        if (location.startsWith(guarded.routePrefix) &&
+            !user.canEnter(guarded)) {
           return _entryPointFor(guarded);
         }
       }
@@ -264,8 +346,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ========== CUSTOMER ROUTES ==========
       ShellRoute(
         builder: (context, state, child) => _ShellScaffold(
-          currentIndex:
-              _indexFor(state.matchedLocation, _customerDestinations),
+          currentIndex: _indexFor(state.matchedLocation, _customerDestinations),
           destinations: _customerDestinations,
           child: child,
         ),
@@ -302,16 +383,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/customer/track/:orderId',
         name: 'customerTrack',
-        builder: (context, state) => TrackingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            TrackingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/customer/orders/:orderId',
         name: 'customerOrderDetail',
-        builder: (context, state) => TrackingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            TrackingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/customer/notifications',
@@ -321,23 +400,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chat/:orderId',
         name: 'chat',
-        builder: (context, state) => ChatScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            ChatScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
       GoRoute(
         path: '/rate/:orderId',
         name: 'rate',
-        builder: (context, state) => RatingScreen(
-          orderId: state.pathParameters['orderId'] ?? '',
-        ),
+        builder: (context, state) =>
+            RatingScreen(orderId: state.pathParameters['orderId'] ?? ''),
       ),
 
       // ========== DRIVER ROUTES ==========
       ShellRoute(
         builder: (context, state, child) => _ShellScaffold(
-          currentIndex:
-              _indexFor(state.matchedLocation, _driverDestinations),
+          currentIndex: _indexFor(state.matchedLocation, _driverDestinations),
           destinations: _driverDestinations,
           child: child,
         ),
@@ -350,8 +426,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/driver/history',
             name: 'driverHistory',
-            builder: (context, state) =>
-                const OrdersScreen(isDriver: true),
+            builder: (context, state) => const OrdersScreen(isDriver: true),
           ),
           GoRoute(
             path: '/driver/earnings',
@@ -383,8 +458,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ========== ADMIN ROUTES ==========
       ShellRoute(
         builder: (context, state, child) => _ShellScaffold(
-          currentIndex:
-              _indexFor(state.matchedLocation, _adminDestinations),
+          currentIndex: _indexFor(state.matchedLocation, _adminDestinations),
           destinations: _adminDestinations,
           child: child,
         ),
@@ -430,8 +504,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ========== INVESTOR ROUTES ==========
       ShellRoute(
         builder: (context, state, child) => _ShellScaffold(
-          currentIndex:
-              _indexFor(state.matchedLocation, _investorDestinations),
+          currentIndex: _indexFor(state.matchedLocation, _investorDestinations),
           destinations: _investorDestinations,
           child: child,
         ),
@@ -505,9 +578,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/matching/:orderId',
         name: 'matching',
-        builder: (context, state) => MatchingScreen(
-          orderId: state.pathParameters['orderId'],
-        ),
+        builder: (context, state) =>
+            MatchingScreen(orderId: state.pathParameters['orderId']),
       ),
 
       // ── Phase 2: Drawer-linked screens ─────────────────────────────
@@ -579,11 +651,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// Where to send someone who reached a mode they are not entitled to.
 String _entryPointFor(AppMode mode) => switch (mode) {
-      AppMode.driver => '/driver/apply',
-      AppMode.investor => '/investor/join',
-      // There is no self-service route into admin.
-      AppMode.admin || AppMode.customer => '/customer/home',
-    };
+  AppMode.driver => '/driver/apply',
+  AppMode.investor => '/investor/join',
+  // There is no self-service route into admin.
+  AppMode.admin || AppMode.customer => '/customer/home',
+};
 
 // ==================== SPLASH SCREEN ====================
 
@@ -633,9 +705,11 @@ class _SplashScreenState extends ConsumerState<_SplashScreen> {
     }
 
     if (!mounted) return;
-    _goTo(ref.read(authStateProvider).value == null
-        ? '/login'
-        : AppMode.customer.homeRoute);
+    _goTo(
+      ref.read(authStateProvider).value == null
+          ? '/login'
+          : AppMode.customer.homeRoute,
+    );
   }
 
   void _goTo(String route) {
@@ -660,8 +734,11 @@ class _SplashScreenState extends ConsumerState<_SplashScreen> {
                 color: palette.brandSubtle,
                 borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
               ),
-              child: Icon(Icons.delivery_dining_rounded,
-                  size: 46, color: palette.brand),
+              child: Icon(
+                Icons.delivery_dining_rounded,
+                size: 46,
+                color: palette.brand,
+              ),
             ),
             const SizedBox(height: 24),
             Text(

@@ -9,7 +9,6 @@ class ApiKeyManager {
   factory ApiKeyManager() => _instance;
   ApiKeyManager._internal();
 
-
   /// Get Mapbox access token
   String? getMapboxToken() {
     try {
@@ -48,7 +47,7 @@ class ApiKeyManager {
   bool areKeysConfigured() {
     final mapboxToken = getMapboxToken();
     final paystackKey = getPaystackPublicKey();
-    
+
     if (mapboxToken == null || paystackKey == null) {
       debugPrint('Missing required API keys in .env file');
       return false;

@@ -170,8 +170,7 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     // Older builds wrote `pickedUp` / `inTransit` (from `.name`) where the
     // schema declares `picked_up` / `in_transit`. Normalise before decoding so
     // documents written by those builds still load.
-    data['status'] =
-        orderStatusFromWire(data['status'] as String?).wireValue;
+    data['status'] = orderStatusFromWire(data['status'] as String?).wireValue;
     return CourierOrderModel.fromJson(data);
   }
 }
@@ -242,8 +241,9 @@ extension CourierOrderModelX on CourierOrderModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'pickedUpAt': pickedUpAt != null ? Timestamp.fromDate(pickedUpAt!) : null,
-      'deliveredAt':
-          deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'deliveredAt': deliveredAt != null
+          ? Timestamp.fromDate(deliveredAt!)
+          : null,
       'estimatedDeliveryTime': estimatedDeliveryTime != null
           ? Timestamp.fromDate(estimatedDeliveryTime!)
           : null,

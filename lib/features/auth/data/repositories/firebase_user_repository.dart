@@ -15,9 +15,9 @@ class FirebaseUserRepository implements IUserRepository {
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
     FirebaseFunctions? functions,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _storage = storage ?? FirebaseStorage.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
@@ -60,7 +60,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateUser(
-      String userId, Map<String, dynamic> data) async {
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       data[FirestoreConstants.fieldUpdatedAt] = FieldValue.serverTimestamp();
       await _usersRef.doc(userId).update(data);
@@ -72,7 +74,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateFcmToken(
-      String userId, String token) async {
+    String userId,
+    String token,
+  ) async {
     try {
       await _usersRef.doc(userId).update({
         'fcmToken': token,
@@ -86,7 +90,10 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, Unit>> updateLocation(
-      String userId, double latitude, double longitude) async {
+    String userId,
+    double latitude,
+    double longitude,
+  ) async {
     try {
       await _usersRef.doc(userId).update({
         'location': GeoPoint(latitude, longitude),
@@ -106,7 +113,10 @@ class FirebaseUserRepository implements IUserRepository {
   /// on the customer map.
   @override
   Future<Either<Failure, Unit>> updateOnlineStatus(
-      String userId, bool isOnline, bool isAvailable) async {
+    String userId,
+    bool isOnline,
+    bool isAvailable,
+  ) async {
     try {
       final batch = _firestore.batch();
 
@@ -116,17 +126,13 @@ class FirebaseUserRepository implements IUserRepository {
         FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
       });
 
-      batch.set(
-        _driverLocationsRef.doc(userId),
-        {
-          'driverId': userId,
-          'isOnline': isOnline,
-          'isAvailable': isAvailable,
-          'lastSeen': FieldValue.serverTimestamp(),
-          if (!isOnline) 'location': FieldValue.delete(),
-        },
-        SetOptions(merge: true),
-      );
+      batch.set(_driverLocationsRef.doc(userId), {
+        'driverId': userId,
+        'isOnline': isOnline,
+        'isAvailable': isAvailable,
+        'lastSeen': FieldValue.serverTimestamp(),
+        if (!isOnline) 'location': FieldValue.delete(),
+      }, SetOptions(merge: true));
 
       await batch.commit();
       return const Right(unit);
@@ -137,7 +143,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, String>> uploadProfilePhoto(
-      String userId, String filePath) async {
+    String userId,
+    String filePath,
+  ) async {
     try {
       final ref = _storage.ref('profile_photos/$userId.jpg');
       await ref.putFile(File(filePath));
@@ -163,8 +171,10 @@ class FirebaseUserRepository implements IUserRepository {
         .where(FirestoreConstants.fieldIsOnline, isEqualTo: true)
         .where(FirestoreConstants.fieldIsAvailable, isEqualTo: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 
   /// Live courier presence for the customer map and availability indicator.
@@ -175,9 +185,11 @@ class FirebaseUserRepository implements IUserRepository {
         .where('isOnline', isEqualTo: true)
         .where('isAvailable', isEqualTo: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => DriverPresence.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => DriverPresence.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   /// Resolve a referral code to its owner.

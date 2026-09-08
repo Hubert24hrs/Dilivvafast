@@ -14,8 +14,7 @@ class DriverDocumentsScreen extends ConsumerStatefulWidget {
       _DriverDocumentsScreenState();
 }
 
-class _DriverDocumentsScreenState
-    extends ConsumerState<DriverDocumentsScreen> {
+class _DriverDocumentsScreenState extends ConsumerState<DriverDocumentsScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
@@ -64,9 +63,9 @@ class _DriverDocumentsScreenState
         return;
       }
 
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('drivers/$uid/$docType.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'drivers/$uid/$docType.jpg',
+      );
 
       await storageRef.putData(
         bytes,
@@ -129,9 +128,7 @@ class _DriverDocumentsScreenState
             ),
             child: ListTile(
               leading: Icon(
-                user?.isVerified == true
-                    ? Icons.verified
-                    : Icons.hourglass_top,
+                user?.isVerified == true ? Icons.verified : Icons.hourglass_top,
                 color: user?.isVerified == true
                     ? context.palette.success
                     : context.palette.warning,
@@ -217,7 +214,9 @@ class _DriverDocumentsScreenState
         subtitle: Text(
           hasUploaded ? 'Document Uploaded' : subtitle,
           style: TextStyle(
-            color: hasUploaded ? context.palette.success : context.palette.textSecondary,
+            color: hasUploaded
+                ? context.palette.success
+                : context.palette.textSecondary,
           ),
         ),
         trailing: ElevatedButton(

@@ -14,8 +14,7 @@ class BiometricSetupScreen extends ConsumerStatefulWidget {
       _BiometricSetupScreenState();
 }
 
-class _BiometricSetupScreenState
-    extends ConsumerState<BiometricSetupScreen> {
+class _BiometricSetupScreenState extends ConsumerState<BiometricSetupScreen> {
   final LocalAuthentication _localAuth = LocalAuthentication();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   bool _isBiometricsAvailable = false;
@@ -63,10 +62,7 @@ class _BiometricSetupScreenState
       );
 
       if (didAuthenticate) {
-        await _secureStorage.write(
-          key: 'biometric_enabled',
-          value: 'true',
-        );
+        await _secureStorage.write(key: 'biometric_enabled', value: 'true');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -75,7 +71,8 @@ class _BiometricSetupScreenState
               backgroundColor: context.palette.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
           context.go('/customer/home');
@@ -127,41 +124,46 @@ class _BiometricSetupScreenState
 
               // Icon with glow
               Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppTheme.primaryGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.palette.brand.withValues(alpha: 0.4),
-                      blurRadius: 40,
-                      spreadRadius: -10,
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppTheme.primaryGradient,
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.palette.brand.withValues(alpha: 0.4),
+                          blurRadius: 40,
+                          spreadRadius: -10,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Icon(
-                  _biometricIcon,
-                  size: 56,
-                  color: context.palette.onBrand,
-                ),
-              )
+                    child: Icon(
+                      _biometricIcon,
+                      size: 56,
+                      color: context.palette.onBrand,
+                    ),
+                  )
                   .animate()
                   .fadeIn(duration: 600.ms)
-                  .scale(begin: const Offset(0.5, 0.5), end: const Offset(1, 1), duration: 600.ms, curve: Curves.elasticOut),
+                  .scale(
+                    begin: const Offset(0.5, 0.5),
+                    end: const Offset(1, 1),
+                    duration: 600.ms,
+                    curve: Curves.elasticOut,
+                  ),
 
               const SizedBox(height: 40),
 
               // Title
               Text(
-                'Enable $_biometricTypeName',
-                style: TextStyle(
-                  color: context.palette.textPrimary,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              )
+                    'Enable $_biometricTypeName',
+                    style: TextStyle(
+                      color: context.palette.textPrimary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  )
                   .animate()
                   .fadeIn(delay: 200.ms, duration: 400.ms)
                   .slideY(begin: 0.2, end: 0),
@@ -178,53 +180,67 @@ class _BiometricSetupScreenState
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
-              )
-                  .animate()
-                  .fadeIn(delay: 400.ms, duration: 400.ms),
+              ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
               const SizedBox(height: 48),
 
               // Features
-              _buildFeatureRow(Icons.shield_outlined, 'Secure Authentication',
-                  'Your biometrics never leave your device'),
+              _buildFeatureRow(
+                Icons.shield_outlined,
+                'Secure Authentication',
+                'Your biometrics never leave your device',
+              ),
               const SizedBox(height: 16),
-              _buildFeatureRow(Icons.bolt, 'Instant Login',
-                  'Skip password entry every time'),
+              _buildFeatureRow(
+                Icons.bolt,
+                'Instant Login',
+                'Skip password entry every time',
+              ),
               const SizedBox(height: 16),
-              _buildFeatureRow(Icons.lock_outline, 'Privacy First',
-                  'Encrypted & stored locally'),
+              _buildFeatureRow(
+                Icons.lock_outline,
+                'Privacy First',
+                'Encrypted & stored locally',
+              ),
 
               const Spacer(flex: 3),
 
               // Enable button
               if (_isBiometricsAvailable)
                 SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isEnrolling ? null : _enableBiometrics,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.palette.brand,
-                      foregroundColor: context.palette.onBrand,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 8,
-                      shadowColor: context.palette.brand.withValues(alpha: 0.4),
-                    ),
-                    child: _isEnrolling
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: context.palette.onBrand,
-                            ),
-                          )
-                        : Text('Enable $_biometricTypeName',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                )
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isEnrolling ? null : _enableBiometrics,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.palette.brand,
+                          foregroundColor: context.palette.onBrand,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 8,
+                          shadowColor: context.palette.brand.withValues(
+                            alpha: 0.4,
+                          ),
+                        ),
+                        child: _isEnrolling
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: context.palette.onBrand,
+                                ),
+                              )
+                            : Text(
+                                'Enable $_biometricTypeName',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    )
                     .animate()
                     .fadeIn(delay: 800.ms, duration: 400.ms)
                     .slideY(begin: 0.3, end: 0)
@@ -235,17 +251,24 @@ class _BiometricSetupScreenState
                     color: context.palette.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: context.palette.warning.withValues(alpha: 0.3)),
+                      color: context.palette.warning.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: context.palette.warning, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: context.palette.warning,
+                        size: 20,
+                      ),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Biometric authentication is not available on this device.',
-                          style: TextStyle(color: context.palette.warning, fontSize: 13),
+                          style: TextStyle(
+                            color: context.palette.warning,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -276,35 +299,44 @@ class _BiometricSetupScreenState
 
   Widget _buildFeatureRow(IconData icon, String title, String subtitle) {
     return Row(
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: context.palette.brand.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: context.palette.brand, size: 22),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: TextStyle(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: context.palette.brand.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: context.palette.brand, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
                       color: context.palette.onBrand,
                       fontSize: 14,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(subtitle,
-                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
                       color: context.palette.textSecondary,
-                      fontSize: 12)),
-            ],
-          ),
-        ),
-      ],
-    ).animate().fadeIn(delay: 600.ms, duration: 400.ms).slideX(begin: -0.1, end: 0);
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        )
+        .animate()
+        .fadeIn(delay: 600.ms, duration: 400.ms)
+        .slideX(begin: -0.1, end: 0);
   }
 }

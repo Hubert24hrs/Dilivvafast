@@ -72,8 +72,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           tooltip: _step > 0 ? 'Previous step' : 'Back to sign in',
           onPressed: _handleBack,
         ),
-        title: Text('Step ${_step + 1} of $_totalSteps',
-            style: context.text.bodyMedium),
+        title: Text(
+          'Step ${_step + 1} of $_totalSteps',
+          style: context.text.bodyMedium,
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -182,10 +184,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             label: 'Confirm password',
             icon: Icons.lock_outline_rounded,
             obscureText: _obscureConfirm,
-            validator: (v) => Validators.confirmPassword(
-              v,
-              _passwordController.text,
-            ),
+            validator: (v) =>
+                Validators.confirmPassword(v, _passwordController.text),
             trailing: _ObscureToggle(
               obscured: _obscureConfirm,
               onPressed: () =>
@@ -241,10 +241,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _TermsCheckbox(
           value: _acceptedTerms,
           onChanged: (v) => setState(() => _acceptedTerms = v),
-          onOpenTerms: () =>
-              _openLegalUrl('https://hubert24hrs.github.io/Dilivvafast/terms.html'),
+          onOpenTerms: () => _openLegalUrl(
+            'https://hubert24hrs.github.io/Dilivvafast/terms.html',
+          ),
           onOpenPrivacy: () => _openLegalUrl(
-              'https://hubert24hrs.github.io/Dilivvafast/privacy.html'),
+            'https://hubert24hrs.github.io/Dilivvafast/privacy.html',
+          ),
         ),
       ],
     );
@@ -274,7 +276,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     // Role is intentionally not passed — registration always creates a
     // customer, and the repository defaults accordingly.
-    ref.read(authControllerProvider.notifier).signUp(
+    ref
+        .read(authControllerProvider.notifier)
+        .signUp(
           fullName: _nameController.text.trim(),
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
@@ -289,9 +293,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the link.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open the link.')));
     }
   }
 
@@ -392,9 +396,7 @@ class _ObscureToggle extends StatelessWidget {
       onPressed: onPressed,
       tooltip: obscured ? 'Show password' : 'Hide password',
       icon: Icon(
-        obscured
-            ? Icons.visibility_outlined
-            : Icons.visibility_off_outlined,
+        obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
         size: 20,
       ),
     );
@@ -440,9 +442,13 @@ class _PasswordStrength extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Text(label,
-            style: context.text.bodySmall?.copyWith(
-                color: color, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: context.text.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -563,10 +569,7 @@ class _BottomBar extends StatelessWidget {
                   )
                 : Text(label),
           ),
-          if (footer != null) ...[
-            const SizedBox(height: 4),
-            footer!,
-          ],
+          if (footer != null) ...[const SizedBox(height: 4), footer!],
         ],
       ),
     );

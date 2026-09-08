@@ -23,8 +23,9 @@ class ConnectivityService {
 }
 
 /// Provider for connectivity service
-final connectivityServiceProvider =
-    Provider<ConnectivityService>((ref) => ConnectivityService());
+final connectivityServiceProvider = Provider<ConnectivityService>(
+  (ref) => ConnectivityService(),
+);
 
 /// Stream provider for connectivity status
 final connectivityStatusProvider = StreamProvider<bool>((ref) {

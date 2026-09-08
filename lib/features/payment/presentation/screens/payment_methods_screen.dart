@@ -14,7 +14,8 @@ class DefaultPaymentMethodNotifier extends Notifier<String> {
 
 final defaultPaymentMethodProvider =
     NotifierProvider<DefaultPaymentMethodNotifier, String>(
-        DefaultPaymentMethodNotifier.new);
+      DefaultPaymentMethodNotifier.new,
+    );
 
 class PaymentMethodsScreen extends ConsumerWidget {
   const PaymentMethodsScreen({super.key});
@@ -59,9 +60,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
             ),
             child: ListTile(
               onTap: () {
-                ref
-                    .read(defaultPaymentMethodProvider.notifier)
-                    .set('wallet');
+                ref.read(defaultPaymentMethodProvider.notifier).set('wallet');
               },
               leading: Icon(
                 Icons.account_balance_wallet,
@@ -81,7 +80,10 @@ class PaymentMethodsScreen extends ConsumerWidget {
               ),
               trailing: selectedMethod == 'wallet'
                   ? Icon(Icons.check_circle, color: context.palette.brand)
-                  : Icon(Icons.radio_button_unchecked, color: context.palette.textMuted),
+                  : Icon(
+                      Icons.radio_button_unchecked,
+                      color: context.palette.textMuted,
+                    ),
             ),
           ),
 
@@ -143,7 +145,9 @@ class PaymentMethodsScreen extends ConsumerWidget {
                             child: Text(
                               'No saved cards yet. Cards used during Paystack payments will be saved here.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: context.palette.textSecondary),
+                              style: TextStyle(
+                                color: context.palette.textSecondary,
+                              ),
                             ),
                           ),
                         ),
@@ -181,13 +185,19 @@ class PaymentMethodsScreen extends ConsumerWidget {
                             ),
                             title: Text(
                               '$brand ending in $last4',
-                              style: TextStyle(color: context.palette.textPrimary),
+                              style: TextStyle(
+                                color: context.palette.textPrimary,
+                              ),
                             ),
                             trailing: isSelected
-                                ? Icon(Icons.check_circle,
-                                    color: context.palette.brand)
-                                : Icon(Icons.radio_button_unchecked,
-                                    color: context.palette.textMuted),
+                                ? Icon(
+                                    Icons.check_circle,
+                                    color: context.palette.brand,
+                                  )
+                                : Icon(
+                                    Icons.radio_button_unchecked,
+                                    color: context.palette.textMuted,
+                                  ),
                           ),
                         );
                       }).toList(),
