@@ -70,6 +70,10 @@ dependencies:
   cached_network_image: ^3.4.1
   firebase_analytics: ^12.1.3
   firebase_crashlytics: ^5.0.8
+  # Attests that calls come from a genuine install of this app rather than a
+  # script holding a stolen token. Attaching tokens is harmless until you turn
+  # on enforcement per-service in the Firebase console — see PLAY_STORE.md.
+  firebase_app_check: ^0.4.0
   encrypt: ^5.0.3
   flutter_secure_storage: ^10.0.0
   hive: ^2.2.3

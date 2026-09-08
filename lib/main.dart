@@ -10,6 +10,7 @@ import 'package:dilivvafast/core/presentation/components/error_boundary.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dilivvafast/core/presentation/routing/app_router.dart';
 import 'package:dilivvafast/firebase_options.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,6 +59,30 @@ void main() async {
           options: DefaultFirebaseOptions.currentPlatform,
         );
         _firebaseReady = true;
+
+        // App Check attests that requests come from a genuine install of this
+        // app rather than a script replaying a stolen token.
+        //
+        // Failure here is deliberately non-fatal: until enforcement is turned
+        // on per-service in the Firebase console, an unattested call is still
+        // served, and taking the whole app down because attestation could not
+        // be reached would be a worse outcome than proceeding without it.
+        // Enable enforcement only after the console metrics show genuine
+        // traffic is being attested — see PLAY_STORE.md.
+        try {
+          await FirebaseAppCheck.instance.activate(
+            // Debug provider prints a token you must allow-list in the
+            // console; release builds attest with Play Integrity / DeviceCheck.
+            providerAndroid: kDebugMode
+                ? const AndroidDebugProvider()
+                : const AndroidPlayIntegrityProvider(),
+            providerApple: kDebugMode
+                ? const AppleDebugProvider()
+                : const AppleDeviceCheckProvider(),
+          );
+        } catch (e) {
+          debugPrint('[Dilivvafast] App Check activation failed: $e');
+        }
 
         // REMOVE AFTER VERIFYING iOS AUTH — temporary diagnostic log
         // ignore: avoid_print

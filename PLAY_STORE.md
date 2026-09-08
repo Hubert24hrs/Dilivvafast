@@ -114,13 +114,19 @@ flutter build appbundle --release
 
 ## App Check
 
-Not configured. Without it the backend accepts calls from anything holding a
-valid token, not only genuine installs of your app.
+The client side is **done**: `firebase_app_check` is a dependency and
+`FirebaseAppCheck.activate()` runs in `main()` (Play Integrity / DeviceCheck in
+release, debug providers in debug builds).
 
-1. Play Console → enable Play Integrity.
-2. Firebase Console → App Check → register the Android app with Play Integrity.
-3. Add `firebase_app_check` to `pubspec.yaml` and activate it in `main()` after
-   `Firebase.initializeApp()`.
-4. Run in **monitoring mode** first and watch the metrics — enforcing
-   immediately will lock out every already-installed client.
-5. Only then enforce, per-service.
+What remains is console-side, and must be done in this order:
+
+1. Play Console → enable Play Integrity for the app.
+2. Firebase Console → App Check → register the Android app with Play Integrity,
+   and the iOS app with DeviceCheck.
+3. For local development, run the app once and copy the debug token it logs
+   into Firebase Console → App Check → Manage debug tokens.
+4. Leave enforcement **off** and watch the metrics until essentially all
+   traffic shows as verified. Enforcing before your users have the build that
+   attests will lock every one of them out.
+5. Only then enable enforcement, one service at a time (Firestore, Functions,
+   Storage), watching for a drop in legitimate traffic after each.

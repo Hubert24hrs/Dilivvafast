@@ -339,6 +339,22 @@ applied to endpoints that cost money to serve:
 
 ---
 
+## App Check
+
+`FirebaseAppCheck.activate()` runs in `main()` immediately after
+`Firebase.initializeApp()`. Debug builds use the debug providers; release
+builds attest with Play Integrity (Android) and DeviceCheck (Apple).
+
+Activation failure is deliberately **non-fatal** — it is logged and the app
+continues. Until enforcement is switched on, an unattested call is served
+anyway, so aborting startup because attestation was unreachable would be a
+strictly worse outcome.
+
+**Enforcement is off.** Attaching tokens does nothing on its own. Turn it on
+per-service in the Firebase console, and only after the App Check metrics show
+real traffic being attested — enabling it cold locks out every client that has
+not yet shipped with this build. See PLAY_STORE.md.
+
 ## Admin actions and audit trail
 
 `admin_audit_log` is append-only from the Admin SDK, readable by admins,
@@ -389,8 +405,7 @@ position so a stale pin does not linger on the customer map.
 3. **Storage download URLs bypass storage rules** (above).
 4. **Money is floating-point**, not integer minor units.
 5. **Email verification is sent but not enforced** (see above).
-6. **Firebase App Check is not configured** — see README for setup. Without it,
-   the backend accepts calls from any client, not only genuine app installs.
+6. **App Check is integrated but not enforced** (see below).
 7. **Admin screen writes are not audited.** The admin UI writes to Firestore
    directly; only `setUserRole` and `reviewDriverApplication` reach
    `admin_audit_log`.
