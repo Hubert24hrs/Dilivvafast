@@ -1080,29 +1080,55 @@ export const setUserRole = onCall(async (request) => {
   return { success: true, uid: targetUid, role };
 });
 
-/** Approve or reject a driver application, with an audit trail. */
+/**
+ * Approve or reject a driver application, with an audit trail.
+ *
+ * The admin UI used to write the application record and the user entitlement
+ * straight to Firestore. That worked — admins may write both — but it left no
+ * audit trail for a decision that grants someone the ability to earn money on
+ * the platform. Routing it through here records who decided what, and when.
+ */
 export const reviewDriverApplication = onCall(async (request) => {
   const actorUid = await requireAdmin(request);
 
   const targetUid = String(request.data?.uid ?? "").trim();
   const decision = String(request.data?.decision ?? "").trim();
   const reason = String(request.data?.reason ?? "").slice(0, 500);
+  const applicationId = String(request.data?.applicationId ?? "").trim();
+  const vehicleType = String(request.data?.vehicleType ?? "").slice(0, 80);
+  const vehiclePlate = String(request.data?.vehiclePlate ?? "").slice(0, 40);
 
   if (!targetUid) throw new HttpsError("invalid-argument", "A target uid is required.");
   if (!["approved", "rejected", "suspended"].includes(decision)) {
     throw new HttpsError("invalid-argument", "Decision must be approved, rejected or suspended.");
   }
 
-  await db.collection("users").doc(targetUid).update({
+  // The application record and the entitlement must agree, so they move
+  // together.
+  const batch = db.batch();
+
+  batch.update(db.collection("users").doc(targetUid), {
     driverStatus: decision,
+    ...(decision === "approved" && vehicleType ? { vehicleType } : {}),
+    ...(decision === "approved" && vehiclePlate ? { vehiclePlate } : {}),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  if (applicationId) {
+    batch.update(db.collection("driver_applications").doc(applicationId), {
+      status: decision,
+      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: actorUid,
+    });
+  }
+
+  await batch.commit();
 
   await writeAuditLog({
     actorUid,
     action: "review_driver_application",
     targetUid,
-    details: { decision, reason },
+    details: { decision, reason, applicationId },
   });
 
   await sendToUser(

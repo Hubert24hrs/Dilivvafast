@@ -358,12 +358,20 @@ not yet shipped with this build. See PLAY_STORE.md.
 ## Admin actions and audit trail
 
 `admin_audit_log` is append-only from the Admin SDK, readable by admins,
-writable by no client. `setUserRole` and `reviewDriverApplication` both write
-to it.
+writable by no client.
 
-Not every privileged path is audited yet — admin edits made directly through
-Firestore client writes (the admin screens) are **not** logged. Routing those
-through callables is outstanding.
+Audited today:
+
+- `setUserRole` — role grants and revocations.
+- `reviewDriverApplication` — driver approval / rejection. The admin
+  applications screen calls this rather than writing Firestore directly, so
+  granting someone the ability to earn on the platform records who decided it.
+  The function commits the application record and the user entitlement in one
+  batch, so the two cannot disagree.
+
+Still unaudited: other admin screen writes (suspending accounts, editing
+zones, promo creation) go straight to Firestore. Routing them through
+callables is the remaining work.
 
 ---
 
@@ -406,7 +414,7 @@ position so a stale pin does not linger on the customer map.
 4. **Money is floating-point**, not integer minor units.
 5. **Email verification is sent but not enforced** (see above).
 6. **App Check is integrated but not enforced** (see below).
-7. **Admin screen writes are not audited.** The admin UI writes to Firestore
-   directly; only `setUserRole` and `reviewDriverApplication` reach
-   `admin_audit_log`.
+7. **Most admin screen writes are still unaudited.** Driver approval and role
+   changes now go through audited callables; account suspension, zone edits
+   and promo creation still write Firestore directly.
 8. **Re-authentication is not required** for high-risk account operations.

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -184,36 +185,23 @@ class _DriverCard extends ConsumerWidget {
     required bool approved,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
-    final firestore = ref.read(firestoreProvider);
 
     try {
-      // The application record and the user's entitlement must agree, so they
-      // move together in one batch.
-      final batch = firestore.batch();
-
-      batch.update(
-        firestore
-            .collection(FirestoreConstants.driverApplications)
-            .doc(application.id),
-        {
-          'status': approved ? 'approved' : 'rejected',
-          'reviewedAt': FieldValue.serverTimestamp(),
-        },
-      );
-
-      batch.update(
-        firestore.collection(FirestoreConstants.users).doc(application.userId),
-        {
-          'driverStatus': approved
-              ? ModeAccess.approved.name
-              : ModeAccess.rejected.name,
-          if (approved) 'vehicleType': application.vehicleType,
-          if (approved) 'vehiclePlate': application.vehiclePlate,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      );
-
-      await batch.commit();
+      // Goes through the Cloud Function rather than writing Firestore
+      // directly. Admins are permitted to write both documents, but granting
+      // someone the ability to earn on the platform should leave a record of
+      // who decided it — the function writes admin_audit_log, which no client
+      // can forge, and commits both documents in one batch.
+      await ref
+          .read(firebaseFunctionsProvider)
+          .httpsCallable('reviewDriverApplication')
+          .call<Map<String, dynamic>>({
+            'uid': application.userId,
+            'applicationId': application.id,
+            'decision': approved ? 'approved' : 'rejected',
+            if (approved) 'vehicleType': application.vehicleType,
+            if (approved) 'vehiclePlate': application.vehiclePlate,
+          });
 
       messenger.showSnackBar(
         SnackBar(
@@ -224,8 +212,17 @@ class _DriverCard extends ConsumerWidget {
           ),
         ),
       );
+    } on FirebaseFunctionsException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? 'Could not update the application.'),
+        ),
+      );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Could not update: $e')));
+      debugPrint('reviewDriverApplication failed: $e');
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not update the application.')),
+      );
     }
   }
 }
