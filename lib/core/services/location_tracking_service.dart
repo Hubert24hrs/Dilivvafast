@@ -130,9 +130,11 @@ class LocationTrackingService {
 
   /// Ensure foreground location permission is granted.
   ///
-  /// Deliberately requests foreground ("while in use") only. Background
-  /// location is requested separately, after the prominent disclosure screen —
-  /// see BackgroundLocationDisclosure and PLAY_STORE.md.
+  /// Foreground ("while in use") only. The app does not declare or request
+  /// ACCESS_BACKGROUND_LOCATION, so no Google Play prominent-disclosure screen
+  /// is required and none exists. If background tracking is ever added, read
+  /// PLAY_STORE.md before writing the code — the disclosure has to ship with
+  /// it, not after.
   Future<bool> _ensurePermissions() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return false;

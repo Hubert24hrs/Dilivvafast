@@ -400,7 +400,7 @@ position so a stale pin does not linger on the customer map.
 | `flutter test` | ✅ 111 passing |
 | `tsc --noEmit` (functions) | ✅ clean |
 | Firestore rules tests | ⚠️ **written but never executed** — the emulator needs a JVM and none was installed on the audit machine. Run `npm test` in `test/firestore-rules/` before deploying rules. |
-| Release build | ⚠️ not produced during the audit |
+| Release build | ✅ `flutter build apk --release` (arm64), 84.3 MB |
 
 ---
 

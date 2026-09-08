@@ -46,9 +46,13 @@ service firebase.storage {
     // Readable by any signed-in user: a customer sees their driver avatar and
     // vice versa. Writable only by the owner.
 
-    match /profile_photos/{userId} {
+    // The uploader writes `profile_photos/<uid>.jpg`, so the object name is the
+    // uid plus an extension. Matched with a regex rather than split() so the
+    // owner check is unambiguous: only <own-uid>.<ext> is writable.
+    match /profile_photos/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId.split('[.]')[0]) &&
+      allow write: if isAuthenticated() &&
+                      fileName.matches(request.auth.uid + '\\.(jpg|jpeg|png|webp)') &&
                       isImage() && withinSizeLimit();
     }
 
