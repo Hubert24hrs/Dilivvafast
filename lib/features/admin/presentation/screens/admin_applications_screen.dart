@@ -227,64 +227,179 @@ class _DriverCard extends ConsumerWidget {
   }
 }
 
-class _DocumentRow extends StatelessWidget {
+class _DocumentRow extends ConsumerWidget {
   const _DocumentRow({required this.application});
 
   final DriverApplicationModel application;
 
-  @override
-  Widget build(BuildContext context) {
-    final docs = <String, String?>{
-      'Licence': application.licenseUrl,
-      'Vehicle': application.vehiclePhotoUrl,
-      'ID': application.governmentIdUrl,
-    };
+  /// Label -> (whether it was uploaded, the storage key the backend expects).
+  Map<String, (bool, String)> get _docs => {
+    'Licence': (application.licenseUrl != null, 'drivers_license'),
+    'Vehicle': (application.vehiclePhotoUrl != null, 'vehicle_photo'),
+    'ID': (application.governmentIdUrl != null, 'government_id'),
+  };
 
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
-          for (final entry in docs.entries)
-            _DocChip(label: entry.key, uploaded: entry.value != null),
+          for (final entry in _docs.entries)
+            _DocChip(
+              label: entry.key,
+              uploaded: entry.value.$1,
+              onTap: entry.value.$1
+                  ? () => _view(context, ref, entry.key, entry.value.$2)
+                  : null,
+            ),
         ],
       ),
     );
   }
+
+  /// Open one identity document.
+  ///
+  /// These chips used to be decoration — they showed a tick if a file had been
+  /// uploaded and nothing more, so an application was approved or declined
+  /// without anyone ever seeing the licence or ID behind it.
+  ///
+  /// The URL is minted on demand by `getDriverDocumentUrl` and expires after
+  /// 15 minutes. The permanent `getDownloadURL()` links stored on the
+  /// application document bypass storage.rules and cannot be revoked, so they
+  /// are deliberately not used here.
+  Future<void> _view(
+    BuildContext context,
+    WidgetRef ref,
+    String label,
+    String docKey,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final result = await ref
+          .read(firebaseFunctionsProvider)
+          .httpsCallable('getDriverDocumentUrl')
+          .call<Map<String, dynamic>>({
+            'uid': application.userId,
+            'docKey': docKey,
+          });
+
+      navigator.pop(); // dismiss the spinner
+
+      final url = result.data['url'] as String?;
+      if (url == null || url.isEmpty) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('That document is unavailable.')),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBar(
+                title: Text(label),
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                  ),
+                ],
+              ),
+              Flexible(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (_, child, progress) => progress == null
+                        ? child
+                        : const Padding(
+                            padding: EdgeInsets.all(48),
+                            child: CircularProgressIndicator(),
+                          ),
+                    errorBuilder: (_, _, _) => const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text('Could not load the image.'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      navigator.pop();
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Could not open that document.')),
+      );
+    } catch (e) {
+      navigator.pop();
+      debugPrint('getDriverDocumentUrl failed: $e');
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not open that document.')),
+      );
+    }
+  }
 }
 
 class _DocChip extends StatelessWidget {
-  const _DocChip({required this.label, required this.uploaded});
+  const _DocChip({required this.label, required this.uploaded, this.onTap});
 
   final String label;
   final bool uploaded;
 
+  /// Null when nothing was uploaded, which also leaves the chip inert.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: uploaded ? palette.successSubtle : palette.surfaceSunken,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            uploaded ? Icons.check_rounded : Icons.remove_rounded,
-            size: 14,
-            color: uploaded ? palette.success : palette.textMuted,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: context.text.bodySmall?.copyWith(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: uploaded ? palette.successSubtle : palette.surfaceSunken,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              uploaded ? Icons.check_rounded : Icons.remove_rounded,
+              size: 14,
               color: uploaded ? palette.success : palette.textMuted,
             ),
-          ),
-        ],
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: context.text.bodySmall?.copyWith(
+                color: uploaded ? palette.success : palette.textMuted,
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.visibility_outlined, size: 13, color: palette.success),
+            ],
+          ],
+        ),
       ),
     );
   }

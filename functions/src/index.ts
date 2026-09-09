@@ -29,6 +29,7 @@ import {
 } from "firebase-admin/firestore";
 import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
 import { getAuth } from "firebase-admin/auth";
+import { getStorage } from "firebase-admin/storage";
 import * as crypto from "crypto";
 import axios from "axios";
 
@@ -1166,6 +1167,94 @@ export const reviewDriverApplication = onCall(async (request) => {
   );
 
   return { success: true };
+});
+
+// ==================== DRIVER DOCUMENT ACCESS ====================
+
+/** Upload keys used by driver_application_screen. */
+const DRIVER_DOC_KEYS = [
+  "drivers_license",
+  "vehicle_photo",
+  "government_id",
+] as const;
+
+/**
+ * Mint a short-lived signed URL for one driver identity document.
+ *
+ * Why this exists: `getDownloadURL()` mints a token that lives forever and
+ * bypasses storage.rules entirely — anyone who obtains the link can read a
+ * driver's licence or government ID, with no way to revoke it short of
+ * deleting the object. Storing those URLs on the user document meant a leak of
+ * that document was a leak of the identity papers behind it.
+ *
+ * A signed URL expires in 15 minutes and is minted only for a caller we have
+ * just authorised. Every access is written to admin_audit_log, because reading
+ * somebody's identity documents is exactly the kind of privileged act that
+ * should leave a trace.
+ *
+ * DEPLOYMENT NOTE: signing requires the runtime service account to hold the
+ * "Service Account Token Creator" role on itself. Without it this throws
+ * "Permission iam.serviceAccounts.signBlob is required". See DEPLOYMENT.md.
+ */
+export const getDriverDocumentUrl = onCall(async (request) => {
+  const uid = requireAuth(request);
+
+  const targetUid = String(request.data?.uid ?? "").trim();
+  const docKey = String(request.data?.docKey ?? "").trim();
+
+  if (!targetUid) {
+    throw new HttpsError("invalid-argument", "A driver uid is required.");
+  }
+  if (!(DRIVER_DOC_KEYS as readonly string[]).includes(docKey)) {
+    // Rejecting anything off the list stops a caller walking the bucket by
+    // feeding arbitrary path fragments in here.
+    throw new HttpsError("invalid-argument", "Unknown document type.");
+  }
+
+  // A driver may fetch their own documents; anyone else must be an admin.
+  let isAdminCaller = false;
+  if (targetUid !== uid) {
+    await requireAdmin(request);
+    isAdminCaller = true;
+  }
+
+  await enforceRateLimit(uid, "driver_doc_url", 60, 60 * 10);
+
+  const path = `driver_applications/${targetUid}/${docKey}.jpg`;
+
+  try {
+    const file = getStorage().bucket().file(path);
+
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new HttpsError("not-found", "That document has not been uploaded.");
+    }
+
+    const [url] = await file.getSignedUrl({
+      action: "read",
+      expires: Date.now() + 15 * 60 * 1000,
+    });
+
+    if (isAdminCaller) {
+      await writeAuditLog({
+        actorUid: uid,
+        action: "view_driver_document",
+        targetUid,
+        details: { docKey },
+      });
+    }
+
+    return { url, expiresInSeconds: 900 };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    logger.error("getDriverDocumentUrl failed", {
+      uid,
+      targetUid,
+      docKey,
+      ...errorInfo(error),
+    });
+    throw new HttpsError("internal", "Could not open that document.");
+  }
 });
 
 // ==================== REFERRAL CODE LOOKUP ====================
