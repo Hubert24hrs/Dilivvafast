@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "fast-delivery-d8d5c"
+    "default": "fast-delivery-d8d5c",
+    "prod": "fast-delivery-d8d5c",
+    "staging": "dilivvafast-staging"
   }
 }
