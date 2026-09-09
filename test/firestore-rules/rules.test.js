@@ -52,7 +52,12 @@ before(async () => {
     firestore: {
       rules: readFileSync("../../firestore.rules", "utf8"),
       host: "127.0.0.1",
-      port: 8080,
+      // 8085, not the emulator default of 8080 — that port is contended by
+      // too many dev tools. Pointing the suite at an occupied port fails in a
+      // thoroughly confusing way: loadFirestoreRules PUTs the rules to
+      // whatever is listening and every test dies with `cancelledByParent`.
+      // Keep this in step with `emulators.firestore.port` in firebase.json.
+      port: 8085,
     },
   });
 });
@@ -412,6 +417,209 @@ describe("financial ledgers", () => {
       setDoc(doc(db, "investors", "inv_1"), {
         userId: "inv_1",
         totalEarned: 5000000,
+      })
+    );
+  });
+});
+
+/**
+ * The tests above prove the holes are closed. These prove the app still works.
+ *
+ * A rules change has two failure modes, and denial tests only catch one of
+ * them. Everything here is an access path the running app depends on; if any
+ * of it regresses, real users are locked out of a working feature.
+ */
+describe("legitimate access still works", () => {
+  test("a user updates their own profile", async () => {
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "users", CUSTOMER), {
+        fullName: "Updated Name",
+        phone: "+2348000000009",
+      })
+    );
+  });
+
+  test("an investor updates a non-financial field on their own profile", async () => {
+    // Exercises the `affects()` helper against an existing document — the
+    // path that speculative evaluation on a missing doc does not cover.
+    await seed(async (db) => {
+      await setDoc(doc(db, "investors", CUSTOMER), {
+        userId: CUSTOMER,
+        totalInvested: 0,
+        totalEarned: 0,
+        bankName: "Old Bank",
+      });
+    });
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "investors", CUSTOMER), { bankName: "New Bank" })
+    );
+  });
+
+  test("a customer reads their own order and transactions", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "mine"), { userId: CUSTOMER, status: "pending" });
+      await setDoc(doc(db, "transactions", "t_mine"), { userId: CUSTOMER, amount: 100 });
+    });
+    await assertSucceeds(getDoc(doc(asCustomer(), "couriers", "mine")));
+    await assertSucceeds(getDoc(doc(asCustomer(), "transactions", "t_mine")));
+  });
+
+  test("a customer lists their own orders", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "mine"), { userId: CUSTOMER, status: "pending" });
+    });
+    await assertSucceeds(
+      getDocs(
+        query(collection(asCustomer(), "couriers"), where("userId", "==", CUSTOMER))
+      )
+    );
+  });
+
+  test("a driver browses the unassigned queue", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "open"), { userId: OTHER_CUSTOMER, status: "pending" });
+    });
+    await assertSucceeds(getDocs(collection(asDriver(), "couriers")));
+  });
+
+  test("a driver reads and progresses a job assigned to them", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "job"), {
+        userId: OTHER_CUSTOMER,
+        driverId: DRIVER,
+        status: "picked_up",
+      });
+    });
+    await assertSucceeds(getDoc(doc(asDriver(), "couriers", "job")));
+    await assertSucceeds(
+      updateDoc(doc(asDriver(), "couriers", "job"), { status: "in_transit" })
+    );
+  });
+
+  test("a driver completes a delivery from in_transit", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "job"), {
+        userId: OTHER_CUSTOMER,
+        driverId: DRIVER,
+        status: "in_transit",
+      });
+    });
+    await assertSucceeds(
+      updateDoc(doc(asDriver(), "couriers", "job"), {
+        status: "delivered",
+        deliveredAt: new Date(),
+      })
+    );
+  });
+
+  test("a customer rates a delivered order", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "done"), {
+        userId: CUSTOMER,
+        driverId: DRIVER,
+        status: "delivered",
+      });
+    });
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "couriers", "done"), {
+        rating: 5,
+        ratingComment: "Great service",
+      })
+    );
+  });
+
+  test("order chat works for both parties", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "chat"), {
+        userId: CUSTOMER,
+        driverId: DRIVER,
+        status: "in_transit",
+      });
+    });
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "couriers", "chat", "messages", "m1"), {
+        senderId: CUSTOMER,
+        text: "I am at the gate",
+      })
+    );
+    await assertSucceeds(
+      getDocs(collection(asDriver(), "couriers", "chat", "messages"))
+    );
+  });
+
+  test("a user writes in their own support thread", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "orders", `support_${CUSTOMER}`), {
+        userId: CUSTOMER,
+        subject: "Where is my parcel",
+      })
+    );
+    await assertSucceeds(
+      setDoc(
+        doc(asCustomer(), "orders", `support_${CUSTOMER}`, "messages", "m1"),
+        { senderId: CUSTOMER, text: "Hello" }
+      )
+    );
+  });
+
+  test("reference data is readable by any signed-in user", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "zones", "lagos"), { name: "Lagos", isActive: true });
+      await setDoc(doc(db, "promos", "p1"), { code: "WELCOME", isActive: true });
+      await setDoc(doc(db, "app_config", "pricing"), { commission: 0.2 });
+    });
+    await assertSucceeds(getDoc(doc(asCustomer(), "zones", "lagos")));
+    await assertSucceeds(getDoc(doc(asCustomer(), "promos", "p1")));
+    await assertSucceeds(getDoc(doc(asCustomer(), "app_config", "pricing")));
+  });
+
+  test("a user raises an SOS and files a support ticket", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "sos_alerts", "s1"), {
+        userId: CUSTOMER,
+        orderId: "mine",
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "support_tickets", "st1"), {
+        userId: CUSTOMER,
+        subject: "Damaged item",
+      })
+    );
+  });
+
+  test("a user requests driver access by moving their own status to pending", async () => {
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "users", CUSTOMER), { driverStatus: "pending" })
+    );
+  });
+
+  test("a user manages their own saved addresses and payment methods", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "users", CUSTOMER, "saved_addresses", "a1"), {
+        label: "Home",
+        address: "1 Marina",
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "users", CUSTOMER, "payment_methods", "pm1"), {
+        last4: "4242",
+      })
+    );
+  });
+
+  test("a user submits a driver application and a withdrawal request", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "driver_applications", "app1"), {
+        userId: CUSTOMER,
+        status: "submitted",
+      })
+    );
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "withdrawal_requests", "w1"), {
+        userId: CUSTOMER,
+        status: "pending",
+        amount: 5000,
       })
     );
   });
