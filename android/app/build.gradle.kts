@@ -60,10 +60,37 @@ android {
 
     buildTypes {
         release {
-            // Use release signing if key.properties exists, otherwise fall back to debug
+            // Falling back to the debug key keeps `flutter build apk --release`
+            // working on a machine without the keystore, which is genuinely
+            // useful for local smoke testing. It is dangerous silently: a
+            // debug-signed artefact looks like a release build, and Play
+            // rejects it only at upload time.
+            //
+            // So: warn loudly always, and refuse outright when the caller says
+            // this build is meant to be shippable. CI passes
+            // -PrequireReleaseSigning=true for the appbundle job.
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
+                val requireRealSigning =
+                    (project.findProperty("requireReleaseSigning") as String?)
+                        ?.toBoolean() ?: false
+                if (requireRealSigning) {
+                    throw GradleException(
+                        "android/key.properties is missing, so this release " +
+                            "build would be signed with the DEBUG key. " +
+                            "Provide the keystore, or drop " +
+                            "-PrequireReleaseSigning=true if you only want a " +
+                            "local test build."
+                    )
+                }
+                logger.warn(
+                    "\n**********************************************************\n" +
+                        "WARNING: android/key.properties not found.\n" +
+                        "This release build is signed with the DEBUG key and is\n" +
+                        "NOT publishable. Google Play will reject it.\n" +
+                        "**********************************************************\n"
+                )
                 signingConfigs.getByName("debug")
             }
 

@@ -269,7 +269,10 @@ jobs:
           EOF
 
       - name: Build App Bundle
-        run: flutter build appbundle --release
+        # -PrequireReleaseSigning=true makes the build fail rather than fall
+        # back to the debug key. A debug-signed bundle is not publishable, and
+        # discovering that at upload time is too late.
+        run: flutter build appbundle --release -PrequireReleaseSigning=true
 
       - name: Upload App Bundle artifact
         uses: actions/upload-artifact@v4
