@@ -9,58 +9,97 @@ delivery.
 
 ---
 
+## Current staging status
+
+`dilivvafast-staging` exists and is partly deployed.
+
+| Step | State |
+|---|---|
+| Project created | ✅ `dilivvafast-staging` |
+| Firestore/Storage/Firebase APIs enabled | ✅ via `gcloud services enable` |
+| Firestore `(default)` database (nam5) | ✅ created |
+| **Firestore rules deployed** | ✅ compiled and released |
+| **Firestore indexes deployed** | ✅ |
+| Storage rules | ❌ blocked — Storage not initialised |
+| Cloud Functions | ❌ blocked — project is on Spark |
+| Secrets set | ❌ not set |
+
+Rules and indexes are live on staging. That is the first successful deploy this
+project has ever had.
+
+---
+
 ## Part 1 — What you need to do (I cannot)
 
-### 1. Create the staging project
+### 1. Upgrade staging to Blaze
 
-Firebase Console → Add project → name it **`dilivvafast-staging`**.
+**Cloud Functions v2 requires the Blaze (pay-as-you-go) plan.** The deploy
+fails at `artifactregistry.googleapis.com` on Spark:
 
-If you pick a different id, update the `staging` alias in `.firebaserc`.
+> Your project dilivvafast-staging must be on the Blaze (pay-as-you-go) plan
+> to complete this command.
 
-### 2. Enable billing on it
+https://console.firebase.google.com/project/dilivvafast-staging/usage/details
 
-**Cloud Functions v2 requires the Blaze (pay-as-you-go) plan.** A Spark-plan
-project will fail the functions deploy with a quota error.
+This needs a payment method, which is yours to add. Staging costs
+approximately nothing at test volumes — set a $10/month budget alert while you
+are in there.
 
-Staging costs approximately nothing at test volumes, but the card has to be on
-file. Set a budget alert (say $10/month) while you are in there.
+### 2. Initialise Storage
 
-### 3. Enable the services staging needs
+https://console.firebase.google.com/project/dilivvafast-staging/storage →
+**Get started**. One click; the CLI cannot do this first-time setup.
 
-In the staging project: **Authentication** (Email/Password), **Firestore**
-(production mode — the rules in this repo are the access control), **Storage**.
+### 3. Enable Email/Password auth
+
+https://console.firebase.google.com/project/dilivvafast-staging/authentication/providers
 
 ### 4. Set the two secrets
 
 ```bash
 firebase use staging
-firebase functions:secrets:set PAYSTACK_SECRET_KEY   # your Paystack TEST key (sk_test_...)
+firebase functions:secrets:set PAYSTACK_SECRET_KEY   # Paystack TEST key (sk_test_...)
 firebase functions:secrets:set ANTHROPIC_API_KEY
 ```
 
-Use the **test** Paystack key for staging. Never the live one.
+Use the **test** Paystack key for staging, never the live one. I have
+deliberately not handled either key.
 
-### 5. Rotate the leaked Paystack key
+### 5. Grant the signing role
 
-Separate from all of the above, and still outstanding: the key
-`sk_test_8a005c…` is in this repository's git history. Removing it from `HEAD`
-does not remove it from history. Rotate it in the Paystack dashboard.
+`getDriverDocumentUrl` signs URLs, which needs the runtime service account to
+hold **Service Account Token Creator** on itself. Without it, opening a driver
+document throws `Permission iam.serviceAccounts.signBlob is required`.
 
-### 6. Tell me when 1–4 are done
+```bash
+gcloud projects add-iam-policy-binding dilivvafast-staging \
+  --member="serviceAccount:dilivvafast-staging@appspot.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator"
+```
 
-Then I run Part 2.
+### 6. Rotate the leaked Paystack key
+
+Separate from all of the above, and still outstanding: `sk_test_8a005c…` is in
+this repository's git history. Removing it from `HEAD` does not remove it from
+history. Rotate it in the Paystack dashboard.
+
+### 7. Tell me when 1–5 are done
+
+Then I finish Part 2.
 
 ---
 
-## Part 2 — Deploy to staging (I can run this)
+## Part 2 — Finish the staging deploy (I can run this)
 
 ```bash
 firebase use staging
-firebase deploy --only firestore:rules,firestore:indexes,storage,functions
+firebase deploy --only storage,functions
 ```
 
-Indexes build asynchronously; the deploy returns before they are ready.
-Watch Firestore → Indexes until they all read "Enabled".
+Rules and indexes are already live, so only storage and functions remain.
+
+Indexes build asynchronously; the deploy returns before they are ready. Watch
+Firestore → Indexes until they all read "Enabled".
 
 ### Verify the deploy
 

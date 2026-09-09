@@ -138,15 +138,33 @@ Status values are serialised as the snake_case `@JsonValue` forms
 
 ```bash
 flutter analyze
-flutter test
+dart format --output=none --set-exit-if-changed lib test
+flutter test                              # 111 unit/widget tests
 
-cd functions && npx tsc --noEmit        # Cloud Functions type-check
-
-cd test/firestore-rules && npm install && npm test   # needs a JVM
+cd functions && npx tsc --noEmit          # Cloud Functions type-check
 ```
 
-The Firestore rules tests run against the emulator, which requires Java. They
-also run in CI.
+Both emulator suites need a JVM. Android Studio bundles one:
+
+```bash
+export JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+export PATH="/c/Program Files/Android/Android Studio/jbr/bin:$PATH"
+export FUNCTIONS_DISCOVERY_TIMEOUT=120
+
+cd test/firestore-rules && npm install && npm test   # 49 rules assertions
+npm --prefix functions run test:integration          # 13 backend assertions
+```
+
+The Firestore emulator runs on port **8085**, not the default 8080. If every
+rules test reports `cancelledByParent`, something else has taken the port.
+
+All of the above run in CI.
+
+## Deploying
+
+See [DEPLOYMENT.md](DEPLOYMENT.md). Staging (`dilivvafast-staging`) already has
+Firestore rules and indexes deployed; functions and storage are blocked on a
+Blaze upgrade and one console click.
 
 ---
 

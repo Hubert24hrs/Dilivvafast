@@ -303,14 +303,35 @@ holding driver licences and ID documents.
   driver, and admins; writable by the assigned driver.
 - Uploads are constrained to `image/(jpeg|jpg|png|webp)` and 8 MB.
 
-### ⚠ Known weakness — download URLs
+### Driver document access — signed URLs
 
-`getDownloadURL()` mints a long-lived bearer token that **bypasses these rules**
-for anyone holding the link. Driver document URLs are currently stored on the
-user document, so a leak of that document leaks the documents.
+`getDownloadURL()` mints a bearer token that never expires and **bypasses these
+rules** for anyone holding the link. Those URLs are stored on the application
+document, so leaking that document leaked the licence and government ID behind
+it, unrevocably.
 
-The correct fix is to store the storage *path* and serve admins short-lived
-signed URLs from the Admin SDK. This has **not** been implemented.
+Driver documents are now served through the `getDriverDocumentUrl` callable,
+which mints a **signed URL valid for 15 minutes** and only after authorising
+the caller:
+
+- a driver may fetch their own documents;
+- anyone else must be an admin;
+- `docKey` is validated against a fixed list, so a caller cannot supply path
+  fragments and walk the bucket;
+- every admin access is written to `admin_audit_log`.
+
+This also closed a product gap: the admin review screen showed only a tick
+indicating a file had been uploaded, with no way to view it. Applications were
+being approved or declined **without anyone ever seeing the documents**. The
+chips now open the image.
+
+Residual risk: the legacy permanent `getDownloadURL()` values are still stored
+on existing application documents. New uploads should stop writing them, and
+the historical ones are worth purging.
+
+**Deployment requirement:** signing needs the runtime service account to hold
+`roles/iam.serviceAccountTokenCreator` on itself, or this throws
+`Permission iam.serviceAccounts.signBlob is required`. See DEPLOYMENT.md.
 
 ---
 
@@ -442,7 +463,8 @@ thoroughly misleading way (every test reports `cancelledByParent`).
    source.
 2. **Firestore rules tests have never been run.** They encode the intended
    behaviour but are unverified.
-3. **Storage download URLs bypass storage rules** (above).
+3. **Legacy permanent download URLs** remain on existing driver application
+   documents, even though new access goes through signed URLs. Worth purging.
 4. **Money is floating-point**, not integer minor units.
 5. **Email verification is sent but not enforced** (see above).
 6. **App Check is integrated but not enforced** (see below).
