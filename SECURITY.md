@@ -397,10 +397,42 @@ position so a stale pin does not linger on the customer map.
 | Check | Status |
 |---|---|
 | `flutter analyze` | ✅ clean |
+| `dart format --set-exit-if-changed` | ✅ clean |
 | `flutter test` | ✅ 111 passing |
 | `tsc --noEmit` (functions) | ✅ clean |
-| Firestore rules tests | ⚠️ **written but never executed** — the emulator needs a JVM and none was installed on the audit machine. Run `npm test` in `test/firestore-rules/` before deploying rules. |
+| Firestore rules tests | ✅ **49 passing** against the emulator |
+| Cloud Functions integration | ✅ **13 passing** against the emulator |
 | Release build | ✅ `flutter build apk --release` (arm64), 84.3 MB |
+| Deployed to Firebase | ❌ **never** — see below |
+| Exercised against live Firebase | ❌ **never** |
+
+### Running the emulator suites
+
+Both need a JVM. Android Studio bundles one:
+
+```bash
+export JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+export PATH="/c/Program Files/Android/Android Studio/jbr/bin:$PATH"
+export FUNCTIONS_DISCOVERY_TIMEOUT=120
+
+cd test/firestore-rules && npm install && npm test   # 49 rules assertions
+npm --prefix functions run test:integration          # 13 backend assertions
+```
+
+The Firestore emulator runs on port **8085**, not the default 8080 — that port
+is too commonly contended, and pointing the suite at an occupied one fails in a
+thoroughly misleading way (every test reports `cancelledByParent`).
+
+### What the emulator does not cover
+
+- **Paystack.** `initializePaystackPayment`, `verifyPaystackPayment` and
+  `paystackWebhook` all call Paystack's API. Their idempotency and ownership
+  logic is unit-reviewed but **not executed**; proving it needs Paystack test
+  keys against a real deployment.
+- **`processDriverPayout` / `weeklyDriverReport`.** Scheduled functions, which
+  the emulator skips without a pubsub emulator. Payout idempotency is
+  therefore **unproven by test**.
+- **FCM delivery.** Notification sends are stubbed by the emulator.
 
 ---
 
