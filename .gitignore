@@ -78,3 +78,6 @@ android/build/
 # Node (Cloud Functions)
 node_modules/
 functions/lib/
+
+# Cloud Functions emulator secrets (never commit)
+functions/.secret.local

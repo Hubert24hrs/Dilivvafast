@@ -128,6 +128,30 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The emulator needs a JVM for Firestore.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Provide emulator secrets
+        # Dummy values. These functions never reach Paystack or Anthropic in
+        # the tests below; defineSecret only requires that a value exists.
+        run: |
+          printf 'PAYSTACK_SECRET_KEY=sk_test_ci_dummy\nANTHROPIC_API_KEY=sk-ant-ci-dummy\n' > .secret.local
+
+      - name: Integration tests (pricing, promo redemption)
+        env:
+          # Discovery defaults to 10s, which is not always enough on a cold
+          # runner; the failure mode is an unhelpful "cannot determine backend
+          # specification".
+          FUNCTIONS_DISCOVERY_TIMEOUT: 120
+        run: npm run test:integration
+
   # ---------------------------------------------------------------------------
   # Firestore security rules, exercised against the emulator.
   # These assertions were written during the 2026-09 audit but never executed

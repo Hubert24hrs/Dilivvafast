@@ -21,13 +21,20 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { logger } from "firebase-functions";
-import * as admin from "firebase-admin";
+import { initializeApp } from "firebase-admin/app";
+import {
+  getFirestore,
+  FieldValue,
+  GeoPoint,
+} from "firebase-admin/firestore";
+import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
 import * as crypto from "crypto";
 import axios from "axios";
 
-admin.initializeApp();
-const db = admin.firestore();
-const messaging = admin.messaging();
+initializeApp();
+const db = getFirestore();
+const messaging = getMessaging();
 
 setGlobalOptions({ region: "us-central1", maxInstances: 20 });
 
@@ -48,6 +55,21 @@ const REFERRAL_BONUS = 500;
  *  increments from accumulating binary-floating-point drift. */
 function toKoboPrecision(naira: number): number {
   return Math.round(naira * 100) / 100;
+}
+
+/**
+ * Serialise an error for structured logging.
+ *
+ * Passing the raw error as a log field looks right but is useless: an Error
+ * has no enumerable own properties, so it JSON-serialises to `{}` and the log
+ * records that something failed without saying what. Every catch block in this
+ * file goes through here instead.
+ */
+function errorInfo(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return { message: error.message, stack: error.stack, name: error.name };
+  }
+  return { message: String(error) };
 }
 
 function requireAuth(request: CallableRequest): string {
@@ -112,7 +134,7 @@ async function writeAuditLog(entry: {
 }): Promise<void> {
   await db.collection("admin_audit_log").add({
     ...entry,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   });
 }
 
@@ -126,7 +148,7 @@ async function pruneTokenIfStale(uid: string, error: unknown): Promise<void> {
     await db
       .collection("users")
       .doc(uid)
-      .update({ fcmToken: admin.firestore.FieldValue.delete() })
+      .update({ fcmToken: FieldValue.delete() })
       .catch(() => undefined);
   }
 }
@@ -143,7 +165,7 @@ async function sendToUser(
   try {
     await messaging.send({ token, notification, data });
   } catch (error) {
-    logger.warn("FCM send failed", { uid, error });
+    logger.warn("FCM send failed", { uid, ...errorInfo(error) });
     await pruneTokenIfStale(uid, error);
   }
 }
@@ -211,7 +233,7 @@ export const initializePaystackPayment = onCall(
         uid,
         amount,
         status: "initialized",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       });
 
       return {
@@ -221,7 +243,7 @@ export const initializePaystackPayment = onCall(
       };
     } catch (error) {
       // Never surface the provider's raw error to the client.
-      logger.error("initializePaystackPayment failed", { uid, error });
+      logger.error("initializePaystackPayment failed", { uid, ...errorInfo(error) });
       throw new HttpsError("internal", "Could not start the payment. Please try again.");
     }
   }
@@ -291,11 +313,11 @@ async function creditVerifiedPayment(
       uid: paidUid,
       amount: amountNaira,
       channel: data.channel ?? "unknown",
-      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+      processedAt: FieldValue.serverTimestamp(),
     });
 
     tx.update(userRef, {
-      walletBalance: admin.firestore.FieldValue.increment(amountNaira),
+      walletBalance: FieldValue.increment(amountNaira),
     });
 
     tx.set(db.collection("transactions").doc(), {
@@ -305,7 +327,7 @@ async function creditVerifiedPayment(
       description: "Wallet top-up via Paystack",
       paystackReference: reference,
       status: "completed",
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     return true;
@@ -337,7 +359,7 @@ export const verifyPaystackPayment = onCall(
       };
     } catch (error) {
       if (error instanceof HttpsError) throw error;
-      logger.error("verifyPaystackPayment failed", { uid, reference, error });
+      logger.error("verifyPaystackPayment failed", { uid, reference, ...errorInfo(error) });
       throw new HttpsError("internal", "Could not verify the payment.");
     }
   }
@@ -378,7 +400,7 @@ export const paystackWebhook = onRequest(
       logger.info("Webhook processed", { reference, credited: result.credited });
       res.status(200).send("ok");
     } catch (error) {
-      logger.error("Webhook processing failed", { reference, error });
+      logger.error("Webhook processing failed", { reference, ...errorInfo(error) });
       // 200 so Paystack does not hot-loop retries on a permanent failure;
       // the error is captured above for investigation.
       res.status(200).send("error logged");
@@ -456,17 +478,17 @@ async function redeemPromo(
         code: promo.code,
         userId: uid,
         discount: capped,
-        redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+        redeemedAt: FieldValue.serverTimestamp(),
       });
       tx.update(promoRef, {
-        usedCount: admin.firestore.FieldValue.increment(1),
+        usedCount: FieldValue.increment(1),
       });
 
       return capped;
     });
   } catch (error) {
     // A losing race on tx.create means someone else redeemed it first.
-    logger.warn("Promo redemption failed", { code, uid, error });
+    logger.warn("Promo redemption failed", { code, uid, ...errorInfo(error) });
     return 0;
   }
 }
@@ -495,7 +517,7 @@ export const onCourierCreated = onDocumentCreated(
       // ---- server-authoritative pricing ----
       const distanceKm = Number(order.estimatedDistanceKm) || 0;
       const weightKg = Number(order.packageWeight) || 0;
-      const pickup = order.pickupGeoPoint as admin.firestore.GeoPoint | undefined;
+      const pickup = order.pickupGeoPoint as GeoPoint | undefined;
 
       let baseFare = 500;
       let perKmRate = 100;
@@ -508,7 +530,7 @@ export const onCourierCreated = onDocumentCreated(
           .get();
         for (const zoneDoc of zones.docs) {
           const zone = zoneDoc.data();
-          const centre = zone.center as admin.firestore.GeoPoint | undefined;
+          const centre = zone.center as GeoPoint | undefined;
           const radiusKm = Number(zone.radiusKm) || 0;
           if (!centre || radiusKm <= 0) continue;
           if (haversineKm(pickup.latitude, pickup.longitude, centre.latitude, centre.longitude) <= radiusKm) {
@@ -549,7 +571,7 @@ export const onCourierCreated = onDocumentCreated(
         platformCommission,
         driverEarnings,
         fareAuthoritative: true,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
       // ---- dispatch ----
@@ -585,7 +607,7 @@ export const onCourierCreated = onDocumentCreated(
             type: "order_update",
             orderId,
             isRead: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
           }
         );
       }
@@ -618,7 +640,7 @@ export const onCourierCreated = onDocumentCreated(
         failed: response.failureCount,
       });
     } catch (error) {
-      logger.error("onCourierCreated error", { orderId, error });
+      logger.error("onCourierCreated error", { orderId, ...errorInfo(error) });
     }
   }
 );
@@ -688,7 +710,7 @@ export const onCourierStatusChanged = onDocumentUpdated(
           type: "order_update",
           orderId,
           isRead: false,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
         });
 
       // Free the driver up again once the job leaves an active state.
@@ -700,7 +722,7 @@ export const onCourierStatusChanged = onDocumentUpdated(
           .catch(() => undefined);
       }
     } catch (error) {
-      logger.error("onCourierStatusChanged error", { orderId, error });
+      logger.error("onCourierStatusChanged error", { orderId, ...errorInfo(error) });
     }
   }
 );
@@ -776,11 +798,11 @@ export const processDriverPayout = onSchedule(
               orderCount: entry.orderIds.length,
               orderIds: entry.orderIds,
               status: "completed",
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
             });
 
             tx.update(db.collection("users").doc(driverId), {
-              walletBalance: admin.firestore.FieldValue.increment(amount),
+              walletBalance: FieldValue.increment(amount),
             });
 
             tx.set(db.collection("transactions").doc(), {
@@ -790,7 +812,7 @@ export const processDriverPayout = onSchedule(
               description: `Daily earnings for ${periodKey}`,
               payoutId: payoutRef.id,
               status: "completed",
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
             });
           });
           paid++;
@@ -799,13 +821,13 @@ export const processDriverPayout = onSchedule(
             skipped++;
             continue;
           }
-          logger.error("Payout failed for driver", { driverId, periodKey, error });
+          logger.error("Payout failed for driver", { driverId, periodKey, ...errorInfo(error) });
         }
       }
 
       logger.info("Payout run complete", { periodKey, paid, skipped });
     } catch (error) {
-      logger.error("processDriverPayout error", { periodKey, error });
+      logger.error("processDriverPayout error", { periodKey, ...errorInfo(error) });
     }
   }
 );
@@ -848,7 +870,7 @@ export const onRatingCreated = onDocumentCreated(
         totalRatings: count,
       });
     } catch (error) {
-      logger.error("onRatingCreated error", { error });
+      logger.error("onRatingCreated error", errorInfo(error));
     }
   }
 );
@@ -878,12 +900,12 @@ export const onReferralCompleted = onDocumentUpdated(
         if (current.data()?.bonusPaidAt) return false;
 
         tx.update(referralRef, {
-          bonusPaidAt: admin.firestore.FieldValue.serverTimestamp(),
+          bonusPaidAt: FieldValue.serverTimestamp(),
         });
 
         for (const uid of [referrerId, refereeId]) {
           tx.update(db.collection("users").doc(uid), {
-            walletBalance: admin.firestore.FieldValue.increment(REFERRAL_BONUS),
+            walletBalance: FieldValue.increment(REFERRAL_BONUS),
           });
           tx.set(db.collection("transactions").doc(), {
             userId: uid,
@@ -894,7 +916,7 @@ export const onReferralCompleted = onDocumentUpdated(
                 ? "Referral bonus — your friend completed their first delivery!"
                 : "Welcome bonus — thanks for joining Dilivvafast!",
             status: "completed",
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
           });
         }
         return true;
@@ -911,7 +933,7 @@ export const onReferralCompleted = onDocumentUpdated(
         { type: "referral_bonus" }
       );
     } catch (error) {
-      logger.error("onReferralCompleted error", { error });
+      logger.error("onReferralCompleted error", errorInfo(error));
     }
   }
 );
@@ -965,7 +987,7 @@ export const onSosTriggered = onDocumentCreated(
         },
       });
     } catch (error) {
-      logger.error("onSosTriggered error", { error });
+      logger.error("onSosTriggered error", errorInfo(error));
     }
   }
 );
@@ -1008,11 +1030,11 @@ export const weeklyDriverReport = onSchedule(
           .doc(driverId)
           .collection("weekly_reports")
           .add({
-            weekEnding: admin.firestore.FieldValue.serverTimestamp(),
+            weekEnding: FieldValue.serverTimestamp(),
             totalDeliveries,
             totalEarnings,
             averagePerDelivery: toKoboPrecision(totalEarnings / totalDeliveries),
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
           });
 
         await sendToUser(
@@ -1025,7 +1047,7 @@ export const weeklyDriverReport = onSchedule(
         );
       }
     } catch (error) {
-      logger.error("weeklyDriverReport error", { error });
+      logger.error("weeklyDriverReport error", errorInfo(error));
     }
   }
 );
@@ -1060,14 +1082,14 @@ export const setUserRole = onCall(async (request) => {
     );
   }
 
-  await admin.auth().setCustomUserClaims(targetUid, {
+  await getAuth().setCustomUserClaims(targetUid, {
     admin: role === "admin",
     role,
   });
 
   await db.collection("users").doc(targetUid).update({
     role,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
 
   await writeAuditLog({
@@ -1111,13 +1133,13 @@ export const reviewDriverApplication = onCall(async (request) => {
     driverStatus: decision,
     ...(decision === "approved" && vehicleType ? { vehicleType } : {}),
     ...(decision === "approved" && vehiclePlate ? { vehiclePlate } : {}),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
 
   if (applicationId) {
     batch.update(db.collection("driver_applications").doc(applicationId), {
       status: decision,
-      reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+      reviewedAt: FieldValue.serverTimestamp(),
       reviewedBy: actorUid,
     });
   }
@@ -1234,7 +1256,7 @@ export const askMaya = onCall(
       return { reply: text };
     } catch (error) {
       if (error instanceof HttpsError) throw error;
-      logger.error("askMaya failed", { uid, error });
+      logger.error("askMaya failed", { uid, ...errorInfo(error) });
       throw new HttpsError("unavailable", "The assistant is unavailable right now.");
     }
   }
