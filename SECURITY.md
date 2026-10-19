@@ -423,7 +423,7 @@ position so a stale pin does not linger on the customer map.
 | `tsc --noEmit` (functions) | ✅ clean |
 | Firestore rules tests | ✅ **49 passing** against the emulator |
 | Cloud Functions integration | ✅ **13 passing** against the emulator |
-| Release build | ✅ `flutter build apk --release` (arm64), 84.3 MB |
+| Release build | ✅ `flutter build apk --release` (arm64), 83.7 MB, after dependency removal. Debug-signed — no keystore on the build machine, so not publishable as-is. |
 | Deployed to Firebase | ❌ **never** — see below |
 | Exercised against live Firebase | ❌ **never** |
 
