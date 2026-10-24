@@ -225,13 +225,13 @@ jobs:
           EOF
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --flavor production
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: dilivvafast-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-production-release.apk
           retention-days: 30
 
   build-appbundle:
@@ -272,11 +272,11 @@ jobs:
         # -PrequireReleaseSigning=true makes the build fail rather than fall
         # back to the debug key. A debug-signed bundle is not publishable, and
         # discovering that at upload time is too late.
-        run: flutter build appbundle --release -PrequireReleaseSigning=true
+        run: flutter build appbundle --release --flavor production -PrequireReleaseSigning=true
 
       - name: Upload App Bundle artifact
         uses: actions/upload-artifact@v4
         with:
           name: dilivvafast-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: build/app/outputs/bundle/productionRelease/app-production-release.aab
           retention-days: 30

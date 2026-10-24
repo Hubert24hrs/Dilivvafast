@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "54402955686",
+    "project_id": "dilivvafast-staging",
+    "storage_bucket": "dilivvafast-staging.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54402955686:android:eb8098262392b19875b767",
+        "android_client_info": {
+          "package_name": "com.dilivvafast.app.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkoOb0gul_5MskaYdYcLjcWTbbRuq0trE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

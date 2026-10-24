@@ -46,6 +46,33 @@ android {
         multiDexEnabled = true
     }
 
+    // Two builds of the same app, pointed at two Firebase projects.
+    //
+    //   production -> fast-delivery-d8d5c   (android/app/google-services.json)
+    //   staging    -> dilivvafast-staging   (android/app/src/staging/google-services.json)
+    //
+    // Staging has its own package name, so it installs alongside the real app
+    // on the same phone instead of replacing it, and shows up as
+    // "Dilivvafast Staging" in the launcher. The Dart side picks its Firebase
+    // options from the same flavor via appFlavor — see lib/core/config/
+    // app_environment.dart.
+    //
+    //   flutter run   --flavor staging
+    //   flutter build apk --release --flavor production
+    flavorDimensions += "env"
+    productFlavors {
+        create("production") {
+            dimension = "env"
+            resValue("string", "app_name", "Dilivvafast")
+        }
+        create("staging") {
+            dimension = "env"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Dilivvafast Staging")
+        }
+    }
+
     // Release signing configuration
     signingConfigs {
         if (keystorePropertiesFile.exists()) {
