@@ -11,23 +11,39 @@ delivery.
 
 ## Current staging status
 
-`dilivvafast-staging` exists and is partly deployed.
+`dilivvafast-staging` is fully deployed.
 
 | Step | State |
 |---|---|
 | Project created | ✅ `dilivvafast-staging` |
-| Firestore/Storage/Firebase APIs enabled | ✅ via `gcloud services enable` |
-| Firestore `(default)` database (nam5) | ✅ created |
-| **Firestore rules deployed** | ✅ compiled and released |
-| **Firestore indexes deployed** | ✅ |
-| Storage rules | ❌ blocked — Storage not initialised |
-| Cloud Functions | ❌ blocked — project is on Spark |
-| Secrets set | ❌ not set |
+| Blaze plan | ✅ billed to *Suskii Errands*, $10/month budget alert |
+| Firestore `(default)` database (nam5) | ✅ |
+| Firestore rules + indexes | ✅ including the negotiation (`bids`) rules |
+| Storage bucket (us-east1) + storage rules | ✅ |
+| Auth — Email/Password + Google | ✅ |
+| Cloud Functions | ✅ all 18 live, callables answer (unauthenticated calls are refused) |
+| `PAYSTACK_SECRET_KEY`, `ANTHROPIC_API_KEY` | ⚠️ **random placeholders** — top-up and the AI chat return "unavailable" until real values are set |
+| `serviceAccountTokenCreator` for document signing | ❌ not granted — admins cannot open driver documents yet |
+| Staging Android app `com.dilivvafast.app.staging` | ✅ registered, debug SHA-1 added; build with `--flavor staging` |
 
-Rules and indexes are live on staging. That is the first successful deploy this
-project has ever had.
+### Gotcha seen on the first functions deploy
 
----
+Right after enabling Eventarc, the six Firestore-triggered functions failed with
+"Permission denied while using the Eventarc Service Agent". Google grants that
+agent its role asynchronously; re-running the deploy for just those functions
+a few minutes later succeeded. If it recurs on a fresh project, wait and retry
+before granting anything by hand.
+
+### Replacing the placeholder secrets
+
+```bash
+firebase functions:secrets:set PAYSTACK_SECRET_KEY --project dilivvafast-staging
+firebase functions:secrets:set ANTHROPIC_API_KEY --project dilivvafast-staging
+firebase deploy --only functions --project dilivvafast-staging
+```
+
+Functions read the secret version they were deployed with, so the redeploy is
+required for a new value to take effect.
 
 ## Part 1 — What you need to do (I cannot)
 
