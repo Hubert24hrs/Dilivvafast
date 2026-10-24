@@ -31,6 +31,15 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   baseFare: (json['baseFare'] as num?)?.toDouble() ?? 0.0,
   surgeMultiplier: (json['surgeMultiplier'] as num?)?.toDouble() ?? 1.0,
   totalFare: (json['totalFare'] as num?)?.toDouble() ?? 0.0,
+  vehicleType:
+      $enumDecodeNullable(
+        _$CourierVehicleEnumMap,
+        json['vehicleType'],
+        unknownValue: CourierVehicle.bike,
+      ) ??
+      CourierVehicle.bike,
+  offeredFare: (json['offeredFare'] as num?)?.toDouble() ?? 0.0,
+  recommendedFare: (json['recommendedFare'] as num?)?.toDouble() ?? 0.0,
   paymentMethod:
       $enumDecodeNullable(_$PaymentMethodEnumMap, json['paymentMethod']) ??
       PaymentMethod.wallet,
@@ -88,6 +97,9 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'baseFare': instance.baseFare,
   'surgeMultiplier': instance.surgeMultiplier,
   'totalFare': instance.totalFare,
+  'vehicleType': _$CourierVehicleEnumMap[instance.vehicleType]!,
+  'offeredFare': instance.offeredFare,
+  'recommendedFare': instance.recommendedFare,
   'paymentMethod': _$PaymentMethodEnumMap[instance.paymentMethod]!,
   'paymentStatus': _$PaymentStatusEnumMap[instance.paymentStatus]!,
   'paystackReference': instance.paystackReference,
@@ -131,6 +143,11 @@ const _$PackageCategoryEnumMap = {
   PackageCategory.food: 'food',
   PackageCategory.clothing: 'clothing',
   PackageCategory.other: 'other',
+};
+
+const _$CourierVehicleEnumMap = {
+  CourierVehicle.bike: 'bike',
+  CourierVehicle.car: 'car',
 };
 
 const _$PaymentMethodEnumMap = {

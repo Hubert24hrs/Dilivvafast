@@ -127,7 +127,7 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                   controller: _controller,
                   focusNode: _focusNode,
                   style: TextStyle(
-                    color: context.palette.onBrand,
+                    color: context.palette.textPrimary,
                     fontSize: 15,
                   ),
                   decoration: InputDecoration(
@@ -217,7 +217,7 @@ class _AddressSearchFieldState extends State<AddressSearchField> {
                   title: Text(
                     suggestion.address,
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontSize: 13,
                     ),
                     maxLines: 2,

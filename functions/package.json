@@ -4,7 +4,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test:integration": "npm run build && firebase emulators:exec --only functions,firestore --project fast-delivery-d8d5c \"node --test test/integration.test.js\"",
+    "test:integration": "npm run build && firebase emulators:exec --only functions,firestore,auth --project fast-delivery-d8d5c \"node --test test/integration.test.js\"",
     "lint": "eslint --ext .ts src",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",

@@ -29,6 +29,9 @@ abstract class FirestoreConstants {
   // Subcollection names
   static const String messages = 'messages';
 
+  /// Driver offers on a delivery request: `couriers/{orderId}/bids/{driverId}`.
+  static const String bids = 'bids';
+
   // Common fields
   static const String fieldCreatedAt = 'createdAt';
   static const String fieldUpdatedAt = 'updatedAt';

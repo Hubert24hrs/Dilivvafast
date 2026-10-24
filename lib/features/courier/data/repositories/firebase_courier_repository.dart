@@ -1,18 +1,24 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:dilivvafast/core/errors/failures.dart';
 import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
 
 class FirebaseCourierRepository implements ICourierRepository {
-  FirebaseCourierRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseCourierRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   CollectionReference<Map<String, dynamic>> get _couriersRef =>
       _firestore.collection(FirestoreConstants.couriers);
@@ -168,18 +174,133 @@ class FirebaseCourierRepository implements ICourierRepository {
     }
   }
 
+  // ── Price negotiation ────────────────────────────────────────────────────
+
+  CollectionReference<Map<String, dynamic>> _bidsRef(String orderId) =>
+      _couriersRef.doc(orderId).collection(FirestoreConstants.bids);
+
   @override
-  Future<Either<Failure, Unit>> assignDriver(
+  Stream<List<CourierBid>> watchBids(String orderId) {
+    return _bidsRef(
+      orderId,
+    ).where('status', isEqualTo: BidStatus.open.name).snapshots().map((snap) {
+      final bids = snap.docs
+          .map(CourierBid.fromFirestore)
+          .where((b) => b.isEnriched)
+          .toList();
+      bids.sort((a, b) => a.amount.compareTo(b.amount));
+      return bids;
+    });
+  }
+
+  @override
+  Stream<CourierBid?> watchMyBid(String orderId, String driverId) {
+    return _bidsRef(orderId)
+        .doc(driverId)
+        .snapshots()
+        .map((doc) => doc.exists ? CourierBid.fromFirestore(doc) : null);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> placeBid({
+    required String orderId,
+    required String driverId,
+    required double amount,
+    int? etaMinutes,
+  }) async {
+    try {
+      // Only these keys are client-writable. The driver's name, rating and
+      // vehicle are filled in server-side from their own record.
+      await _bidsRef(orderId).doc(driverId).set({
+        'driverId': driverId,
+        'amount': amount,
+        'status': BidStatus.open.name,
+        'etaMinutes': ?etaMinutes,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return const Right(unit);
+    } on FirebaseException catch (e) {
+      return Left(
+        FirestoreFailure(
+          e.code == 'permission-denied'
+              ? 'This request is no longer taking offers.'
+              : 'Could not send your offer. Please try again.',
+        ),
+      );
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> withdrawBid(
     String orderId,
     String driverId,
   ) async {
     try {
-      await _couriersRef.doc(orderId).update({
-        FirestoreConstants.fieldDriverId: driverId,
-        FirestoreConstants.fieldStatus: OrderStatus.accepted.name,
-        FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
-      });
+      await _bidsRef(orderId).doc(driverId).delete();
       return const Right(unit);
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> declineBid(
+    String orderId,
+    String driverId,
+  ) async {
+    try {
+      await _bidsRef(
+        orderId,
+      ).doc(driverId).update({'status': BidStatus.declined.name});
+      return const Right(unit);
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> acceptBid(
+    String orderId,
+    String driverId,
+  ) async {
+    final callable = _functions.httpsCallable('acceptBid');
+    final payload = {'orderId': orderId, 'driverId': driverId};
+    try {
+      try {
+        await callable.call<Map<String, dynamic>>(payload);
+      } on FirebaseFunctionsException catch (e) {
+        // 'aborted' means the transaction lost a race under contention, not
+        // that the offer was refused. One retry is safe: the server re-checks
+        // everything, so if another offer won in the meantime this second
+        // attempt fails with "already has a courier" instead.
+        if (e.code != 'aborted') rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        await callable.call<Map<String, dynamic>>(payload);
+      }
+      return const Right(unit);
+    } on FirebaseFunctionsException catch (e) {
+      return Left(
+        FirestoreFailure(e.message ?? 'Could not accept that offer.'),
+      );
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, double>> raiseOffer(
+    String orderId,
+    double amount,
+  ) async {
+    try {
+      final result = await _functions
+          .httpsCallable('raiseOffer')
+          .call<Map<String, dynamic>>({'orderId': orderId, 'amount': amount});
+      return Right((result.data['offeredFare'] as num).toDouble());
+    } on FirebaseFunctionsException catch (e) {
+      return Left(FirestoreFailure(e.message ?? 'Could not raise your offer.'));
     } catch (e) {
       return Left(FirestoreFailure(e.toString()));
     }

@@ -31,11 +31,16 @@ abstract class IUserRepository {
   );
 
   /// Update online/available status (for drivers)
+  ///
+  /// [vehicleType] is published on the driver's public presence record so
+  /// dispatch can offer bike bookings to bike riders and car bookings to car
+  /// drivers. It is the driver's own approved vehicle, not a secret.
   Future<Either<Failure, Unit>> updateOnlineStatus(
     String userId,
     bool isOnline,
-    bool isAvailable,
-  );
+    bool isAvailable, {
+    String? vehicleType,
+  });
 
   /// Upload profile photo and update URL
   Future<Either<Failure, String>> uploadProfilePhoto(

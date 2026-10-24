@@ -3,19 +3,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:dilivvafast/core/presentation/widgets/delivery_map_widget.dart';
-import 'package:dilivvafast/core/services/fare_calculator_service.dart';
+import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/widgets/live_map.dart';
 import 'package:dilivvafast/core/services/location_helper.dart';
 import 'package:dilivvafast/features/booking/presentation/controllers/courier_booking_controller.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
-import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
-/// Map-based courier booking screen with a draggable bottom sheet.
+const _ink = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
+const _field = Color(0xFFF3F4F6);
+const _lime = Color(0xFFC1F11D);
+
+/// "Where to & for how much?" — booking with inDrive-style price offers.
 ///
-/// Shows a map preview on top and a bottom sheet containing:
-/// vehicle type selector, pickup/dropoff, package details,
-/// proposed price, and "Find a courier" button.
+/// The customer sets the route, then names their own fare. The server's
+/// recommended fare is shown as guidance, the −/+ steppers move in ₦100
+/// steps, and the field refuses to leave the band the backend enforces (see
+/// NegotiationBounds). Submitting sends the request out; couriers answer with
+/// offers on the next screen.
 class CourierBookingScreen extends ConsumerStatefulWidget {
   const CourierBookingScreen({super.key});
 
@@ -25,28 +31,81 @@ class CourierBookingScreen extends ConsumerStatefulWidget {
 }
 
 class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
+  final _offerCtrl = TextEditingController();
+  final _offerFocus = FocusNode();
+
   @override
   void initState() {
     super.initState();
-    // Initialize location on first load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(courierBookingControllerProvider.notifier).initializeLocation();
+      if (!mounted) return;
+      final state = ref.read(courierBookingControllerProvider);
+      final controller = ref.read(courierBookingControllerProvider.notifier);
+      if (!state.hasPickup && !state.isLoadingLocation) {
+        controller.initializeLocation();
+      }
+      if (state.canFindCourier && state.fareBreakdown == null) {
+        controller.calculateFare();
+      }
+      _syncOfferField();
     });
+    _offerFocus.addListener(() {
+      if (!_offerFocus.hasFocus) _commitTypedOffer();
+    });
+  }
+
+  @override
+  void dispose() {
+    _offerCtrl.dispose();
+    _offerFocus.dispose();
+    super.dispose();
+  }
+
+  void _syncOfferField() {
+    if (_offerFocus.hasFocus) return;
+    final offer = ref.read(courierBookingControllerProvider).effectiveOffer;
+    _offerCtrl.text = offer > 0 ? offer.toStringAsFixed(0) : '';
+  }
+
+  void _commitTypedOffer() {
+    final typed = double.tryParse(_offerCtrl.text.replaceAll(',', ''));
+    final state = ref.read(courierBookingControllerProvider);
+    final controller = ref.read(courierBookingControllerProvider.notifier);
+    if (typed != null && typed > 0) {
+      final bounds = state.bounds;
+      controller.setProposedPrice(bounds == null ? typed : bounds.clamp(typed));
+    }
+    _syncOfferField();
+  }
+
+  Future<void> _submit() async {
+    _commitTypedOffer();
+    final controller = ref.read(courierBookingControllerProvider.notifier);
+    final orderId = await controller.submitOrder();
+    if (orderId != null && mounted) {
+      context.push('/matching/$orderId');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(courierBookingControllerProvider);
     final controller = ref.read(courierBookingControllerProvider.notifier);
+    final media = MediaQuery.of(context);
 
-    // Listen for order creation and navigate to matching screen
     ref.listen<CourierBookingState>(courierBookingControllerProvider, (
       prev,
       next,
     ) {
-      if (next.createdOrderId != null && prev?.createdOrderId == null) {
-        context.push('/matching/${next.createdOrderId}');
-      }
+      // Price the route as soon as both ends are known.
+      final routeChanged =
+          prev?.dropoffLat != next.dropoffLat ||
+          prev?.pickupLat != next.pickupLat ||
+          prev?.dropoffLng != next.dropoffLng ||
+          prev?.pickupLng != next.pickupLng;
+      if (routeChanged && next.canFindCourier) controller.calculateFare();
+      if (prev?.effectiveOffer != next.effectiveOffer) _syncOfferField();
+
       if (next.error != null && prev?.error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -59,175 +118,123 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
       }
     });
 
+    final mapHeight = media.size.height * 0.34;
+
     return Scaffold(
-      backgroundColor: context.palette.surfaceBase,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Map area (top portion)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.45,
-            child: Stack(
-              children: [
-                DeliveryMapWidget(
-                  height: MediaQuery.of(context).size.height * 0.45,
-                  pickupLat: state.hasPickup ? state.pickupLat : null,
-                  pickupLng: state.hasPickup ? state.pickupLng : null,
-                  dropoffLat: state.hasDropoff ? state.dropoffLat : null,
-                  dropoffLng: state.hasDropoff ? state.dropoffLng : null,
-                  pickupLabel: 'Pickup',
-                  dropoffLabel: 'Dropoff',
-                ),
-                // Back button
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 12,
-                  child: _CircleIconButton(
-                    icon: Icons.arrow_back,
-                    onTap: () => context.pop(),
-                  ),
-                ),
-              ],
+            height: mapHeight + 28,
+            child: LiveMap(
+              pickupLat: state.hasPickup ? state.pickupLat : null,
+              pickupLng: state.hasPickup ? state.pickupLng : null,
+              dropoffLat: state.hasDropoff ? state.dropoffLat : null,
+              dropoffLng: state.hasDropoff ? state.dropoffLng : null,
+              bottomPadding: 28,
             ),
           ),
-
-          // Bottom sheet
-          DraggableScrollableSheet(
-            initialChildSize: 0.58,
-            minChildSize: 0.40,
-            maxChildSize: 0.92,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFF141629),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black38,
-                      blurRadius: 20,
-                      offset: Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+          Positioned(
+            top: media.padding.top + 10,
+            left: 14,
+            child: _CircleButton(
+              icon: Icons.arrow_back_rounded,
+              onTap: () => context.canPop()
+                  ? context.pop()
+                  : context.go('/customer/home'),
+            ),
+          ),
+          Positioned.fill(
+            top: mapHeight,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x1A000000),
+                    blurRadius: 16,
+                    offset: Offset(0, -2),
                   ),
-                  children: [
-                    // Handle bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: context.palette.textMuted,
-                          borderRadius: BorderRadius.circular(2),
+                ],
+              ),
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  media.padding.bottom + 20,
+                ),
+                children: [
+                  _VehicleTabs(
+                    selected: state.vehicleType,
+                    onChanged: controller.setVehicleType,
+                  ),
+                  const SizedBox(height: 14),
+                  _RouteCard(
+                    state: state,
+                    onEditPickup: () => _showPickupSearch(context, controller),
+                    onDropoff: controller.setDropoff,
+                    onRetryLocation: controller.initializeLocation,
+                  ),
+                  const SizedBox(height: 14),
+                  _OfferPanel(
+                    controller: _offerCtrl,
+                    focusNode: _offerFocus,
+                    state: state,
+                    onStep: (delta) {
+                      _offerFocus.unfocus();
+                      controller.nudgeOffer(delta);
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  _PackageDetails(state: state, controller: controller),
+                  const SizedBox(height: 12),
+                  _PaymentPicker(
+                    selected: state.paymentMethod,
+                    onChanged: controller.setPaymentMethod,
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    height: 58,
+                    child: FilledButton(
+                      onPressed: state.canFindCourier && !state.isSubmitting
+                          ? _submit
+                          : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _lime,
+                        foregroundColor: _ink,
+                        disabledBackgroundColor: _field,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-
-                    // Title
-                    Text(
-                      'Courier delivery',
-                      style: TextStyle(
-                        color: context.palette.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Vehicle type selector
-                    _VehicleTypeSelector(
-                      selected: state.vehicleType,
-                      onChanged: controller.setVehicleType,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Pickup location row
-                    _PickupLocationRow(
-                      displayText: state.pickupDisplayText,
-                      isLoading: state.isLoadingLocation,
-                      hasLocation: state.hasPickup,
-                      onTap: () => _showPickupSearch(context, controller),
-                      onRetryLocation: () => controller.initializeLocation(),
-                      locationStatus: state.locationStatus,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Destination field
-                    AddressSearchField(
-                      label: 'To',
-                      icon: Icons.search,
-                      initialAddress: state.dropoffAddress.isNotEmpty
-                          ? state.dropoffAddress
-                          : null,
-                      onAddressSelected: controller.setDropoff,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Add stops',
-                            style: TextStyle(
-                              color: context.palette.textSecondary,
-                              fontSize: 13,
+                      child: state.isSubmitting
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: _ink,
+                              ),
+                            )
+                          : Text(
+                              state.canFindCourier
+                                  ? 'Find a courier'
+                                  : 'Choose a destination',
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.add,
-                            color: context.palette.textSecondary,
-                            size: 18,
-                          ),
-                        ],
-                      ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Package details (expandable)
-                    _PackageDetailsSection(
-                      isExpanded: state.packageDetailsExpanded,
-                      hasDetails: state.hasPackageDetails,
-                      packageDescription: state.packageDescription,
-                      onToggle: controller.togglePackageDetails,
-                      onDescriptionChanged: controller.setPackageDescription,
-                      onCategoryChanged: controller.setPackageCategory,
-                      onWeightChanged: controller.setPackageWeight,
-                      onRecipientNameChanged: controller.setRecipientName,
-                      onRecipientPhoneChanged: controller.setRecipientPhone,
-                      selectedCategory: state.packageCategory,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Propose your price
-                    _ProposePriceRow(
-                      currentPrice: state.proposedPrice,
-                      fareBreakdown: state.fareBreakdown,
-                      onPriceChanged: controller.setProposedPrice,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Find a courier button
-                    _FindCourierButton(
-                      canSubmit: state.canFindCourier,
-                      isSubmitting: state.isSubmitting,
-                      onPressed: () async {
-                        final orderId = await controller.submitOrder();
-                        if (orderId != null && context.mounted) {
-                          context.push('/matching/$orderId');
-                        }
-                      },
-                    ),
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-                  ],
-                ),
-              );
-            },
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -238,60 +245,49 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
     BuildContext context,
     CourierBookingController controller,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF141629),
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          MediaQuery.of(ctx).viewInsets.bottom + 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Set pickup location',
+            const Text(
+              'Pickup point',
               style: TextStyle(
-                color: context.palette.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _ink,
               ),
             ),
             const SizedBox(height: 16),
             AddressSearchField(
-              label: 'Enter pickup address',
-              icon: Icons.location_on,
+              label: 'Where should the courier collect from?',
+              icon: Icons.trip_origin_rounded,
               onAddressSelected: (addr, lat, lng) {
                 controller.setPickup(addr, lat, lng);
                 Navigator.of(ctx).pop();
               },
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            TextButton.icon(
               onPressed: () {
                 Navigator.of(ctx).pop();
                 controller.initializeLocation();
               },
-              icon: const Icon(Icons.gps_fixed, size: 18),
-              label: const Text('Use current location'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.palette.brand,
-                side: BorderSide(color: context.palette.brand),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('Use my current location'),
             ),
           ],
         ),
@@ -300,645 +296,437 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
   }
 }
 
-// ======================== SUB-WIDGETS ========================
+// ── Pieces ───────────────────────────────────────────────────────────────────
 
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
+class _CircleButton extends StatelessWidget {
+  const _CircleButton({required this.icon, required this.onTap});
+
   final IconData icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.5),
-        ),
-        child: Icon(icon, color: context.palette.textPrimary, size: 20),
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 3,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(width: 48, height: 48, child: Icon(icon, color: _ink)),
       ),
     );
   }
 }
 
-class _VehicleTypeSelector extends StatelessWidget {
-  const _VehicleTypeSelector({required this.selected, required this.onChanged});
-  final VehicleType selected;
-  final ValueChanged<VehicleType> onChanged;
+class _VehicleTabs extends StatelessWidget {
+  const _VehicleTabs({required this.selected, required this.onChanged});
+
+  final CourierVehicle selected;
+  final ValueChanged<CourierVehicle> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _VehicleChip(
-          icon: Icons.directions_car,
-          label: 'Car',
-          isSelected: selected == VehicleType.car,
-          onTap: () => onChanged(VehicleType.car),
+        for (final v in CourierVehicle.values) ...[
+          Expanded(
+            child: Material(
+              color: v == selected ? const Color(0xFFD6ECFA) : _field,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => onChanged(v),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        v == CourierVehicle.bike
+                            ? Icons.two_wheeler_rounded
+                            : Icons.directions_car_filled_rounded,
+                        color: _ink,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        v.label,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (v != CourierVehicle.values.last) const SizedBox(width: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _RouteCard extends StatelessWidget {
+  const _RouteCard({
+    required this.state,
+    required this.onEditPickup,
+    required this.onDropoff,
+    required this.onRetryLocation,
+  });
+
+  final CourierBookingState state;
+  final VoidCallback onEditPickup;
+  final void Function(String, double, double) onDropoff;
+  final VoidCallback onRetryLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final locationProblem =
+        !state.hasPickup &&
+        !state.isLoadingLocation &&
+        state.locationStatus != LocationStatus.granted;
+
+    return Column(
+      children: [
+        Material(
+          color: _field,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: locationProblem ? onRetryLocation : onEditPickup,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.trip_origin_rounded,
+                    color: Color(0xFF12805C),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.pickupDisplayText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, color: _ink),
+                    ),
+                  ),
+                  if (state.isLoadingLocation)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else if (locationProblem)
+                    const Text(
+                      'Retry',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(width: 10),
-        _VehicleChip(
-          icon: Icons.two_wheeler,
-          label: 'Motorcycle',
-          isSelected: selected == VehicleType.motorcycle,
-          onTap: () => onChanged(VehicleType.motorcycle),
+        const SizedBox(height: 8),
+        AddressSearchField(
+          label: 'To — where is it going?',
+          icon: Icons.location_on_rounded,
+          initialAddress: state.dropoffAddress.isNotEmpty
+              ? state.dropoffAddress
+              : null,
+          onAddressSelected: onDropoff,
         ),
       ],
     );
   }
 }
 
-class _VehicleChip extends StatelessWidget {
-  const _VehicleChip({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
+/// The inDrive-style fare offer: a big editable price, ₦100 steppers, and
+/// the recommended fare and allowed range underneath.
+class _OfferPanel extends StatelessWidget {
+  const _OfferPanel({
+    required this.controller,
+    required this.focusNode,
+    required this.state,
+    required this.onStep,
   });
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final CourierBookingState state;
+  final ValueChanged<double> onStep;
+
+  static const _step = 100.0;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? context.palette.surfaceRaised
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected
-                ? context.palette.brand
-                : context.palette.textMuted,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? context.palette.brand
-                  : context.palette.textSecondary,
-              size: 18,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? context.palette.brand
-                    : context.palette.textSecondary,
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
+    final bounds = state.bounds;
+    final offer = state.effectiveOffer;
+    final atFloor = bounds != null && offer <= bounds.floor;
+    final atCeiling = bounds != null && offer >= bounds.ceiling;
+    final priced = bounds != null;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: _field,
+        borderRadius: BorderRadius.circular(16),
       ),
-    );
-  }
-}
-
-class _PickupLocationRow extends StatelessWidget {
-  const _PickupLocationRow({
-    required this.displayText,
-    required this.isLoading,
-    required this.hasLocation,
-    required this.onTap,
-    required this.onRetryLocation,
-    required this.locationStatus,
-  });
-  final String displayText;
-  final bool isLoading;
-  final bool hasLocation;
-  final VoidCallback onTap;
-  final VoidCallback onRetryLocation;
-  final LocationStatus locationStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: context.palette.surfaceRaised,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: hasLocation
-                ? context.palette.brand.withValues(alpha: 0.3)
-                : context.palette.border,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Offer your fare',
+            style: TextStyle(fontSize: 14, color: _muted),
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.radio_button_checked,
-              color: hasLocation
-                  ? const Color(0xFF4CAF50)
-                  : context.palette.textMuted,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: isLoading
-                  ? Row(
-                      children: [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.palette.brand,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          displayText,
-                          style: TextStyle(
-                            color: context.palette.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      displayText,
-                      style: TextStyle(
-                        color: hasLocation
-                            ? context.palette.textPrimary
-                            : context.palette.textSecondary,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-            ),
-            if (!hasLocation && !isLoading)
-              GestureDetector(
-                onTap: () {
-                  if (locationStatus == LocationStatus.servicesDisabled) {
-                    LocationHelper.showLocationServicesDialog(context);
-                  } else if (locationStatus ==
-                      LocationStatus.permissionDeniedForever) {
-                    LocationHelper.showPermissionDeniedDialog(context);
-                  } else {
-                    onRetryLocation();
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _StepButton(
+                icon: Icons.remove_rounded,
+                label: 'Lower offer by ₦100',
+                onTap: priced && !atFloor ? () => onStep(-_step) : null,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  enabled: priced,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: _ink,
                   ),
-                  decoration: BoxDecoration(
-                    color: context.palette.brand.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Enable',
-                    style: TextStyle(
-                      color: context.palette.brand,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  decoration: InputDecoration(
+                    prefixText: '₦',
+                    prefixStyle: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
                     ),
+                    hintText: state.isCalculatingFare ? '…' : '—',
+                    border: InputBorder.none,
+                    isDense: true,
                   ),
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PackageDetailsSection extends StatelessWidget {
-  const _PackageDetailsSection({
-    required this.isExpanded,
-    required this.hasDetails,
-    required this.packageDescription,
-    required this.onToggle,
-    required this.onDescriptionChanged,
-    required this.onCategoryChanged,
-    required this.onWeightChanged,
-    required this.onRecipientNameChanged,
-    required this.onRecipientPhoneChanged,
-    required this.selectedCategory,
-  });
-  final bool isExpanded;
-  final bool hasDetails;
-  final String packageDescription;
-  final VoidCallback onToggle;
-  final ValueChanged<String> onDescriptionChanged;
-  final ValueChanged<PackageCategory> onCategoryChanged;
-  final ValueChanged<double> onWeightChanged;
-  final ValueChanged<String> onRecipientNameChanged;
-  final ValueChanged<String> onRecipientPhoneChanged;
-  final PackageCategory selectedCategory;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.palette.surfaceRaised,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: context.palette.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.tune,
-                  color: context.palette.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Package details',
-                        style: TextStyle(
-                          color: context.palette.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (hasDetails)
-                        Text(
-                          'Details added',
-                          style: TextStyle(
-                            color: const Color(0xFF4CAF50),
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  isExpanded ? Icons.keyboard_arrow_up : Icons.chevron_right,
-                  color: context.palette.textMuted,
-                ),
-              ],
-            ),
-            if (isExpanded) ...[
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {}, // prevent parent toggle
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildField(
-                      context,
-                      hint: 'What are you sending?',
-                      icon: Icons.inventory_2,
-                      onChanged: onDescriptionChanged,
-                    ),
-                    const SizedBox(height: 10),
-                    // Category chips
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: PackageCategory.values.map((cat) {
-                        final isSelected = cat == selectedCategory;
-                        return GestureDetector(
-                          onTap: () => onCategoryChanged(cat),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? context.palette.brand.withValues(
-                                      alpha: 0.15,
-                                    )
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected
-                                    ? context.palette.brand
-                                    : context.palette.border,
-                              ),
-                            ),
-                            child: Text(
-                              cat.name[0].toUpperCase() + cat.name.substring(1),
-                              style: TextStyle(
-                                color: isSelected
-                                    ? context.palette.brand
-                                    : context.palette.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildField(
-                      context,
-                      hint: 'Weight (kg)',
-                      icon: Icons.fitness_center,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d{0,1}'),
-                        ),
-                      ],
-                      onChanged: (val) {
-                        final w = double.tryParse(val) ?? 0.0;
-                        onWeightChanged(w);
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    _buildField(
-                      context,
-                      hint: 'Recipient name',
-                      icon: Icons.person_outline,
-                      onChanged: onRecipientNameChanged,
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildField(
-                      context,
-                      hint: 'Recipient phone',
-                      icon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
-                      ],
-                      onChanged: onRecipientPhoneChanged,
-                    ),
-                  ],
-                ),
+              _StepButton(
+                icon: Icons.add_rounded,
+                label: 'Raise offer by ₦100',
+                onTap: priced && !atCeiling ? () => onStep(_step) : null,
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildField(
-    BuildContext context, {
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-    ValueChanged<String>? onChanged,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.palette.surfaceBase,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        style: TextStyle(color: context.palette.textPrimary, fontSize: 14),
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: context.palette.brand, size: 18),
-          hintText: hint,
-          hintStyle: TextStyle(color: context.palette.textSecondary),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
           ),
-        ),
-        keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        onChanged: onChanged,
-        textCapitalization: textCapitalization,
-      ),
-    );
-  }
-}
-
-class _ProposePriceRow extends StatelessWidget {
-  const _ProposePriceRow({
-    required this.currentPrice,
-    required this.fareBreakdown,
-    required this.onPriceChanged,
-  });
-  final double currentPrice;
-  final FareBreakdown? fareBreakdown;
-  final ValueChanged<double> onPriceChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final displayPrice = currentPrice > 0
-        ? '₦${currentPrice.toStringAsFixed(0)}'
-        : (fareBreakdown != null
-              ? '₦${fareBreakdown!.totalFare.toStringAsFixed(0)}'
-              : '');
-
-    return GestureDetector(
-      onTap: () => _showPriceDialog(context),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.palette.surfaceRaised,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: context.palette.border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.calculate_outlined,
-              color: context.palette.textSecondary,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Propose your price',
-                    style: TextStyle(
-                      color: context.palette.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (displayPrice.isNotEmpty)
-                    Text(
-                      displayPrice,
-                      style: TextStyle(
-                        color: context.palette.brand,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: context.palette.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPriceDialog(BuildContext context) {
-    final textController = TextEditingController(
-      text: currentPrice > 0 ? currentPrice.toStringAsFixed(0) : '',
-    );
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.palette.surfaceRaised,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Propose your price',
-          style: TextStyle(color: context.palette.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (fareBreakdown != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  'Suggested: ₦${fareBreakdown!.totalFare.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: context.palette.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            TextField(
-              controller: textController,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              style: TextStyle(
-                color: context.palette.textPrimary,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              !priced
+                  ? (state.isCalculatingFare
+                        ? 'Working out a fair price…'
+                        : 'Add a destination to see the recommended fare')
+                  : 'Recommended ₦${bounds.recommended.toStringAsFixed(0)} · '
+                        'you can offer ₦${bounds.floor.toStringAsFixed(0)}'
+                        '–₦${bounds.ceiling.toStringAsFixed(0)}',
               textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                prefixText: '₦ ',
-                prefixStyle: TextStyle(
-                  color: context.palette.brand,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-                hintText: '0',
-                hintStyle: TextStyle(color: context.palette.textMuted),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: context.palette.textMuted),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: context.palette.brand),
-                ),
+              style: const TextStyle(fontSize: 13, color: _muted),
+            ),
+          ),
+          if (priced && offer < bounds.recommended) ...[
+            const SizedBox(height: 6),
+            const Center(
+              child: Text(
+                'Lower offers can take longer to get a courier.',
+                style: TextStyle(fontSize: 12.5, color: Color(0xFFB54708)),
               ),
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.palette.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final val = double.tryParse(textController.text) ?? 0.0;
-              onPriceChanged(val);
-              Navigator.of(ctx).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.palette.brand,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Set Price',
-              style: TextStyle(color: context.palette.onBrand),
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _FindCourierButton extends StatelessWidget {
-  const _FindCourierButton({
-    required this.canSubmit,
-    required this.isSubmitting,
-    required this.onPressed,
-  });
-  final bool canSubmit;
-  final bool isSubmitting;
-  final VoidCallback onPressed;
+class _StepButton extends StatelessWidget {
+  const _StepButton({required this.icon, required this.label, this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: canSubmit && !isSubmitting ? onPressed : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canSubmit
-              ? const Color(0xFF00E676)
-              : context.palette.surfaceRaised,
-          foregroundColor: canSubmit
-              ? context.palette.surfaceBase
-              : context.palette.textMuted,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    final enabled = onTap != null;
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 46,
+            height: 46,
+            child: Icon(icon, color: enabled ? _ink : const Color(0xFFD1D5DB)),
           ),
-          elevation: canSubmit ? 4 : 0,
         ),
-        child: isSubmitting
-            ? SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  color: context.palette.surfaceBase,
-                  strokeWidth: 2.5,
-                ),
-              )
-            : const Text(
-                'Find a courier',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
-              ),
       ),
+    );
+  }
+}
+
+class _PackageDetails extends StatelessWidget {
+  const _PackageDetails({required this.state, required this.controller});
+
+  final CourierBookingState state;
+  final CourierBookingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _field,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: state.packageDetailsExpanded,
+          onExpansionChanged: (_) => controller.togglePackageDetails(),
+          leading: const Icon(Icons.inventory_2_outlined, color: _ink),
+          title: Text(
+            state.hasPackageDetails
+                ? state.packageDescription
+                : 'Package & recipient',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w600, color: _ink),
+          ),
+          subtitle: Text(
+            state.hasPackageDetails
+                ? '${state.recipientName} · ${state.recipientPhone}'
+                : 'Tell the courier what they are carrying',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: _muted, fontSize: 12.5),
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          children: [
+            _Input(
+              label: 'What is it?',
+              initial: state.packageDescription,
+              onChanged: controller.setPackageDescription,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final c in PackageCategory.values)
+                  ChoiceChip(
+                    label: Text(c.name[0].toUpperCase() + c.name.substring(1)),
+                    selected: state.packageCategory == c,
+                    onSelected: (_) => controller.setPackageCategory(c),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _Input(
+              label: "Recipient's name",
+              initial: state.recipientName,
+              onChanged: controller.setRecipientName,
+            ),
+            const SizedBox(height: 8),
+            _Input(
+              label: "Recipient's phone",
+              initial: state.recipientPhone,
+              keyboardType: TextInputType.phone,
+              onChanged: controller.setRecipientPhone,
+            ),
+            const SizedBox(height: 8),
+            _Input(
+              label: 'Note for the courier (optional)',
+              initial: state.notes,
+              onChanged: controller.setNotes,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Input extends StatelessWidget {
+  const _Input({
+    required this.label,
+    required this.initial,
+    required this.onChanged,
+    this.keyboardType,
+  });
+
+  final String label;
+  final String initial;
+  final ValueChanged<String> onChanged;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      initialValue: initial,
+      onChanged: onChanged,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: _ink),
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentPicker extends StatelessWidget {
+  const _PaymentPicker({required this.selected, required this.onChanged});
+
+  final PaymentMethod selected;
+  final ValueChanged<PaymentMethod> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = {
+      PaymentMethod.wallet: ('Wallet', Icons.account_balance_wallet_outlined),
+      PaymentMethod.cash: ('Cash', Icons.payments_outlined),
+      PaymentMethod.card: ('Card', Icons.credit_card_outlined),
+    };
+    return Row(
+      children: [
+        for (final entry in labels.entries) ...[
+          Expanded(
+            child: ChoiceChip(
+              avatar: Icon(entry.value.$2, size: 18),
+              label: Text(entry.value.$1),
+              selected: selected == entry.key,
+              onSelected: (_) => onChanged(entry.key),
+            ),
+          ),
+          if (entry.key != labels.keys.last) const SizedBox(width: 8),
+        ],
+      ],
     );
   }
 }

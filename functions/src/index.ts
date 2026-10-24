@@ -16,7 +16,7 @@
  */
 
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
-import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import { setGlobalOptions } from "firebase-functions/v2";
@@ -550,45 +550,62 @@ export const onCourierCreated = onDocumentCreated(
       const subtotal =
         (baseFare + distanceKm * perKmRate + weightSurcharge) * surgeMultiplier;
 
+      // inDrive-style pricing: the computed fare is a *recommendation*. The
+      // customer names their own price, and drivers answer with offers. The
+      // customer's figure is honoured only inside the negotiation band, so a
+      // patched client cannot book a delivery for ₦1 — anything outside the
+      // band is clamped to its edge.
+      const recommendedFare = toKoboPrecision(Math.max(subtotal, MINIMUM_FARE));
+      const bounds = negotiationBounds(recommendedFare);
+      const requested = Number(order.offeredFare) || Number(order.totalFare) || 0;
+      const offeredFare = clampToBounds(requested || recommendedFare, bounds);
+
       // The client writes a promo code and its own idea of the discount. The
       // code is honoured; the amount is recomputed and redeemed atomically
-      // here, so a code cannot be applied twice or inflated.
+      // here, so a code cannot be applied twice or inflated. The discount is
+      // taken off whatever price is finally agreed, in acceptBid.
       const promoCode = typeof order.promoCode === "string" ? order.promoCode : "";
       const discountAmount = promoCode
-        ? await redeemPromo(promoCode, order.userId, subtotal)
+        ? await redeemPromo(promoCode, order.userId, offeredFare)
         : 0;
 
-      const totalFare = toKoboPrecision(
-        Math.max(subtotal - discountAmount, MINIMUM_FARE)
-      );
-      const platformCommission = toKoboPrecision(totalFare * PLATFORM_COMMISSION_RATE);
-      const driverEarnings = toKoboPrecision(totalFare - platformCommission);
+      // Provisional figures, recomputed from the accepted offer in acceptBid.
+      const split = fareSplit(offeredFare, discountAmount);
+      const vehicleType = order.vehicleType === "car" ? "car" : "bike";
 
       await snapshot.ref.update({
         baseFare: toKoboPrecision(baseFare),
         surgeMultiplier,
         discountAmount,
-        totalFare,
-        platformCommission,
-        driverEarnings,
+        recommendedFare,
+        offeredFare,
+        offerAdjusted: requested > 0 && offeredFare !== toKoboPrecision(requested),
+        vehicleType,
+        totalFare: split.totalFare,
+        platformCommission: split.platformCommission,
+        driverEarnings: split.driverEarnings,
         fareAuthoritative: true,
         updatedAt: FieldValue.serverTimestamp(),
       });
 
-      // ---- dispatch ----
+      // ---- dispatch: only drivers whose vehicle can serve this booking ----
       const driversSnapshot = await db
         .collection("driver_locations")
         .where("isOnline", "==", true)
         .where("isAvailable", "==", true)
-        .limit(50)
+        .limit(100)
         .get();
 
-      if (driversSnapshot.empty) {
-        logger.info("No available drivers", { orderId });
+      const eligible = driversSnapshot.docs.filter((d) =>
+        driverCanServe(d.data().vehicleType, vehicleType)
+      );
+
+      if (eligible.length === 0) {
+        logger.info("No available drivers for vehicle type", { orderId, vehicleType });
         return;
       }
 
-      const driverIds = driversSnapshot.docs.map((d) => d.id);
+      const driverIds = eligible.slice(0, 50).map((d) => d.id);
       const driverDocs = await db.getAll(
         ...driverIds.map((id) => db.collection("users").doc(id))
       );
@@ -619,14 +636,15 @@ export const onCourierCreated = onDocumentCreated(
       const response = await messaging.sendEachForMulticast({
         tokens,
         notification: {
-          title: "🚀 New Delivery Request!",
-          body: `${order.pickupAddress} → ${order.dropoffAddress} · ₦${totalFare.toFixed(0)}`,
+          title: `🚀 New ${vehicleType} delivery · offer ₦${offeredFare.toFixed(0)}`,
+          body: `${order.pickupAddress} → ${order.dropoffAddress}`,
         },
         data: {
           type: "new_order",
           orderId,
           pickupAddress: order.pickupAddress ?? "",
-          totalFare: String(totalFare),
+          offeredFare: String(offeredFare),
+          vehicleType,
         },
         android: {
           priority: "high",
@@ -657,6 +675,292 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
       Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
+// ==================== PRICE NEGOTIATION ====================
+//
+// inDrive-style bargaining. The customer names a price; drivers answer with
+// offers at or above it; the customer picks one. Three invariants hold
+// throughout, and every path below exists to protect one of them:
+//
+//   1. No price outside the negotiation band ever reaches an order.
+//   2. A driver is assigned only by the customer accepting their offer, and
+//      only once — two concurrent accepts cannot both win.
+//   3. The agreed price is the stored offer, never a figure the client sends.
+//
+// Mirrored on the client in NegotiationBounds (lib/.../courier_bid.dart).
+
+const FLOOR_RATIO = 0.7;
+const CEILING_RATIO = 3.0;
+
+interface Bounds {
+  floor: number;
+  ceiling: number;
+}
+
+function negotiationBounds(recommendedFare: number): Bounds {
+  const ratioFloor = Math.ceil((recommendedFare * FLOOR_RATIO) / 50) * 50;
+  const floor = Math.max(MINIMUM_FARE, ratioFloor);
+  const ceiling = Math.max(floor, toKoboPrecision(recommendedFare * CEILING_RATIO));
+  return { floor, ceiling };
+}
+
+function clampToBounds(value: number, bounds: Bounds): number {
+  if (!Number.isFinite(value)) return bounds.floor;
+  return toKoboPrecision(Math.min(Math.max(value, bounds.floor), bounds.ceiling));
+}
+
+/** What the customer pays, and how it divides, for an agreed price. */
+function fareSplit(agreedFare: number, discountAmount: number) {
+  const totalFare = toKoboPrecision(Math.max(agreedFare - discountAmount, MINIMUM_FARE));
+  // Commission is taken on the agreed price, not the discounted one: the
+  // platform funds the promo, the driver is not charged for it.
+  const platformCommission = toKoboPrecision(agreedFare * PLATFORM_COMMISSION_RATE);
+  const driverEarnings = toKoboPrecision(agreedFare - platformCommission);
+  return { totalFare, platformCommission, driverEarnings };
+}
+
+/** Driver vehicle types (from the application) that can serve a booking. */
+function driverCanServe(driverVehicleType: unknown, bookingVehicle: string): boolean {
+  const v = String(driverVehicleType ?? "");
+  // Drivers approved before presence carried a vehicle type are offered every
+  // job rather than none; the bid rule still checks their real vehicle.
+  if (!v) return true;
+  return bookingVehicle === "car"
+    ? v === "car" || v === "van"
+    : v === "motorcycle" || v === "bicycle";
+}
+
+/**
+ * Fill in who placed an offer, and tell the customer.
+ *
+ * The driver's device writes only `amount`, `etaMinutes` and `status` —
+ * firestore.rules rejects anything else. The identity a customer chooses on
+ * (name, photo, rating, vehicle, plate) is copied here from the driver's own
+ * record, so it cannot be forged by the bidder.
+ */
+export const onBidWritten = onDocumentWritten(
+  "couriers/{orderId}/bids/{driverId}",
+  async (event) => {
+    const after = event.data?.after;
+    if (!after?.exists) return; // withdrawn
+
+    const bid = after.data()!;
+    const before = event.data?.before?.data();
+    const { orderId, driverId } = event.params;
+
+    // Only react to the driver's own writes. A driver's set() replaces the
+    // whole document and so wipes the fields filled in below, which makes a
+    // missing driverName the reliable signal: it covers a fresh offer, a new
+    // amount, and re-offering the same amount after a decline. The update
+    // below sets driverName, so it does not loop back through here, and
+    // status changes made by acceptBid leave it in place.
+    if (bid.status !== "open") return;
+    const amountChanged = !!before && before.amount !== bid.amount;
+    if (bid.driverName && !amountChanged) return;
+
+    try {
+      const [driverSnap, orderSnap] = await Promise.all([
+        db.collection("users").doc(driverId).get(),
+        db.collection("couriers").doc(orderId).get(),
+      ]);
+      const driver = driverSnap.data();
+      const order = orderSnap.data();
+
+      // Defence in depth: the rules already require these, but an offer on
+      // a closed request or from a non-driver is removed rather than shown.
+      const isDriver =
+        driver?.driverStatus === "approved" || driver?.role === "driver";
+      if (!order || !driver || !isDriver || order.status !== "pending" || order.driverId) {
+        await after.ref.delete();
+        return;
+      }
+
+      const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
+      const amount = Number(bid.amount);
+      if (!Number.isFinite(amount) || amount < Number(order.offeredFare) || amount > bounds.ceiling) {
+        await after.ref.delete();
+        return;
+      }
+
+      await after.ref.update({
+        driverName: String(driver.fullName ?? "Courier").split(" ")[0],
+        driverPhotoUrl: driver.photoUrl ?? null,
+        driverRating: Number(driver.rating) || 0,
+        driverTrips: Number(driver.totalDeliveries) || 0,
+        vehicleLabel: driver.vehicleType ?? null,
+        vehiclePlate: driver.vehiclePlate ?? null,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      await sendToUser(
+        order.userId,
+        {
+          title: `New offer: ₦${amount.toFixed(0)}`,
+          body: `A courier is ready to take your delivery. Tap to review offers.`,
+        },
+        { type: "new_bid", orderId, driverId, amount: String(amount) }
+      );
+    } catch (error) {
+      logger.error("onBidWritten failed", { orderId, driverId, ...errorInfo(error) });
+    }
+  }
+);
+
+/**
+ * Customer accepts one driver's offer.
+ *
+ * Runs as a single transaction: it re-reads the order and the offer, checks
+ * the order is still the caller's, still pending and still unassigned, then
+ * assigns the driver and fixes the price from the stored offer. A second
+ * accept — a double tap, or a race between two offers — finds the order
+ * already assigned and fails cleanly. Every other open offer is closed.
+ */
+export const acceptBid = onCall(async (request) => {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "accept_bid", 20, 60 * 10);
+
+  const orderId = String(request.data?.orderId ?? "").trim();
+  const driverId = String(request.data?.driverId ?? "").trim();
+  if (!orderId || !driverId) {
+    throw new HttpsError("invalid-argument", "An order and an offer are required.");
+  }
+
+  const orderRef = db.collection("couriers").doc(orderId);
+  const bidRef = orderRef.collection("bids").doc(driverId);
+
+  // Two accepts racing for one request — or an accept racing the trigger
+  // that fills in the driver's details on the offer — contend on the same
+  // documents. Firestore retries a contended transaction; the default five
+  // attempts is not always enough when both sides keep retrying, and then
+  // *both* fail. Ten attempts makes that vanishingly rare, and if it still
+  // happens the caller gets a retryable error rather than a generic one.
+  let agreed: number;
+  try {
+    agreed = await db.runTransaction(async (tx) => {
+    const [orderSnap, bidSnap] = await Promise.all([tx.get(orderRef), tx.get(bidRef)]);
+    const order = orderSnap.data();
+    const bid = bidSnap.data();
+
+    if (!order) throw new HttpsError("not-found", "That request no longer exists.");
+    if (order.userId !== uid) {
+      throw new HttpsError("permission-denied", "That is not your request.");
+    }
+    if (order.status !== "pending" || order.driverId) {
+      throw new HttpsError("failed-precondition", "This request already has a courier.");
+    }
+    if (!bid || bid.status !== "open") {
+      throw new HttpsError("failed-precondition", "That offer is no longer available.");
+    }
+
+    const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
+    const agreedFare = clampToBounds(Number(bid.amount), bounds);
+    const split = fareSplit(agreedFare, Number(order.discountAmount) || 0);
+
+    tx.update(orderRef, {
+      driverId,
+      status: "accepted",
+      agreedFare,
+      totalFare: split.totalFare,
+      platformCommission: split.platformCommission,
+      driverEarnings: split.driverEarnings,
+      acceptedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    tx.update(bidRef, { status: "accepted", decidedAt: FieldValue.serverTimestamp() });
+
+    return agreedFare;
+  }, { maxAttempts: 10 });
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    const code = (error as { code?: unknown })?.code;
+    if (code === 10 || code === "aborted" || code === "ABORTED") {
+      throw new HttpsError("aborted", "Busy right now — please try again.");
+    }
+    logger.error("acceptBid failed", { orderId, driverId, ...errorInfo(error) });
+    throw new HttpsError("internal", "Could not accept that offer.");
+  }
+
+  // Close the losing offers outside the transaction — best effort, and the
+  // order is already assigned so no stale offer can be accepted regardless.
+  const others = await orderRef.collection("bids").where("status", "==", "open").get();
+  if (!others.empty) {
+    const batch = db.batch();
+    others.docs.forEach((d) =>
+      batch.update(d.ref, { status: "declined", decidedAt: FieldValue.serverTimestamp() })
+    );
+    await batch.commit();
+  }
+
+  // The winning driver is no longer free for other jobs.
+  await db
+    .collection("driver_locations")
+    .doc(driverId)
+    .set({ isAvailable: false }, { merge: true })
+    .catch(() => undefined);
+
+  await sendToUser(
+    driverId,
+    {
+      title: "Your offer was accepted 🎉",
+      body: `₦${agreed.toFixed(0)} — head to the pickup point.`,
+    },
+    { type: "bid_accepted", orderId }
+  );
+
+  return { success: true, agreedFare: agreed };
+});
+
+/**
+ * Customer raises their offer while waiting, as inDrive allows.
+ *
+ * Only upwards, only while the request is still open, and never past the
+ * ceiling. Lowering is not offered: drivers who already answered at the old
+ * price would otherwise be holding offers below the customer's own.
+ */
+export const raiseOffer = onCall(async (request) => {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "raise_offer", 15, 60 * 10);
+
+  const orderId = String(request.data?.orderId ?? "").trim();
+  const amount = Number(request.data?.amount);
+  if (!orderId || !Number.isFinite(amount)) {
+    throw new HttpsError("invalid-argument", "An order and an amount are required.");
+  }
+
+  const orderRef = db.collection("couriers").doc(orderId);
+
+  const offeredFare = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(orderRef);
+    const order = snap.data();
+    if (!order) throw new HttpsError("not-found", "That request no longer exists.");
+    if (order.userId !== uid) {
+      throw new HttpsError("permission-denied", "That is not your request.");
+    }
+    if (order.status !== "pending" || order.driverId) {
+      throw new HttpsError("failed-precondition", "This request already has a courier.");
+    }
+
+    const current = Number(order.offeredFare) || 0;
+    if (amount <= current) {
+      throw new HttpsError("invalid-argument", "A new offer must be higher than your current one.");
+    }
+
+    const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
+    const next = clampToBounds(amount, bounds);
+    const split = fareSplit(next, Number(order.discountAmount) || 0);
+
+    tx.update(orderRef, {
+      offeredFare: next,
+      totalFare: split.totalFare,
+      platformCommission: split.platformCommission,
+      driverEarnings: split.driverEarnings,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return next;
+  });
+
+  return { success: true, offeredFare };
+});
 
 // ==================== ORDER STATUS CHANGED ====================
 

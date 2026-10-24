@@ -14,4 +14,10 @@ class AppConstants {
 
   // Asset Paths
   static const String logoPath = 'assets/images/logo.png';
+
+  // Social links shown at the foot of the side menu. Left empty on purpose:
+  // the icons stay hidden until these point at Dilivvafast's real pages, so
+  // a guessed handle can never send customers to someone else's account.
+  static const String facebookUrl = '';
+  static const String instagramUrl = '';
 }

@@ -115,8 +115,9 @@ class FirebaseUserRepository implements IUserRepository {
   Future<Either<Failure, Unit>> updateOnlineStatus(
     String userId,
     bool isOnline,
-    bool isAvailable,
-  ) async {
+    bool isAvailable, {
+    String? vehicleType,
+  }) async {
     try {
       final batch = _firestore.batch();
 
@@ -130,6 +131,8 @@ class FirebaseUserRepository implements IUserRepository {
         'driverId': userId,
         'isOnline': isOnline,
         'isAvailable': isAvailable,
+        if (vehicleType != null && vehicleType.isNotEmpty)
+          'vehicleType': vehicleType,
         'lastSeen': FieldValue.serverTimestamp(),
         if (!isOnline) 'location': FieldValue.delete(),
       }, SetOptions(merge: true));

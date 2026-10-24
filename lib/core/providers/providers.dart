@@ -28,6 +28,7 @@ import 'package:dilivvafast/features/investor/data/repositories/firebase_investo
 
 // Models
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
@@ -77,7 +78,10 @@ final userRepositoryProvider = Provider<IUserRepository>((ref) {
 });
 
 final courierRepositoryProvider = Provider<ICourierRepository>((ref) {
-  return FirebaseCourierRepository(firestore: ref.watch(firestoreProvider));
+  return FirebaseCourierRepository(
+    firestore: ref.watch(firestoreProvider),
+    functions: ref.watch(firebaseFunctionsProvider),
+  );
 });
 
 final paymentRepositoryProvider = Provider<IPaymentRepository>((ref) {
@@ -197,6 +201,25 @@ final allOrdersProvider = StreamProvider<List<CourierOrderModel>>((ref) {
   return ref.watch(courierRepositoryProvider).watchAllOrders();
 });
 
+/// Open driver offers on one request, cheapest first — the customer's view
+/// of the negotiation.
+final orderBidsProvider = StreamProvider.family<List<CourierBid>, String>((
+  ref,
+  orderId,
+) {
+  return ref.watch(courierRepositoryProvider).watchBids(orderId);
+});
+
+/// The signed-in driver's own offer on a request, if they have made one.
+final myBidProvider = StreamProvider.family<CourierBid?, String>((
+  ref,
+  orderId,
+) {
+  final driverId = ref.watch(currentUserIdProvider);
+  if (driverId == null) return Stream.value(null);
+  return ref.watch(courierRepositoryProvider).watchMyBid(orderId, driverId);
+});
+
 /// Watch a specific order
 final orderStreamProvider = StreamProvider.family<CourierOrderModel?, String>((
   ref,
@@ -305,7 +328,12 @@ class DriverStatusNotifier extends Notifier<bool> {
 
     final result = await ref
         .read(userRepositoryProvider)
-        .updateOnlineStatus(userId, newStatus, newStatus);
+        .updateOnlineStatus(
+          userId,
+          newStatus,
+          newStatus,
+          vehicleType: ref.read(currentUserProvider).value?.vehicleType,
+        );
 
     // Roll back so the switch cannot claim a state the backend rejected.
     result.fold((_) => state = previous, (_) {});

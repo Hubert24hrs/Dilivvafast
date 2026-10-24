@@ -55,6 +55,40 @@ enum PaymentStatus {
   refunded,
 }
 
+/// The kind of courier a customer is booking.
+///
+/// This is the service the customer picks on the home screen. It is matched
+/// against a driver's own vehicle when offers are placed: a `bike` job can be
+/// taken by a motorcycle or bicycle rider, a `car` job by a car or van driver.
+/// The same mapping is enforced in firestore.rules and in the dispatch trigger.
+enum CourierVehicle {
+  @JsonValue('bike')
+  bike,
+  @JsonValue('car')
+  car;
+
+  String get label => switch (this) {
+    CourierVehicle.bike => 'Bike',
+    CourierVehicle.car => 'Car',
+  };
+
+  /// Driver vehicle types (from the driver application) that can serve this.
+  List<String> get driverVehicleTypes => switch (this) {
+    CourierVehicle.bike => const ['motorcycle', 'bicycle'],
+    CourierVehicle.car => const ['car', 'van'],
+  };
+
+  /// Firestore value — the @JsonValue, not `.name` (they happen to coincide
+  /// here, but going through one accessor keeps that from being load-bearing).
+  String get wireValue => this == CourierVehicle.bike ? 'bike' : 'car';
+
+  static CourierVehicle forDriverVehicle(String? driverVehicleType) =>
+      switch (driverVehicleType) {
+        'car' || 'van' => CourierVehicle.car,
+        _ => CourierVehicle.bike,
+      };
+}
+
 /// JSON converter for Firestore GeoPoint.
 ///
 /// Accepts BOTH a native [GeoPoint] and a `{latitude, longitude}` map.
@@ -141,6 +175,24 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     @Default(0.0) double baseFare,
     @Default(1.0) double surgeMultiplier,
     @Default(0.0) double totalFare,
+
+    /// Which courier service was booked. Orders created before this field
+    /// existed decode as [CourierVehicle.bike], the only service then offered.
+    // Freezed forwards this to the generated field; the analyzer cannot see
+    // that. The generated decoder does use unknownValue (see the .g.dart).
+    // ignore: invalid_annotation_target
+    @JsonKey(unknownEnumValue: CourierVehicle.bike)
+    @Default(CourierVehicle.bike)
+    CourierVehicle vehicleType,
+
+    /// The price the customer is offering, inDrive-style. Server-validated:
+    /// `onCourierCreated` clamps it to the allowed band around
+    /// [recommendedFare], and only `raiseOffer` may change it afterwards.
+    @Default(0.0) double offeredFare,
+
+    /// The fare the server computed from distance, weight and zone pricing.
+    /// Shown to the customer as guidance and used to bound offers.
+    @Default(0.0) double recommendedFare,
     @Default(PaymentMethod.wallet) PaymentMethod paymentMethod,
     @Default(PaymentStatus.pending) PaymentStatus paymentStatus,
     String? paystackReference,
@@ -226,6 +278,9 @@ extension CourierOrderModelX on CourierOrderModel {
       'baseFare': baseFare,
       'surgeMultiplier': surgeMultiplier,
       'totalFare': totalFare,
+      'vehicleType': vehicleType.wireValue,
+      'offeredFare': offeredFare,
+      'recommendedFare': recommendedFare,
       'paymentMethod': paymentMethod.name,
       'paymentStatus': paymentStatus.name,
       'paystackReference': paystackReference,

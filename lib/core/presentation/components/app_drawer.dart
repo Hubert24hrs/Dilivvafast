@@ -1,77 +1,116 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
-import 'package:dilivvafast/core/presentation/theme/theme_controller.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/auth/presentation/controllers/mode_controller.dart';
 
-/// The app's main navigation drawer.
+/// Side menu, laid out after inDrive.
 ///
-/// Its first section is the mode switcher: customer, driver and investor are
-/// all listed for every signed-in person, with a status chip showing whether
-/// each one is active, under review or not yet applied for. Tapping a mode the
-/// user is not entitled to opens that mode's onboarding rather than failing.
+/// Profile header (photo, name, rating) on top, a plain list of destinations
+/// in the middle, and one large lime button at the foot that flips between
+/// customer and driver mode. Investor and admin access stay reachable through
+/// small links under that button, shown only to accounts that have them.
+///
+/// Log out lives in Settings, as it does in inDrive.
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
+
+  static const _lime = Color(0xFFC1F11D);
+  static const _ink = Color(0xFF111827);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).value;
     final activeMode = ref.watch(activeModeProvider);
+    final here = _currentPath(context);
+
+    final otherModes = <AppMode>[
+      if (activeMode != AppMode.investor &&
+          user?.accessFor(AppMode.investor) == ModeAccess.approved)
+        AppMode.investor,
+      if (activeMode != AppMode.admin && user?.role == UserRole.admin)
+        AppMode.admin,
+    ];
+
+    final toggleTarget = activeMode == AppMode.customer
+        ? AppMode.driver
+        : AppMode.customer;
 
     return Drawer(
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(),
       child: SafeArea(
-        bottom: false,
         child: Column(
           children: [
-            _DrawerHeader(user: user, activeMode: activeMode),
+            _ProfileHeader(
+              user: user,
+              onTap: () => _push(context, _profileRoute(activeMode)),
+            ),
+            const Divider(height: 1, color: Color(0xFFE5E7EB)),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _SectionLabel('Modes'),
-                  ...AppMode.switchable.map(
-                    (mode) => _ModeTile(
-                      mode: mode,
-                      isActive: mode == activeMode,
-                      access: user?.accessFor(mode) ?? ModeAccess.none,
-                      onTap: () => _switchMode(context, ref, mode),
+                  for (final item in _itemsFor(activeMode))
+                    _MenuItem(
+                      icon: item.icon,
+                      label: item.label,
+                      selected: here == item.route,
+                      onTap: () => item.replacesTab
+                          ? _go(context, item.route)
+                          : _push(context, item.route),
                     ),
-                  ),
-                  const _SectionDivider(),
-                  ..._itemsForMode(activeMode),
-                  const _SectionDivider(),
-                  _SectionLabel('Preferences'),
-                  const _ThemeTile(),
-                  _NavTile(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    onTap: (c) => _push(c, '/settings'),
-                  ),
-                  _NavTile(
-                    icon: Icons.help_outline_rounded,
-                    label: 'Help centre',
-                    onTap: (c) => _push(c, '/help'),
-                  ),
-                  _NavTile(
-                    icon: Icons.info_outline_rounded,
-                    label: 'About Dilivvafast',
-                    onTap: (c) => _push(c, '/about'),
-                  ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-            _NavTile(
-              icon: Icons.logout_rounded,
-              label: 'Log out',
-              danger: true,
-              onTap: (c) => _confirmLogout(c, ref),
+            const Divider(height: 1, color: Color(0xFFE5E7EB)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  onPressed: () => _switchMode(context, ref, toggleTarget),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _lime,
+                    foregroundColor: _ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: Text(
+                    toggleTarget == AppMode.driver
+                        ? 'Driver mode'
+                        : 'Customer mode',
+                  ),
+                ),
+              ),
             ),
+            if (otherModes.isNotEmpty)
+              Wrap(
+                spacing: 4,
+                children: [
+                  for (final mode in otherModes)
+                    TextButton(
+                      onPressed: () => _switchMode(context, ref, mode),
+                      child: Text(
+                        '${mode.label} mode',
+                        style: const TextStyle(color: Color(0xFF4B5563)),
+                      ),
+                    ),
+                ],
+              ),
+            const _SocialLinks(),
             const SizedBox(height: 8),
           ],
         ),
@@ -79,112 +118,120 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
-  // ── Mode-specific navigation ─────────────────────────────────────────────
+  // ── Destinations per mode ────────────────────────────────────────────────
 
-  List<Widget> _itemsForMode(AppMode mode) => switch (mode) {
-    AppMode.customer => _customerItems(),
-    AppMode.driver => _driverItems(),
-    AppMode.investor => _investorItems(),
-    AppMode.admin => _adminItems(),
+  static String _profileRoute(AppMode mode) => switch (mode) {
+    AppMode.driver => '/driver/profile',
+    AppMode.investor => '/investor/profile',
+    _ => '/customer/profile',
   };
 
-  List<Widget> _customerItems() => [
-    _SectionLabel('Deliveries'),
-    _NavTile(
-      icon: Icons.add_box_outlined,
-      label: 'Send a package',
-      onTap: (c) => _go(c, '/customer/book'),
-    ),
-    _NavTile(
-      icon: Icons.local_shipping_outlined,
-      label: 'My orders',
-      onTap: (c) => _go(c, '/customer/orders'),
-    ),
-    _NavTile(
-      icon: Icons.location_on_outlined,
-      label: 'Saved addresses',
-      onTap: (c) => _push(c, '/customer/addresses'),
-    ),
-    _SectionLabel('Money'),
-    _NavTile(
-      icon: Icons.account_balance_wallet_outlined,
-      label: 'Wallet',
-      onTap: (c) => _go(c, '/customer/wallet'),
-    ),
-    _NavTile(
-      icon: Icons.credit_card_outlined,
-      label: 'Payment methods',
-      onTap: (c) => _push(c, '/payment-methods'),
-    ),
-    _NavTile(
-      icon: Icons.local_offer_outlined,
-      label: 'Promotions',
-      onTap: (c) => _push(c, '/customer/promotions'),
-    ),
-    _NavTile(
-      icon: Icons.card_giftcard_outlined,
-      label: 'Refer and earn',
-      onTap: (c) => _push(c, '/customer/refer'),
-    ),
-  ];
+  static List<_Item> _itemsFor(AppMode mode) {
+    const shared = [
+      _Item(
+        Icons.notifications_none_rounded,
+        'Notifications',
+        '/customer/notifications',
+      ),
+      _Item(Icons.shield_outlined, 'Safety', '/safety'),
+      _Item(Icons.settings_outlined, 'Settings', '/settings'),
+      _Item(Icons.info_outline_rounded, 'Help', '/help'),
+      _Item(Icons.forum_outlined, 'Support', '/support-chat'),
+    ];
 
-  List<Widget> _driverItems() => [
-    _SectionLabel('Driving'),
-    _NavTile(
-      icon: Icons.history_rounded,
-      label: 'Trip history',
-      onTap: (c) => _go(c, '/driver/history'),
-    ),
-    _NavTile(
-      icon: Icons.payments_outlined,
-      label: 'Earnings and payouts',
-      onTap: (c) => _go(c, '/driver/earnings'),
-    ),
-    _SectionLabel('Compliance'),
-    _NavTile(
-      icon: Icons.folder_outlined,
-      label: 'Documents',
-      onTap: (c) => _push(c, '/driver/documents'),
-    ),
-    _NavTile(
-      icon: Icons.two_wheeler_outlined,
-      label: 'Vehicle details',
-      onTap: (c) => _push(c, '/driver/vehicle'),
-    ),
-  ];
+    return switch (mode) {
+      AppMode.customer => const [
+        _Item(
+          Icons.directions_car_outlined,
+          'City',
+          '/customer/home',
+          tab: true,
+        ),
+        _Item(
+          Icons.history_rounded,
+          'Request history',
+          '/customer/orders',
+          tab: true,
+        ),
+        _Item(
+          Icons.inventory_2_outlined,
+          'Couriers',
+          '/customer/book',
+          tab: true,
+        ),
+        _Item(
+          Icons.account_balance_wallet_outlined,
+          'Wallet',
+          '/customer/wallet',
+          tab: true,
+        ),
+        ...shared,
+      ],
+      AppMode.driver => const [
+        _Item(
+          Icons.two_wheeler_outlined,
+          'Requests',
+          '/driver/home',
+          tab: true,
+        ),
+        _Item(
+          Icons.history_rounded,
+          'Trip history',
+          '/driver/history',
+          tab: true,
+        ),
+        _Item(
+          Icons.payments_outlined,
+          'Earnings',
+          '/driver/earnings',
+          tab: true,
+        ),
+        _Item(Icons.folder_outlined, 'Documents', '/driver/documents'),
+        _Item(Icons.badge_outlined, 'Vehicle', '/driver/vehicle'),
+        ...shared,
+      ],
+      AppMode.investor => const [
+        _Item(
+          Icons.pedal_bike_outlined,
+          'My bikes',
+          '/investor/home',
+          tab: true,
+        ),
+        _Item(
+          Icons.trending_up_rounded,
+          'Earnings',
+          '/investor/earnings',
+          tab: true,
+        ),
+        ...shared,
+      ],
+      AppMode.admin => const [
+        _Item(
+          Icons.dashboard_outlined,
+          'Dashboard',
+          '/admin/dashboard',
+          tab: true,
+        ),
+        _Item(
+          Icons.assignment_outlined,
+          'Applications',
+          '/admin/applications',
+          tab: true,
+        ),
+        _Item(Icons.insights_outlined, 'Analytics', '/admin/analytics'),
+        ...shared,
+      ],
+    };
+  }
 
-  List<Widget> _investorItems() => [
-    _SectionLabel('Portfolio'),
-    _NavTile(
-      icon: Icons.pedal_bike_outlined,
-      label: 'My bikes',
-      onTap: (c) => _go(c, '/investor/home'),
-    ),
-    _NavTile(
-      icon: Icons.trending_up_rounded,
-      label: 'Earnings',
-      onTap: (c) => _go(c, '/investor/earnings'),
-    ),
-  ];
-
-  List<Widget> _adminItems() => [
-    _SectionLabel('Operations'),
-    _NavTile(
-      icon: Icons.dashboard_outlined,
-      label: 'Dashboard',
-      onTap: (c) => _go(c, '/admin/dashboard'),
-    ),
-    _NavTile(
-      icon: Icons.assignment_outlined,
-      label: 'Applications',
-      onTap: (c) => _go(c, '/admin/applications'),
-    ),
-    _NavTile(
-      icon: Icons.insights_outlined,
-      label: 'Analytics',
-      onTap: (c) => _push(c, '/admin/analytics'),
-    ),
-  ];
+  /// The current route, for highlighting. Absent outside a router (tests).
+  static String? _currentPath(BuildContext context) {
+    try {
+      return GoRouterState.of(context).matchedLocation;
+    } catch (_) {
+      return null;
+    }
+  }
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -227,347 +274,205 @@ class AppDrawer extends ConsumerWidget {
     context.push(route);
   }
 
-  /// Used for destinations that live inside a shell so they replace the
-  /// current tab instead of stacking a second scaffold and bottom bar on top.
+  /// Destinations that live inside a shell replace the current tab instead
+  /// of stacking a second scaffold on top.
   static void _go(BuildContext context, String route) {
     Navigator.of(context).pop();
     context.go(route);
   }
-
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    final router = GoRouter.of(context);
-    Navigator.of(context).pop();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to continue.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: dialogContext.palette.danger,
-            ),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed ?? false) {
-      await ref.read(authRepositoryProvider).logout();
-      router.go('/login');
-    }
-  }
 }
 
-// ── Header ──────────────────────────────────────────────────────────────────
+class _Item {
+  const _Item(this.icon, this.label, this.route, {this.tab = false});
 
-class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({required this.user, required this.activeMode});
+  final IconData icon;
+  final String label;
+  final String route;
+  final bool tab;
+
+  bool get replacesTab => tab;
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({required this.user, required this.onTap});
 
   final UserModel? user;
-  final AppMode activeMode;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.palette;
-    final name = user?.fullName.trim();
-    final initial = (name != null && name.isNotEmpty)
-        ? name.characters.first.toUpperCase()
-        : '?';
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: palette.border)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: palette.brandSubtle,
-            foregroundImage: user?.photoUrl != null
-                ? NetworkImage(user!.photoUrl!)
-                : null,
-            child: Text(
-              initial,
-              style: context.text.titleLarge?.copyWith(color: palette.brand),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name?.isNotEmpty == true ? name! : 'Your account',
-                  style: context.text.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  user?.email ?? '',
-                  style: context.text.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Mode tile ───────────────────────────────────────────────────────────────
-
-class _ModeTile extends StatelessWidget {
-  const _ModeTile({
-    required this.mode,
-    required this.isActive,
-    required this.access,
-    required this.onTap,
-  });
-
-  final AppMode mode;
-  final bool isActive;
-  final ModeAccess access;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-    final accent = switch (mode) {
-      AppMode.customer => palette.brand,
-      AppMode.driver => palette.driverAccent,
-      AppMode.investor => palette.investorAccent,
-      AppMode.admin => palette.info,
-    };
+    final name = user?.fullName.trim() ?? '';
+    final firstName = name.isEmpty ? 'Your account' : name.split(' ').first;
+    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
+    final rating = user?.rating ?? 0;
+    final count = user?.totalDeliveries ?? 0;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 2),
-      child: Material(
-        color: isActive ? accent.withValues(alpha: 0.10) : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: isActive ? 0.18 : 0.10),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                  ),
-                  child: Icon(_icon, size: 19, color: accent),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 34,
+              backgroundColor: const Color(0xFFF3F4F6),
+              foregroundImage: user?.photoUrl != null
+                  ? NetworkImage(user!.photoUrl!)
+                  : null,
+              child: Text(
+                initial,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: context.palette.brand,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mode.label,
-                        style: context.text.titleMedium?.copyWith(
-                          fontSize: 15,
-                          color: isActive ? accent : palette.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        isActive ? 'Current mode' : _subtitle,
-                        style: context.text.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                if (isActive)
-                  Icon(Icons.check_circle_rounded, size: 20, color: accent)
-                else
-                  _AccessChip(access: access),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    firstName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: AppDrawer._ink,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _RatingRow(rating: rating, count: count),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 28,
+              color: AppDrawer._ink,
+            ),
+          ],
         ),
       ),
     );
   }
-
-  IconData get _icon => switch (mode) {
-    AppMode.customer => Icons.inventory_2_outlined,
-    AppMode.driver => Icons.two_wheeler_outlined,
-    AppMode.investor => Icons.trending_up_rounded,
-    AppMode.admin => Icons.shield_outlined,
-  };
-
-  String get _subtitle => switch (access) {
-    ModeAccess.approved => 'Tap to switch',
-    ModeAccess.pending => 'Application under review',
-    ModeAccess.none => mode.tagline,
-    ModeAccess.rejected => 'Application declined',
-    ModeAccess.suspended => 'Access suspended',
-  };
 }
 
-class _AccessChip extends StatelessWidget {
-  const _AccessChip({required this.access});
+class _RatingRow extends StatelessWidget {
+  const _RatingRow({required this.rating, required this.count});
 
-  final ModeAccess access;
+  final double rating;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-
-    if (access == ModeAccess.none) {
-      return Text(
-        'Join',
-        style: context.text.bodySmall?.copyWith(
-          color: palette.brand,
-          fontWeight: FontWeight.w600,
-        ),
+    if (rating <= 0) {
+      return const Text(
+        'New on Dilivvafast',
+        style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
       );
     }
-
-    final (bg, fg) = switch (access) {
-      ModeAccess.pending => (palette.warningSubtle, palette.warning),
-      ModeAccess.approved => (palette.successSubtle, palette.success),
-      ModeAccess.rejected ||
-      ModeAccess.suspended => (palette.dangerSubtle, palette.danger),
-      ModeAccess.none => (palette.surfaceSunken, palette.textMuted),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        access.label,
-        style: context.text.labelSmall?.copyWith(color: fg, letterSpacing: 0.2),
-      ),
+    return Row(
+      children: [
+        for (var i = 1; i <= 5; i++)
+          Icon(
+            rating >= i - 0.25
+                ? Icons.star_rounded
+                : rating >= i - 0.75
+                ? Icons.star_half_rounded
+                : Icons.star_outline_rounded,
+            size: 20,
+            color: const Color(0xFFF5B301),
+          ),
+        const SizedBox(width: 6),
+        Text(
+          '${rating.toStringAsFixed(2)} ($count)',
+          style: const TextStyle(fontSize: 15, color: Color(0xFF374151)),
+        ),
+      ],
     );
   }
 }
 
-// ── Shared pieces ───────────────────────────────────────────────────────────
+// ── Menu rows ────────────────────────────────────────────────────────────────
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 6),
-      child: Text(title.toUpperCase(), style: context.text.labelSmall),
-    );
-  }
-}
-
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Divider(height: 1, color: context.palette.border),
-    );
-  }
-}
-
-class _NavTile extends StatelessWidget {
-  const _NavTile({
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({
     required this.icon,
     required this.label,
+    required this.selected,
     required this.onTap,
-    this.danger = false,
   });
 
   final IconData icon;
   final String label;
-
-  /// Accepts the tile's own context so callers can navigate after popping.
-  final void Function(BuildContext) onTap;
-  final bool danger;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-    final color = danger ? palette.danger : palette.textPrimary;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: -1),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        leading: Icon(
-          icon,
-          size: 21,
-          color: danger ? palette.danger : palette.textSecondary,
-        ),
-        title: Text(
-          label,
-          style: context.text.bodyLarge?.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: color,
+    return Material(
+      color: selected ? const Color(0xFFF1EFEA) : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          child: Row(
+            children: [
+              Icon(icon, size: 26, color: const Color(0xFF4B5563)),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: AppDrawer._ink,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        onTap: () => onTap(context),
       ),
     );
   }
 }
 
-/// Cycles system → light → dark without leaving the drawer.
-class _ThemeTile extends ConsumerWidget {
-  const _ThemeTile();
+/// Facebook and Instagram, shown only once real URLs are configured in
+/// [AppConstants] — a guessed handle could point at someone else's page.
+class _SocialLinks extends StatelessWidget {
+  const _SocialLinks();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
-    final palette = context.palette;
+  Widget build(BuildContext context) {
+    final links = <(IconData, String, String)>[
+      if (AppConstants.facebookUrl.isNotEmpty)
+        (Icons.facebook_rounded, 'Facebook', AppConstants.facebookUrl),
+      if (AppConstants.instagramUrl.isNotEmpty)
+        (Icons.camera_alt_outlined, 'Instagram', AppConstants.instagramUrl),
+    ];
+    if (links.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: -1),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        leading: Icon(mode.icon, size: 21, color: palette.textSecondary),
-        title: Text(
-          'Appearance',
-          style: context.text.bodyLarge?.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final (icon, label, url) in links)
+          IconButton(
+            tooltip: label,
+            iconSize: 30,
+            color: AppDrawer._ink,
+            icon: Icon(icon),
+            onPressed: () =>
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
           ),
-        ),
-        trailing: Text(
-          mode.label,
-          style: context.text.bodySmall?.copyWith(
-            color: palette.brand,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        onTap: () => ref.read(themeControllerProvider.notifier).cycle(),
-      ),
+      ],
     );
   }
 }

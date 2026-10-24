@@ -25,6 +25,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   updateDoc,
   collection,
   getDocs,
@@ -37,6 +38,7 @@ let testEnv;
 const CUSTOMER = "customer_1";
 const OTHER_CUSTOMER = "customer_2";
 const DRIVER = "driver_1";
+const CAR_DRIVER = "driver_car";
 const ADMIN = "admin_1";
 
 /** Seed documents bypassing rules. */
@@ -89,6 +91,11 @@ beforeEach(async () => {
       email: "d1@example.com",
       fcmToken: "tok",
     });
+    await setDoc(doc(db, "users", CAR_DRIVER), {
+      role: "driver",
+      driverStatus: "approved",
+      vehicleType: "car",
+    });
     await setDoc(doc(db, "users", ADMIN), { role: "admin" });
   });
 });
@@ -96,6 +103,7 @@ beforeEach(async () => {
 const asCustomer = () => testEnv.authenticatedContext(CUSTOMER).firestore();
 const asOther = () => testEnv.authenticatedContext(OTHER_CUSTOMER).firestore();
 const asDriver = () => testEnv.authenticatedContext(DRIVER).firestore();
+const asCarDriver = () => testEnv.authenticatedContext(CAR_DRIVER).firestore();
 const asAdmin = () => testEnv.authenticatedContext(ADMIN).firestore();
 const asAnon = () => testEnv.unauthenticatedContext().firestore();
 
@@ -287,9 +295,11 @@ describe("orders (couriers)", () => {
     );
   });
 
-  test("a driver may claim an unassigned pending job", async () => {
+  test("a driver cannot claim a job directly — only via an accepted offer", async () => {
+    // Regression for the pre-negotiation rule, which let any approved driver
+    // assign themselves to any pending job at whatever price was on it.
     await seedOrder();
-    await assertSucceeds(
+    await assertFails(
       updateDoc(doc(asDriver(), "couriers", "order_1"), {
         driverId: DRIVER,
         status: "accepted",
@@ -325,6 +335,167 @@ describe("orders (couriers)", () => {
   test("an unrelated customer cannot read another customer's order", async () => {
     await seedOrder();
     await assertFails(getDoc(doc(asOther(), "couriers", "order_1")));
+  });
+});
+
+describe("price negotiation (inDrive-style offers)", () => {
+  // A request the server has priced: recommended ₦2000, customer offering
+  // ₦1600. The ceiling is 3 × recommended = ₦6000.
+  const pricedOrder = {
+    userId: CUSTOMER,
+    status: "pending",
+    driverId: null,
+    vehicleType: "bike",
+    recommendedFare: 2000,
+    offeredFare: 1600,
+    totalFare: 1600,
+  };
+
+  async function seedPriced(overrides = {}) {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "neg_1"), { ...pricedOrder, ...overrides });
+    });
+  }
+
+  const bid = (db, driverId, data) =>
+    setDoc(doc(db, "couriers", "neg_1", "bids", driverId), {
+      driverId,
+      status: "open",
+      createdAt: new Date(),
+      ...data,
+    });
+
+  test("a driver can accept the customer's price", async () => {
+    await seedPriced();
+    await assertSucceeds(bid(asDriver(), DRIVER, { amount: 1600 }));
+  });
+
+  test("a driver can counter-offer above it", async () => {
+    await seedPriced();
+    await assertSucceeds(bid(asDriver(), DRIVER, { amount: 2100, etaMinutes: 6 }));
+  });
+
+  test("an offer below the customer's own price is rejected", async () => {
+    await seedPriced();
+    await assertFails(bid(asDriver(), DRIVER, { amount: 1599 }));
+  });
+
+  test("an offer past the ceiling is rejected", async () => {
+    await seedPriced();
+    await assertFails(bid(asDriver(), DRIVER, { amount: 6001 }));
+  });
+
+  test("no offer before the server has priced the request", async () => {
+    await seedPriced({ recommendedFare: 0 });
+    await assertFails(bid(asDriver(), DRIVER, { amount: 1600 }));
+  });
+
+  test("a driver cannot forge their name, rating or plate", async () => {
+    await seedPriced();
+    await assertFails(
+      bid(asDriver(), DRIVER, { amount: 1600, driverName: "Top Rated", driverRating: 5 })
+    );
+  });
+
+  test("a driver cannot bid as someone else", async () => {
+    await seedPriced();
+    await assertFails(bid(asDriver(), "driver_2", { amount: 1600 }));
+  });
+
+  test("a customer cannot place an offer", async () => {
+    await seedPriced();
+    await assertFails(bid(asOther(), OTHER_CUSTOMER, { amount: 1600 }));
+  });
+
+  test("a car driver cannot bid on a bike request", async () => {
+    await seedPriced();
+    await assertFails(bid(asCarDriver(), CAR_DRIVER, { amount: 1600 }));
+  });
+
+  test("a car driver can bid on a car request", async () => {
+    await seedPriced({ vehicleType: "car" });
+    await assertSucceeds(bid(asCarDriver(), CAR_DRIVER, { amount: 1600 }));
+  });
+
+  test("no offers once a courier is assigned", async () => {
+    await seedPriced({ status: "accepted", driverId: "driver_2" });
+    await assertFails(bid(asDriver(), DRIVER, { amount: 1600 }));
+  });
+
+  test("the customer sees offers on their own request — nobody else does", async () => {
+    await seedPriced();
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "neg_1", "bids", DRIVER), {
+        driverId: DRIVER,
+        amount: 1600,
+        status: "open",
+      });
+    });
+    await assertSucceeds(getDoc(doc(asCustomer(), "couriers", "neg_1", "bids", DRIVER)));
+    await assertFails(getDoc(doc(asOther(), "couriers", "neg_1", "bids", DRIVER)));
+  });
+
+  test("the customer can decline an offer but not accept it directly", async () => {
+    await seedPriced();
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "neg_1", "bids", DRIVER), {
+        driverId: DRIVER,
+        amount: 1600,
+        status: "open",
+      });
+    });
+    const ref = doc(asCustomer(), "couriers", "neg_1", "bids", DRIVER);
+    // Accepting must go through the acceptBid function so it is atomic.
+    await assertFails(updateDoc(ref, { status: "accepted" }));
+    await assertSucceeds(updateDoc(ref, { status: "declined" }));
+  });
+
+  test("a driver can withdraw their open offer", async () => {
+    await seedPriced();
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", "neg_1", "bids", DRIVER), {
+        driverId: DRIVER,
+        amount: 1600,
+        status: "open",
+      });
+    });
+    await assertSucceeds(deleteDoc(doc(asDriver(), "couriers", "neg_1", "bids", DRIVER)));
+  });
+
+  test("the customer cannot change their offer directly", async () => {
+    // Raising goes through the raiseOffer function, which bounds it.
+    await seedPriced();
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "neg_1"), { offeredFare: 1 })
+    );
+  });
+
+  test("a client cannot set the recommended or agreed fare", async () => {
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "fake"), {
+        ...pricedOrder,
+        offeredFare: 100,
+        recommendedFare: 100,
+        totalFare: 100,
+      })
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "fake2"), {
+        ...pricedOrder,
+        recommendedFare: 0,
+        agreedFare: 50,
+      })
+    );
+  });
+
+  test("a vehicle type outside bike/car is rejected", async () => {
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "fake3"), {
+        ...pricedOrder,
+        recommendedFare: 0,
+        vehicleType: "helicopter",
+      })
+    );
   });
 });
 

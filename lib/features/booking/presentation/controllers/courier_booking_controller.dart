@@ -6,15 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/services/fare_calculator_service.dart';
 import 'package:dilivvafast/core/services/location_helper.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
-
-/// Vehicle type for courier delivery.
-enum VehicleType { car, motorcycle }
 
 /// State for the map-based courier booking screen.
 class CourierBookingState {
   const CourierBookingState({
-    this.vehicleType = VehicleType.motorcycle,
+    this.vehicleType = CourierVehicle.bike,
     this.pickupAddress = '',
     this.pickupLat = 0,
     this.pickupLng = 0,
@@ -39,7 +37,7 @@ class CourierBookingState {
     this.packageDetailsExpanded = false,
   });
 
-  final VehicleType vehicleType;
+  final CourierVehicle vehicleType;
   final String pickupAddress;
   final double pickupLat;
   final double pickupLng;
@@ -64,7 +62,7 @@ class CourierBookingState {
   final bool packageDetailsExpanded;
 
   CourierBookingState copyWith({
-    VehicleType? vehicleType,
+    CourierVehicle? vehicleType,
     String? pickupAddress,
     double? pickupLat,
     double? pickupLng,
@@ -143,6 +141,23 @@ class CourierBookingState {
 
   bool get canFindCourier => hasPickup && hasDropoff;
 
+  /// The server's suggested price for this route, once calculated.
+  double? get recommendedFare => fareBreakdown?.totalFare;
+
+  /// Bounds the offer can move within. The server enforces the same band.
+  NegotiationBounds? get bounds {
+    final r = recommendedFare;
+    return r == null ? null : NegotiationBounds(recommended: r);
+  }
+
+  /// What will actually be offered: the customer's figure if they set one,
+  /// otherwise the recommendation — clamped to the band either way.
+  double get effectiveOffer {
+    final b = bounds;
+    if (b == null) return proposedPrice;
+    return b.clamp(proposedPrice > 0 ? proposedPrice : b.recommended);
+  }
+
   String get pickupDisplayText {
     if (isLoadingLocation) return 'Getting your location...';
     if (pickupAddress.isNotEmpty) return pickupAddress;
@@ -202,8 +217,17 @@ class CourierBookingController extends Notifier<CourierBookingState> {
     }
   }
 
-  void setVehicleType(VehicleType type) {
+  void setVehicleType(CourierVehicle type) {
     state = state.copyWith(vehicleType: type);
+  }
+
+  /// Step the offer by [delta] naira, inDrive-style. Starts from the
+  /// recommendation if nothing has been offered yet.
+  void nudgeOffer(double delta) {
+    final b = state.bounds;
+    final current = state.effectiveOffer;
+    final next = current + delta;
+    state = state.copyWith(proposedPrice: b == null ? next : b.clamp(next));
   }
 
   void setPickup(String address, double lat, double lng) {
@@ -266,7 +290,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
     } catch (e) {
       state = state.copyWith(
         isCalculatingFare: false,
-        error: 'Failed to calculate fare: $e',
+        error: 'Could not price this route. Please try again.',
       );
     }
   }
@@ -305,9 +329,12 @@ class CourierBookingController extends Notifier<CourierBookingState> {
       final trackingCode =
           'DLV${now.millisecondsSinceEpoch.toString().substring(5)}';
 
-      final totalFare = state.proposedPrice > 0
-          ? state.proposedPrice
-          : (state.fareBreakdown?.totalFare ?? 500.0);
+      // The customer's offer. onCourierCreated re-prices the route server-
+      // side and clamps this to the negotiation band, so it is a request,
+      // not a fact.
+      final offer = state.effectiveOffer > 0
+          ? state.effectiveOffer
+          : NegotiationBounds.minimumFare;
 
       final order = CourierOrderModel(
         id: '',
@@ -332,14 +359,17 @@ class CourierBookingController extends Notifier<CourierBookingState> {
         estimatedDurationMin: (state.distanceKm * 4).round(),
         baseFare: state.fareBreakdown?.baseFare ?? 500.0,
         surgeMultiplier: state.fareBreakdown?.surgeMultiplier ?? 1.0,
-        totalFare: totalFare,
+        totalFare: offer,
+        offeredFare: offer,
+        vehicleType: state.vehicleType,
         paymentMethod: state.paymentMethod,
         trackingCode: trackingCode,
-        notes: state.notes.isNotEmpty
-            ? '${state.vehicleType.name} | ${state.notes}'
-            : state.vehicleType.name,
-        driverEarnings: totalFare * 0.80,
-        platformCommission: totalFare * 0.20,
+        notes: state.notes.isNotEmpty ? state.notes : null,
+        // Earnings and commission are set by the server from the agreed
+        // price. firestore.rules rejects an order created with either one
+        // non-zero — which this used to send, so every booking was refused.
+        driverEarnings: 0,
+        platformCommission: 0,
         createdAt: now,
         updatedAt: now,
       );
@@ -364,7 +394,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
       debugPrint('CourierBookingController.submitOrder error: $e');
       state = state.copyWith(
         isSubmitting: false,
-        error: 'Failed to create order: $e',
+        error: 'Could not send your request. Please try again.',
       );
       return null;
     }

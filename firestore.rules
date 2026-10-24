@@ -153,7 +153,12 @@ service cloud.firestore {
         return !affects(['totalFare', 'baseFare', 'driverEarnings',
                          'platformCommission', 'surgeMultiplier',
                          'discountAmount', 'paymentStatus', 'userId',
-                         'createdAt', 'trackingCode', 'paystackReference']);
+                         'createdAt', 'trackingCode', 'paystackReference',
+                         // Negotiation: the customer's offer moves only
+                         // through the raiseOffer callable, the agreed price
+                         // only through acceptBid.
+                         'offeredFare', 'recommendedFare', 'agreedFare',
+                         'vehicleType']);
       }
 
       allow get: if isAuthenticated() && (
@@ -170,10 +175,15 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid
       );
 
-      // An order is always born unassigned, unpaid and unearned. The fare the
-      // client supplies is an estimate only — onCourierCreated recomputes it
-      // server-side and overwrites it.
+      // An order is always born unassigned, unpaid and unearned. The offer the
+      // client supplies is clamped server-side by onCourierCreated to the
+      // negotiation band around the fare the server computes; the
+      // recommended and agreed fares can only come from the server.
       allow create: if isAuthenticated() &&
+        request.resource.data.get('vehicleType', 'bike') in ['bike', 'car'] &&
+        isNonNegativeNumber(request.resource.data.get('offeredFare', 0)) &&
+        request.resource.data.get('recommendedFare', 0) == 0 &&
+        !('agreedFare' in request.resource.data) &&
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.status == 'pending' &&
         request.resource.data.driverId == null &&
@@ -198,22 +208,96 @@ service cloud.firestore {
          (!affects(['status']) ||
           (request.resource.data.status == 'cancelled' &&
            resource.data.status in ['pending', 'accepted']))) ||
-        // A driver may claim an unassigned job or progress one already theirs,
-        // following the same transition table the app enforces.
+        // A driver may progress a job that is already theirs, following the
+        // same transition table the app enforces.
+        //
+        // There is deliberately no path for a driver to claim a job. Drivers
+        // place an offer in /bids; only the customer accepting it assigns
+        // them, server-side in acceptBid. The previous rule let any approved
+        // driver claim any pending job outright, at whatever price was on it.
         (isDriver() &&
          financialsFrozen() &&
-         !affects(['rating', 'ratingComment']) &&
-         statusUnchangedOrValid() && (
-          // progressing a job that is already mine
-          (resource.data.get('driverId', '') == request.auth.uid &&
-           !affects(['driverId'])) ||
-          // claiming an unassigned pending job for myself
-          (resource.data.status == 'pending' &&
-           resource.data.get('driverId', null) == null &&
-           request.resource.data.driverId == request.auth.uid)
-        ));
+         !affects(['rating', 'ratingComment', 'driverId']) &&
+         statusUnchangedOrValid() &&
+         resource.data.get('driverId', '') == request.auth.uid);
 
       allow delete: if isAdmin();
+
+      // ── Driver offers (inDrive-style negotiation) ──────────────────────
+      //
+      // One offer per driver per request, at bids/{driverId}. The driver
+      // writes only the price and an ETA; who they are (name, rating, plate)
+      // is filled in by onBidWritten from their own record, so a customer
+      // choosing between offers cannot be shown forged details.
+      match /bids/{driverId} {
+        function order() {
+          return get(/databases/$(database)/documents/couriers/$(orderId)).data;
+        }
+
+        function stillOpen() {
+          return order().status == 'pending' &&
+            order().get('driverId', null) == null;
+        }
+
+        // A bike booking is for motorcycles and bicycles, a car booking for
+        // cars and vans. Drivers approved before vehicle types were recorded
+        // are not locked out.
+        function vehicleMatches() {
+          let mine = userDoc().get('vehicleType', '');
+          let wanted = order().get('vehicleType', 'bike');
+          return mine == '' ||
+            (wanted == 'car' && mine in ['car', 'van']) ||
+            (wanted == 'bike' && mine in ['motorcycle', 'bicycle']);
+        }
+
+        // Never below what the customer is already offering — the whole
+        // point of an offer is to say "I'll do it for this" — and never past
+        // the ceiling. recommendedFare is 0 for the moment between the order
+        // being written and the server pricing it; no offer is possible then.
+        function validAmount(amount) {
+          return amount is number &&
+            order().get('recommendedFare', 0) > 0 &&
+            amount >= order().get('offeredFare', 0) &&
+            amount <= order().get('recommendedFare', 0) * 3;
+        }
+
+        function validDriverWrite() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['driverId', 'amount', 'etaMinutes',
+                                   'status', 'createdAt']) &&
+            d.driverId == driverId &&
+            d.status == 'open' &&
+            validAmount(d.amount) &&
+            (!('etaMinutes' in d) ||
+             (d.etaMinutes is int && d.etaMinutes >= 0 && d.etaMinutes <= 240));
+        }
+
+        allow get, list: if isAuthenticated() && (
+          isOwner(driverId) ||
+          order().userId == request.auth.uid ||
+          isAdmin()
+        );
+
+        allow create: if isDriver() && isOwner(driverId) &&
+          stillOpen() && vehicleMatches() && validDriverWrite();
+
+        allow update: if
+          // The driver revises their own offer, or makes one again after it
+          // was declined. An accepted offer is final.
+          (isDriver() && isOwner(driverId) &&
+           resource.data.status in ['open', 'declined'] &&
+           stillOpen() && vehicleMatches() && validDriverWrite()) ||
+          // The customer turns an offer down. Accepting is not a client
+          // write — it goes through acceptBid so it can be atomic.
+          (order().userId == request.auth.uid &&
+           resource.data.status == 'open' &&
+           request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status']) &&
+           request.resource.data.status == 'declined');
+
+        allow delete: if (isOwner(driverId) && resource.data.status == 'open') ||
+          isAdmin();
+      }
 
       match /messages/{messageId} {
         allow read, create: if isAuthenticated() && (

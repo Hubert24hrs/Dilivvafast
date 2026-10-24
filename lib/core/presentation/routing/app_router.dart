@@ -57,6 +57,7 @@ import 'package:dilivvafast/features/payment/presentation/screens/promotions_scr
 import 'package:dilivvafast/features/referral/presentation/screens/refer_earn_screen.dart';
 import 'package:dilivvafast/features/payment/presentation/screens/payment_methods_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/help_center_screen.dart';
+import 'package:dilivvafast/features/support/presentation/screens/safety_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:dilivvafast/features/about/presentation/screens/about_screen.dart';
 import 'package:dilivvafast/features/legal/presentation/screens/privacy_policy_screen.dart';
@@ -81,6 +82,8 @@ class _Destination {
 ///
 /// Uses Material 3's [NavigationBar] with a hairline top border, which is the
 /// current convention on both platforms and reads correctly in light and dark.
+const _fullBleedRoutes = {'/customer/home', '/customer/book'};
+
 class _ShellScaffold extends StatelessWidget {
   const _ShellScaffold({
     required this.child,
@@ -95,6 +98,14 @@ class _ShellScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final location = GoRouterState.of(context).matchedLocation;
+
+    // The map-first screens (customer home and booking) are laid out like
+    // inDrive: navigation lives in the side menu, and the bottom of the
+    // screen belongs to the map sheet. Every other tab keeps its bar.
+    if (_fullBleedRoutes.contains(location)) {
+      return Scaffold(body: child);
+    }
 
     return Scaffold(
       body: child,
@@ -607,6 +618,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/help',
         name: 'helpCenter',
         builder: (context, state) => const HelpCenterScreen(),
+      ),
+      GoRoute(
+        path: '/safety',
+        name: 'safety',
+        builder: (context, state) => const SafetyScreen(),
       ),
       GoRoute(
         path: '/support-chat',

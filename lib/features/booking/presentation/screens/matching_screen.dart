@@ -1,442 +1,343 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:dilivvafast/core/constants/firestore_constants.dart';
+
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
-/// Animated "Finding your courier" screen shown after booking confirmation.
-/// Listens to the courier order document for driverId assignment.
+const _ink = Color(0xFF111827);
+const _muted = Color(0xFF6B7280);
+const _field = Color(0xFFF3F4F6);
+const _lime = Color(0xFFC1F11D);
+
+/// Waiting for couriers, inDrive-style.
+///
+/// The customer's request is out with their offered fare. Couriers answer
+/// with offers — at that price or a counter-price — which appear here live,
+/// cheapest first, each with the courier's (server-verified) name, rating
+/// and vehicle. The customer can accept one, decline one, or raise their own
+/// offer to attract more. Accepting is atomic on the server: the first
+/// accepted offer wins and the rest close.
 class MatchingScreen extends ConsumerStatefulWidget {
-  final String? orderId;
-
   const MatchingScreen({super.key, this.orderId});
+
+  final String? orderId;
 
   @override
   ConsumerState<MatchingScreen> createState() => _MatchingScreenState();
 }
 
-class _MatchingScreenState extends ConsumerState<MatchingScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _rotationController;
-  Timer? _timeoutTimer;
-  Timer? _statusTimer;
-  int _elapsedSeconds = 0;
-  bool _driverFound = false;
-  StreamSubscription<DocumentSnapshot>? _orderSubscription;
-  String _statusText = 'Finding your courier...';
+class _MatchingScreenState extends ConsumerState<MatchingScreen> {
+  String? _busyDriverId;
+  bool _raising = false;
+  bool _cancelling = false;
 
-  // Driver search phases shown while waiting
-  final List<String> _searchPhases = [
-    'Finding your courier...',
-    'Searching nearby couriers...',
-    'Matching you with the best courier...',
-    'Almost there...',
-    'Expanding search area...',
-  ];
-  int _currentPhase = 0;
+  String get _orderId => widget.orderId ?? '';
 
-  @override
-  void initState() {
-    super.initState();
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
-
-    // Update elapsed time and rotate status text
-    _statusTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          _elapsedSeconds++;
-          if (_elapsedSeconds % 10 == 0 &&
-              _currentPhase < _searchPhases.length - 1) {
-            _currentPhase++;
-            _statusText = _searchPhases[_currentPhase];
-          }
-        });
-      }
-    });
-
-    // Timeout after 2 minutes
-    _timeoutTimer = Timer(const Duration(minutes: 2), () {
-      if (mounted && !_driverFound) {
-        _showTimeoutDialog();
-      }
-    });
-
-    // Listen for real-time driver assignment on Firestore
-    _listenForDriverAssignment();
+  Future<void> _accept(CourierBid bid) async {
+    setState(() => _busyDriverId = bid.driverId);
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .acceptBid(_orderId, bid.driverId);
+    if (!mounted) return;
+    setState(() => _busyDriverId = null);
+    result.fold(
+      (f) => _toast(f.message, error: true),
+      (_) => context.go('/customer/track/$_orderId'),
+    );
   }
 
-  /// Attaches a Firestore snapshot listener to couriers/{orderId}.
-  /// When a driverId is written to the document (by a driver claiming the job,
-  /// or by an admin), the screen transitions to the live tracking view.
-  ///
-  /// This listened on `orders/` until now — the wrong collection, and one that
-  /// firestore.rules denies outright — so a driver could accept a job and the
-  /// customer would sit on the searching screen until it timed out.
-  void _listenForDriverAssignment() {
-    final orderId = widget.orderId;
-    if (orderId == null || orderId.isEmpty) return;
-
-    final firestore = ref.read(firestoreProvider);
-    _orderSubscription = firestore
-        .collection(FirestoreConstants.couriers)
-        .doc(orderId)
-        .snapshots()
-        .listen(
-          (snapshot) {
-            if (!mounted || _driverFound) return;
-
-            final data = snapshot.data();
-            if (data != null && data['driverId'] != null) {
-              _onDriverFound(data);
-            }
-          },
-          onError: (error) {
-            debugPrint('MatchingScreen: Firestore listener error: $error');
-          },
-        );
+  Future<void> _decline(CourierBid bid) async {
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .declineBid(_orderId, bid.driverId);
+    if (!mounted) return;
+    result.fold((f) => _toast(f.message, error: true), (_) {});
   }
 
-  /// Called when a driver has been assigned to this order.
-  void _onDriverFound(Map<String, dynamic> orderData) {
-    if (!mounted || _driverFound) return;
-
-    setState(() {
-      _driverFound = true;
-      _statusText = 'Courier found!';
-    });
-
-    _timeoutTimer?.cancel();
-    _statusTimer?.cancel();
-
-    // Brief delay to show the "Driver found!" state, then navigate
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        context.go('/customer/track/${widget.orderId}');
-      }
-    });
+  Future<void> _raise(CourierOrderModel order, double by) async {
+    setState(() => _raising = true);
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .raiseOffer(_orderId, order.offeredFare + by);
+    if (!mounted) return;
+    setState(() => _raising = false);
+    result.fold(
+      (f) => _toast(f.message, error: true),
+      (fare) => _toast('Your offer is now ₦${fare.toStringAsFixed(0)}'),
+    );
   }
 
-  void _showTimeoutDialog() {
-    showDialog(
+  Future<void> _cancel() async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.palette.surfaceRaised,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'No Couriers Available',
-          style: TextStyle(color: context.palette.textPrimary),
-        ),
-        content: Text(
-          'We couldn\'t find a courier right now. This might be due to high demand or limited availability in your area.',
-          style: TextStyle(color: context.palette.textSecondary, height: 1.5),
-        ),
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel this request?'),
+        content: const Text('Couriers will stop seeing it.'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Keep searching
-              _timeoutTimer = Timer(const Duration(minutes: 2), () {
-                if (mounted && !_driverFound) _showTimeoutDialog();
-              });
-            },
-            child: Text(
-              'Keep Waiting',
-              style: TextStyle(color: context.palette.brand),
-            ),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep waiting'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/customer/home');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.palette.brand,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.palette.onBrand),
-            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: ctx.palette.danger),
+            child: const Text('Cancel request'),
           ),
         ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _cancelling = true);
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .cancelOrder(_orderId);
+    if (!mounted) return;
+    setState(() => _cancelling = false);
+    result.fold(
+      (f) => _toast(f.message, error: true),
+      (_) => context.go('/customer/home'),
+    );
+  }
+
+  void _toast(String message, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: error ? context.palette.danger : _ink,
       ),
     );
   }
 
   @override
-  void dispose() {
-    _orderSubscription?.cancel();
-    _pulseController.dispose();
-    _rotationController.dispose();
-    _timeoutTimer?.cancel();
-    _statusTimer?.cancel();
-    super.dispose();
-  }
-
-  String get _formattedTime {
-    final minutes = _elapsedSeconds ~/ 60;
-    final seconds = _elapsedSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (_orderId.isEmpty) {
+      return const Scaffold(body: Center(child: Text('Request not found.')));
+    }
+
+    final order = ref.watch(orderStreamProvider(_orderId)).value;
+    final bids = ref.watch(orderBidsProvider(_orderId));
+
+    // Assigned from anywhere — this device, another, or an admin — means
+    // the waiting is over.
+    ref.listen<AsyncValue<CourierOrderModel?>>(orderStreamProvider(_orderId), (
+      _,
+      next,
+    ) {
+      final o = next.value;
+      if (o == null || !mounted) return;
+      if (o.driverId != null && o.status != OrderStatus.pending) {
+        context.go('/customer/track/$_orderId');
+      } else if (o.status == OrderStatus.cancelled) {
+        context.go('/customer/home');
+      }
+    });
+
+    final offers = bids.value ?? const <CourierBid>[];
+
     return Scaffold(
-      backgroundColor: context.palette.surfaceBase,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top bar with cancel
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => context.go('/customer/home'),
-                    icon: Icon(
-                      Icons.close,
-                      color: context.palette.textSecondary,
-                      size: 20,
-                    ),
-                    label: Text(
-                      'Cancel',
-                      style: TextStyle(color: context.palette.textSecondary),
-                    ),
-                  ),
-                  Text(
-                    _formattedTime,
-                    style: TextStyle(
-                      color: context.palette.textMuted,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Spacer(flex: 2),
-
-            // Animated search visualization
-            SizedBox(
-              width: 240,
-              height: 240,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Outer rotating ring
-                  AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _rotationController.value * 2 * pi,
-                        child: Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.palette.brand.withValues(
-                                alpha: 0.15,
-                              ),
-                              width: 2,
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 0,
-                                left: 100,
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: context.palette.brand,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: context.palette.brand.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                        blurRadius: 8,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: _ink,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          tooltip: 'Back to home',
+          onPressed: () => context.go('/customer/home'),
+        ),
+        title: Text(
+          offers.isEmpty ? 'Finding couriers' : 'Choose a courier',
+          style: const TextStyle(fontWeight: FontWeight.w700, color: _ink),
+        ),
+      ),
+      body: order == null
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _YourOffer(
+                  order: order,
+                  raising: _raising,
+                  onRaise: (by) => _raise(order, by),
+                ),
+                Expanded(
+                  child: offers.isEmpty
+                      ? const _Searching()
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                          itemCount: offers.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (_, i) => _OfferCard(
+                            bid: offers[i],
+                            yourOffer: order.offeredFare,
+                            busy: _busyDriverId == offers[i].driverId,
+                            disabled: _busyDriverId != null,
+                            onAccept: () => _accept(offers[i]),
+                            onDecline: () => _decline(offers[i]),
                           ),
                         ),
-                      );
-                    },
-                  ),
-
-                  // Middle pulsing ring
-                  AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, child) {
-                      final scale = 1 + (_pulseController.value * 0.08);
-                      return Transform.scale(
-                        scale: scale,
-                        child: Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.palette.brand.withValues(
-                                alpha: 0.1,
-                              ),
-                              width: 1.5,
-                            ),
-                          ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _cancelling ? null : _cancel,
+                        style: TextButton.styleFrom(
+                          foregroundColor: context.palette.danger,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                      );
-                    },
-                  ),
-
-                  // Ripple effects
-                  ...List.generate(3, (index) {
-                    return _AnimatedRipple(
-                      delay: Duration(milliseconds: index * 600),
-                      color: context.palette.brand,
-                    );
-                  }),
-
-                  // Center icon
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppTheme.primaryGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.palette.brand.withValues(alpha: 0.4),
-                          blurRadius: 24,
-                          spreadRadius: -4,
+                        child: Text(
+                          _cancelling ? 'Cancelling…' : 'Cancel request',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      _driverFound
-                          ? Icons.check_rounded
-                          : Icons.local_shipping_rounded,
-                      color: context.palette.onBrand,
-                      size: 36,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            // Status text
-            Text(
-                  _statusText,
-                  style: TextStyle(
-                    color: context.palette.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                )
-                .animate(
-                  target: _driverFound ? 1 : 0,
-                  onPlay: (c) => c.repeat(reverse: true),
-                )
-                .fadeIn(duration: 400.ms),
-
-            const SizedBox(height: 12),
-
-            Text(
-              _driverFound
-                  ? 'Preparing your delivery...'
-                  : 'Please wait while we connect you with a nearby courier',
-              style: TextStyle(
-                color: context.palette.textSecondary,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 32),
-
-            // Progress dots
-            if (!_driverFound)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  final isActive = index <= _currentPhase;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: isActive ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? context.palette.brand
-                          : context.palette.textMuted,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ).animate().fadeIn(
-                    delay: Duration(milliseconds: 200 * index),
-                    duration: 300.ms,
-                  );
-                }),
-              ),
-
-            const Spacer(flex: 3),
-
-            // Tip card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.palette.surfaceRaised,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: context.palette.border),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.lightbulb_outline,
-                    color: context.palette.brand,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Tip: You can track your courier in real-time once matched!',
-                      style: TextStyle(
-                        color: context.palette.textPrimary,
-                        fontSize: 12,
-                        height: 1.4,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ).animate().fadeIn(delay: 1.seconds, duration: 600.ms),
+                ),
+              ],
+            ),
+    );
+  }
+}
 
-            const SizedBox(height: 32),
+/// The customer's current offer, with inDrive's quick "raise" buttons.
+class _YourOffer extends StatelessWidget {
+  const _YourOffer({
+    required this.order,
+    required this.raising,
+    required this.onRaise,
+  });
+
+  final CourierOrderModel order;
+  final bool raising;
+  final ValueChanged<double> onRaise;
+
+  @override
+  Widget build(BuildContext context) {
+    final bounds = order.recommendedFare > 0
+        ? NegotiationBounds(recommended: order.recommendedFare)
+        : null;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _field,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                order.vehicleType == CourierVehicle.bike
+                    ? Icons.two_wheeler_rounded
+                    : Icons.directions_car_filled_rounded,
+                color: _ink,
+              ),
+              const SizedBox(width: 8),
+              const Text('Your offer', style: TextStyle(color: _muted)),
+              const Spacer(),
+              Text(
+                '₦${order.offeredFare.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: _ink,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${order.pickupAddress.split(',').first}  →  '
+            '${order.dropoffAddress.split(',').first}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: _muted, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Raise your offer to get couriers faster',
+            style: TextStyle(fontSize: 12.5, color: _muted),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (final by in const [100.0, 200.0, 500.0]) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        raising ||
+                            (bounds != null &&
+                                order.offeredFare + by > bounds.ceiling)
+                        ? null
+                        : () => onRaise(by),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _ink,
+                      backgroundColor: Colors.white,
+                      side: BorderSide.none,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      '+₦${by.toStringAsFixed(0)}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                if (by != 500.0) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Searching extends StatelessWidget {
+  const _Searching();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 56,
+              height: 56,
+              child: CircularProgressIndicator(strokeWidth: 3, color: _ink),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Sending your request to nearby couriers',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: _ink,
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Offers will appear here. You choose who to go with.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _muted),
+            ),
           ],
         ),
       ),
@@ -444,59 +345,185 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   }
 }
 
-/// Animated expanding ripple circle
-class _AnimatedRipple extends StatefulWidget {
-  final Duration delay;
-  final Color color;
+/// One courier's offer — inDrive's offer card.
+class _OfferCard extends StatelessWidget {
+  const _OfferCard({
+    required this.bid,
+    required this.yourOffer,
+    required this.busy,
+    required this.disabled,
+    required this.onAccept,
+    required this.onDecline,
+  });
 
-  const _AnimatedRipple({required this.delay, required this.color});
-
-  @override
-  State<_AnimatedRipple> createState() => _AnimatedRippleState();
-}
-
-class _AnimatedRippleState extends State<_AnimatedRipple>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-
-    Future.delayed(widget.delay, () {
-      if (mounted) _controller.repeat();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final CourierBid bid;
+  final double yourOffer;
+  final bool busy;
+  final bool disabled;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Container(
-          width: 80 + (_controller.value * 120),
-          height: 80 + (_controller.value * 120),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: widget.color.withValues(
-                alpha: 0.3 * (1 - _controller.value),
-              ),
-              width: 1.5,
-            ),
+    final matchesYours = (bid.amount - yourOffer).abs() < 1;
+    final name = bid.driverName ?? 'Courier';
+    final vehicle = [
+      if (bid.vehicleLabel != null)
+        bid.vehicleLabel![0].toUpperCase() + bid.vehicleLabel!.substring(1),
+      if (bid.vehiclePlate != null) bid.vehiclePlate!,
+    ].join(' · ');
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
-        );
-      },
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: _field,
+                foregroundImage: bid.driverPhotoUrl != null
+                    ? NetworkImage(bid.driverPhotoUrl!)
+                    : null,
+                child: Text(
+                  name.characters.first.toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: _ink,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: Color(0xFFF5B301),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          (bid.driverRating ?? 0) > 0
+                              ? '${bid.driverRating!.toStringAsFixed(2)} '
+                                    '(${bid.driverTrips ?? 0})'
+                              : 'New courier',
+                          style: const TextStyle(color: _muted, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    if (vehicle.isNotEmpty)
+                      Text(
+                        vehicle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _muted, fontSize: 13),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₦${bid.amount.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: _ink,
+                    ),
+                  ),
+                  if (bid.etaMinutes != null)
+                    Text(
+                      '${bid.etaMinutes} min away',
+                      style: const TextStyle(color: _muted, fontSize: 12.5),
+                    ),
+                  if (!matchesYours)
+                    const Text(
+                      'Counter-offer',
+                      style: TextStyle(
+                        color: Color(0xFFB54708),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: disabled ? null : onDecline,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _ink,
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Decline'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: FilledButton(
+                  onPressed: disabled ? null : onAccept,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _lime,
+                    foregroundColor: _ink,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: _ink,
+                          ),
+                        )
+                      : Text(
+                          'Accept ₦${bid.amount.toStringAsFixed(0)}',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

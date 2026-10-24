@@ -140,34 +140,35 @@ class DriverRouteController extends Notifier<DriverRouteState> {
     }
   }
 
-  /// Accept an en-route order by assigning this driver to it
-  Future<void> acceptOrder(String orderId) async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null) return;
+  /// Make an offer on a request, inDrive-style.
+  ///
+  /// [amount] is either the customer's own offer ("accept for ₦X") or a
+  /// counter-price above it. This no longer assigns the driver: drivers used
+  /// to claim any pending job outright, at whatever price was on it. Now the
+  /// customer chooses between offers and the server assigns whoever they
+  /// pick. The request stays on this driver's list, showing the offer's
+  /// status, until the customer decides.
+  ///
+  /// Returns null on success, or a message to show.
+  Future<String?> placeOffer(String orderId, double amount) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return 'Please sign in again.';
 
-      final courierRepo = ref.read(courierRepositoryProvider);
-      final result = await courierRepo.assignDriver(orderId, userId);
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .placeBid(orderId: orderId, driverId: userId, amount: amount);
 
-      result.fold(
-        (failure) =>
-            state = state.copyWith(isLoading: false, error: failure.message),
-        (_) {
-          // Remove accepted order from en-route list
-          final updated = state.enRouteOrders
-              .where((e) => e.order.id != orderId)
-              .toList();
-          state = state.copyWith(
-            isLoading: false,
-            enRouteOrders: updated,
-            activeOrderId: orderId,
-          );
-        },
-      );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
+    return result.fold((failure) => failure.message, (_) => null);
+  }
+
+  /// Take an unanswered offer back.
+  Future<String?> withdrawOffer(String orderId) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return 'Please sign in again.';
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .withdrawBid(orderId, userId);
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Decline an en-route order (just hide from local list)

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
+import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/features/driver/presentation/controllers/driver_route_controller.dart';
+import 'package:dilivvafast/features/driver/presentation/widgets/driver_offer_actions.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
@@ -465,7 +467,7 @@ class DriverHomeScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '₦${order.driverEarnings.toStringAsFixed(0)}',
+                  '₦${_offerOf(order).toStringAsFixed(0)}',
                   style: TextStyle(
                     color: context.palette.brand,
                     fontWeight: FontWeight.bold,
@@ -536,43 +538,10 @@ class DriverHomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
 
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => ctrl.declineOrder(order.id),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.palette.textSecondary,
-                    side: BorderSide(color: context.palette.textMuted),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text('Decline'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () => ctrl.acceptOrder(order.id),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.palette.brand,
-                    foregroundColor: context.palette.surfaceBase,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Accept Delivery',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
+          // inDrive-style: accept the customer's price or counter-offer.
+          DriverOfferActions(
+            order: order,
+            onDismiss: () => ctrl.declineOrder(order.id),
           ),
         ],
       ),
@@ -661,8 +630,18 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
+  /// What the customer is offering. Older orders, created before price
+  /// negotiation, only carry a total fare.
+  static double _offerOf(CourierOrderModel order) =>
+      order.offeredFare > 0 ? order.offeredFare : order.totalFare;
+
   Widget _buildAllPendingOrders(BuildContext context, WidgetRef ref) {
     final pendingAsync = ref.watch(pendingOrdersProvider);
+    // Bike riders see bike requests, car drivers car requests — the same
+    // matching the bid rules enforce.
+    final myService = CourierVehicle.forDriverVehicle(
+      ref.watch(currentUserProvider).value?.vehicleType,
+    );
 
     return pendingAsync.when(
       loading: () => Center(
@@ -671,61 +650,86 @@ class DriverHomeScreen extends ConsumerWidget {
       error: (e, _) =>
           Text('Error: $e', style: const TextStyle(color: Colors.red)),
       data: (orders) {
-        if (orders.isEmpty) return const SizedBox.shrink();
+        if (!orders.any((o) => o.vehicleType == myService)) {
+          return const SizedBox.shrink();
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionHeader(
               context,
-              'All Pending Orders',
-              '${orders.length}',
+              'Requests near you',
+              '${orders.where((o) => o.vehicleType == myService).length}',
             ),
             const SizedBox(height: 12),
             ...orders
-                .take(5)
+                .where((o) => o.vehicleType == myService)
+                .take(10)
                 .map(
                   (order) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: context.palette.surfaceRaised,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: context.palette.border),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                order.pickupAddress,
-                                style: TextStyle(
-                                  color: context.palette.textPrimary,
-                                  fontSize: 13,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    order.pickupAddress,
+                                    style: TextStyle(
+                                      color: context.palette.textPrimary,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '→ ${order.dropoffAddress}',
+                                    style: TextStyle(
+                                      color: context.palette.textSecondary,
+                                      fontSize: 12.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '→ ${order.dropoffAddress}',
-                                style: TextStyle(
-                                  color: context.palette.textSecondary,
-                                  fontSize: 12,
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '₦${_offerOf(order).toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    color: context.palette.textPrimary,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 17,
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                                Text(
+                                  '${order.estimatedDistanceKm.toStringAsFixed(1)} km',
+                                  style: TextStyle(
+                                    color: context.palette.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        Text(
-                          '₦${order.driverEarnings.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color: context.palette.brand,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        const SizedBox(height: 12),
+                        DriverOfferActions(order: order),
                       ],
                     ),
                   ),
