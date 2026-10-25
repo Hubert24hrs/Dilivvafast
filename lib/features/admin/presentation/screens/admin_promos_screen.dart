@@ -126,7 +126,7 @@ class AdminPromosScreen extends ConsumerWidget {
                     Text(
                       promo.code,
                       style: TextStyle(
-                        color: context.palette.onBrand,
+                        color: context.palette.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1,

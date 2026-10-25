@@ -2,46 +2,72 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
-  static const String policyMarkdown = '''
+  // Keep in step with docs/privacy.html, which is the URL given to Google
+  // Play. The Data safety form must describe the same collection.
+  static const String policyMarkdown =
+      '''
 # Privacy Policy
 
-**Effective Date:** January 1, 2026
+**Effective date:** 25 October 2026
 
-Dilivvafast ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by Dilivvafast.
+Dilivvafast ("we", "us") runs the Dilivvafast courier app. This policy explains what we collect, why, who we share it with, and how to delete it.
 
-## 1. Information We Collect
+## 1. Information we collect
 
-- **Personal Information:** Name, email address, phone number, profile photo, and delivery addresses provided during registration and booking.
-- **Location Data:** We collect precise and coarse location data from your device to match pick-up/drop-off locations and enable real-time tracking for active deliveries (including background location for driver partners).
-- **Payment Information:** Processed securely via Paystack. We do not store raw credit/debit card numbers on our servers.
-- **Device & Technical Information:** Device model, operating system, unique device identifiers, IP address, and crash reports collected via Firebase Analytics and Crashlytics.
+- **Account:** name, email address, phone number and profile photo.
+- **Location:** precise location while you use the app — for customers to set pickup and drop-off points, and for couriers while they are online, so customers can follow an active delivery. We do not collect location when the app is closed.
+- **Courier onboarding:** driver's licence, government ID, vehicle photo and bank details for payouts. These are visible only to you and our review team.
+- **Deliveries and payments:** addresses, package details, fares, wallet transactions and ratings. Card payments are handled by Paystack; we never see or store card numbers.
+- **Messages:** chats with your courier or customer, chats with our support team, and questions you ask our in-app assistant, Maya.
+- **Device and diagnostics:** device model, OS version, push-notification token, app usage events and crash reports (Firebase Analytics and Crashlytics).
 
-## 2. How We Use Your Information
+We do not show ads and do not use your device's advertising ID.
 
-- To provide, maintain, and improve our logistics services.
-- To process transactions and send order confirmations/receipts.
-- To facilitate driver-customer communication regarding package delivery.
-- To ensure platform security, prevent fraud, and comply with legal obligations.
+## 2. How we use it
 
-## 3. Sharing of Information
+To run your account, match deliveries with couriers, show live tracking, process payments and payouts, send notifications you have not switched off, provide support, prevent fraud, and fix and improve the app.
 
-We share information only as necessary to fulfill deliveries:
-- With dispatch drivers assigned to your delivery.
-- With third-party service providers (Firebase, Mapbox, Paystack) operating under strict data protection standards.
-- When required by law or to protect rights and safety.
+## 3. Who we share it with
 
-## 4. Your Rights & Data Deletion
+- **The other side of a delivery:** your courier sees your name, phone number and addresses; customers see their courier's first name, rating, vehicle and live location during the delivery.
+- **Service providers:** Google Firebase (hosting, sign-in, database, notifications, analytics), Paystack (payments), Mapbox (maps and address search) and Anthropic (messages you send to Maya, used only to generate her replies — please don't share passwords or card details with her).
+- **Legal requirements:** when required by law or to protect someone's safety.
 
-You have the right to access, correct, or request deletion of your personal data at any time directly in-app under **Settings → Delete Account**, or by contacting privacy@dilivvafast.app.
+We do not sell your personal data.
 
-## 5. Contact Us
+## 4. Retention and deletion
 
-If you have questions about this policy, please reach out to us at privacy@dilivvafast.app.
+You can delete your account at any time in **Settings → Delete Account**. This permanently deletes your profile, saved addresses, notifications, support chats, uploaded courier documents and bank details, and signs you out everywhere. Any wallet balance is forfeited.
+
+Delivery and payment records are kept for up to 7 years for accounting, tax and dispute handling. They are no longer linked to your name.
+
+If you can't use the app, email ${AppConstants.privacyEmail} from your account's email address and we will delete it for you. Details: ${AppConstants.accountDeletionUrl}
+
+## 5. Security
+
+Data is stored on Google Firebase, encrypted in transit and at rest. Access rules limit each user to their own data, and payment and payout logic runs only on our servers.
+
+## 6. Your rights
+
+You can ask to access, correct or delete your personal data, or object to how we use it, by emailing ${AppConstants.privacyEmail}.
+
+## 7. Children
+
+Dilivvafast is not for anyone under 16, and couriers must be 18 or older.
+
+## 8. Changes
+
+We will tell you in the app before significant changes take effect.
+
+## 9. Contact
+
+${AppConstants.privacyEmail} · Dilivvafast Technologies, Lagos, Nigeria
 ''';
 
   @override
@@ -55,9 +81,7 @@ If you have questions about this policy, please reach out to us at privacy@diliv
           IconButton(
             icon: const Icon(Icons.open_in_browser),
             onPressed: () async {
-              final Uri url = Uri.parse(
-                'https://hubert24hrs.github.io/Dilivvafast/privacy.html',
-              );
+              final Uri url = Uri.parse(AppConstants.privacyPolicyUrl);
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
               }

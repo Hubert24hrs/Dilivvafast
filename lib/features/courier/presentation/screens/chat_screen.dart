@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/chat_message_model.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 /// Streams chat messages for a specific order
 final chatMessagesProvider =
@@ -82,7 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
+        ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     }
   }
@@ -164,7 +165,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               error: (e, _) => Center(
                 child: Text(
-                  'Error: $e',
+                  friendlyError(e),
                   style: TextStyle(color: context.palette.danger),
                 ),
               ),
@@ -276,7 +277,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             Text(
               msg.text,
-              style: TextStyle(color: context.palette.onBrand, fontSize: 14),
+              style: TextStyle(
+                color: context.palette.textPrimary,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 2),
             Text(

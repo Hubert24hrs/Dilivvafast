@@ -87,17 +87,16 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             Text(
               'Permanent Account Deletion',
               style: TextStyle(
-                color: context.palette.onBrand,
+                color: context.palette.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Account: ${user?.email ?? "Current User"}\nUID: ${user?.uid ?? ""}',
+              'Account: ${user?.email ?? 'your account'}',
               style: TextStyle(
                 color: context.palette.textSecondary,
-                fontFamily: 'monospace',
                 fontSize: 13,
               ),
             ),
@@ -121,11 +120,19 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       ),
                     ),
                     SizedBox(height: 8),
+                    // What the deleteMyAccount Cloud Function actually does.
+                    // This used to promise that order history would be
+                    // purged; it is kept, because the other party and the
+                    // accounts rely on it. Play requires an accurate account.
                     Text(
-                      '• Your user profile and personal info will be deleted.\n'
-                      '• Your order history and saved addresses will be purged.\n'
-                      '• Unused wallet balances will be forfeited.\n'
-                      '• You will be immediately logged out of all devices.',
+                      '• Your profile, saved addresses, notifications and '
+                      'support chat are deleted.\n'
+                      '• Driver documents and bank details you uploaded are '
+                      'deleted.\n'
+                      '• Any wallet balance is forfeited.\n'
+                      '• Delivery and payment records are kept for accounting '
+                      'and disputes, no longer linked to your name.\n'
+                      '• You will be signed out on every device.',
                       style: TextStyle(
                         color: context.palette.textSecondary,
                         height: 1.5,
@@ -163,19 +170,19 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   ),
                 ),
                 child: _isDeleting
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: context.palette.onBrand,
+                          color: Colors.white,
                         ),
                       )
-                    : Text(
+                    : const Text(
                         'PERMANENTLY DELETE ACCOUNT',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: context.palette.textPrimary,
+                          color: Colors.white,
                         ),
                       ),
               ),

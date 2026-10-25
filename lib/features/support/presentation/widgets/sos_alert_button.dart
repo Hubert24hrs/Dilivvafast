@@ -183,7 +183,7 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
           const SizedBox(width: 12),
           Text(
             'Emergency SOS',
-            style: TextStyle(color: context.palette.onBrand, fontSize: 18),
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 18),
           ),
         ],
       ).animate().fadeIn(duration: 200.ms).shake(hz: 2, duration: 300.ms),
@@ -247,7 +247,7 @@ class _SosConfirmDialogState extends State<_SosConfirmDialog> {
                       reason,
                       style: TextStyle(
                         color: isSelected
-                            ? context.palette.onBrand
+                            ? context.palette.textPrimary
                             : context.palette.textSecondary,
                         fontSize: 13,
                       ),

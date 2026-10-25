@@ -251,6 +251,27 @@ Enforced invariants:
 | `couriers` update allowed arbitrary status jumps | Mark a delivery complete without a driver |
 | `bikes` update was unconstrained on fields | Alter bike price while claiming it |
 | `referrals` was readable by everyone | Enumerate the referral graph |
+| `referrals` create took any id and any fields | File a code many times, or name yourself the referrer and mark it paid |
+| Support messages did not check `senderId` | Post in your own thread as "Support" |
+
+### Referrals
+
+A new user may write exactly one referral, at `referrals/{their uid}`, holding
+only the code they typed and `status: 'pending'`. Everything that moves money
+is server-side: `onReferralCreated` resolves the code to the referrer
+(rejecting self-referral), and the delivery trigger marks it complete only on
+the referee's **first** delivered order, which releases both ₦500 bonuses
+through `onReferralCompleted` (guarded by `bonusPaidAt`, so it pays once).
+
+### Account deletion
+
+`deleteMyAccount` (callable) deletes the caller's profile and sub-collections,
+support thread, notifications, driver applications, referral, presence,
+investor profile, uploaded documents and profile photo, then the Auth user. It
+refuses while the caller has a delivery in progress or an investor position.
+Deliveries, ratings and ledger entries are kept, keyed only by uid. It was
+previously done on the client, where `user.delete()` regularly failed with
+`requires-recent-login` *after* the profile had already been deleted.
 
 ### Driver location privacy
 
@@ -357,6 +378,7 @@ applied to endpoints that cost money to serve:
 | `verifyPaystackPayment` | 20 / 10 min |
 | `askMaya` | 30 / 10 min |
 | `lookupReferralCode` | 20 / 10 min |
+| `deleteMyAccount` | 5 / 10 min |
 
 ---
 

@@ -70,7 +70,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
               title: Text(
                 'Dilivvafast Wallet',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -181,7 +181,7 @@ class PaymentMethodsScreen extends ConsumerWidget {
                             },
                             leading: Icon(
                               Icons.credit_card,
-                              color: context.palette.onBrand,
+                              color: context.palette.textPrimary,
                             ),
                             title: Text(
                               '$brand ending in $last4',

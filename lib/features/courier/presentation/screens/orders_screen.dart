@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key, this.isDriver = false});
@@ -32,7 +33,7 @@ class OrdersScreen extends ConsumerWidget {
         ),
         error: (e, _) => Center(
           child: Text(
-            'Error: $e',
+            friendlyError(e),
             style: TextStyle(color: context.palette.danger),
           ),
         ),
@@ -121,7 +122,7 @@ class OrdersScreen extends ConsumerWidget {
                   child: Text(
                     order.pickupAddress,
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontSize: 13,
                     ),
                     maxLines: 1,

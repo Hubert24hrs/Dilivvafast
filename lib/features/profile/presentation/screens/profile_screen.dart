@@ -206,7 +206,7 @@ class ProfileScreen extends ConsumerWidget {
           const Spacer(),
           Text(
             value,
-            style: TextStyle(color: context.palette.onBrand, fontSize: 13),
+            style: TextStyle(color: context.palette.textPrimary, fontSize: 13),
           ),
         ],
       ),

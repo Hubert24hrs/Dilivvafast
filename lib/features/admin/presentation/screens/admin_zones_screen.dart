@@ -112,7 +112,7 @@ class AdminZonesScreen extends ConsumerWidget {
                     Text(
                       zone.name,
                       style: TextStyle(
-                        color: context.palette.onBrand,
+                        color: context.palette.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),

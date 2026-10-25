@@ -154,14 +154,35 @@ async function pruneTokenIfStale(uid: string, error: unknown): Promise<void> {
   }
 }
 
+/** What a push is about, for the switches in Settings → Notifications. */
+type PushCategory = "order" | "account";
+
+/**
+ * Whether the user's saved preferences allow this push.
+ *
+ * The Settings switches were local widget state that nothing read, so turning
+ * notifications off changed nothing. They are now stored on the profile as
+ * `notificationPrefs` and honoured here. Absent preferences mean "on".
+ */
+function pushAllowed(
+  user: { notificationPrefs?: { push?: boolean; orderUpdates?: boolean } } | undefined,
+  category: PushCategory
+): boolean {
+  const prefs = user?.notificationPrefs;
+  if (prefs?.push === false) return false;
+  if (category === "order" && prefs?.orderUpdates === false) return false;
+  return true;
+}
+
 async function sendToUser(
   uid: string,
   notification: { title: string; body: string },
-  data: Record<string, string>
+  data: Record<string, string>,
+  category: PushCategory = "account"
 ): Promise<void> {
   const snap = await db.collection("users").doc(uid).get();
   const token = snap.data()?.fcmToken;
-  if (!token) return;
+  if (!token || !pushAllowed(snap.data(), category)) return;
 
   try {
     await messaging.send({ token, notification, data });
@@ -615,7 +636,7 @@ export const onCourierCreated = onDocumentCreated(
 
       for (const driverDoc of driverDocs) {
         const token = driverDoc.data()?.fcmToken;
-        if (token) tokens.push(token);
+        if (token && pushAllowed(driverDoc.data(), "order")) tokens.push(token);
 
         notifyBatch.set(
           db.collection("users").doc(driverDoc.id).collection("notifications").doc(),
@@ -798,7 +819,8 @@ export const onBidWritten = onDocumentWritten(
           title: `New offer: ₦${amount.toFixed(0)}`,
           body: `A courier is ready to take your delivery. Tap to review offers.`,
         },
-        { type: "new_bid", orderId, driverId, amount: String(amount) }
+        { type: "new_bid", orderId, driverId, amount: String(amount) },
+        "order"
       );
     } catch (error) {
       logger.error("onBidWritten failed", { orderId, driverId, ...errorInfo(error) });
@@ -904,7 +926,8 @@ export const acceptBid = onCall(async (request) => {
       title: "Your offer was accepted 🎉",
       body: `₦${agreed.toFixed(0)} — head to the pickup point.`,
     },
-    { type: "bid_accepted", orderId }
+    { type: "bid_accepted", orderId },
+    "order"
   );
 
   return { success: true, agreedFare: agreed };
@@ -1002,7 +1025,8 @@ export const onCourierStatusChanged = onDocumentUpdated(
       await sendToUser(
         after.userId,
         { title: `Order ${after.trackingCode ?? ""}`.trim(), body: statusMsg },
-        { type: "order_update", orderId, status: String(after.status) }
+        { type: "order_update", orderId, status: String(after.status) },
+        "order"
       );
 
       await db
@@ -1017,6 +1041,10 @@ export const onCourierStatusChanged = onDocumentUpdated(
           isRead: false,
           createdAt: FieldValue.serverTimestamp(),
         });
+
+      if (after.status === "delivered") {
+        await completeReferralOnFirstDelivery(after.userId);
+      }
 
       // Free the driver up again once the job leaves an active state.
       if (["delivered", "cancelled", "failed"].includes(after.status) && after.driverId) {
@@ -1132,7 +1160,12 @@ export const processDriverPayout = onSchedule(
 
       logger.info("Payout run complete", { periodKey, paid, skipped });
     } catch (error) {
+      // Rethrow so Cloud Scheduler records the run as FAILED. Swallowing this
+      // made a missing index look like a quiet night: the query failed, the
+      // run "succeeded", and no driver was paid. A retry is safe — each
+      // driver-day payout is created at most once (see above).
       logger.error("processDriverPayout error", { periodKey, ...errorInfo(error) });
+      throw error;
     }
   }
 );
@@ -1187,6 +1220,69 @@ export const onRatingCreated = onDocumentCreated(
  * marker written in the same transaction, so flipping the status back and
  * forth cannot mint repeated bonuses.
  */
+/**
+ * Attach the referrer to a new referral.
+ *
+ * Referral documents are keyed by the referee's uid (one per account) and
+ * carry only the code they typed. Nothing used to resolve that code, so
+ * `referrerId` was never set, `onReferralCompleted` returned early, and no
+ * referral bonus was ever paid. Resolving it here also lets the referrer see
+ * the referral in Refer & Earn while it is pending.
+ */
+export const onReferralCreated = onDocumentCreated(
+  "referrals/{referralId}",
+  async (event) => {
+    const referral = event.data?.data();
+    if (!referral || !event.data) return;
+
+    const refereeId = event.params.referralId;
+    const code = String(referral.referralCode ?? "").trim().toUpperCase();
+
+    try {
+      const snap = code
+        ? await db.collection("users").where("referralCode", "==", code).limit(1).get()
+        : null;
+      const referrerId = snap && !snap.empty ? snap.docs[0].id : null;
+
+      if (!referrerId || referrerId === refereeId) {
+        await event.data.ref.update({ status: "invalid" });
+        return;
+      }
+      await event.data.ref.update({ referrerId, refereeId });
+    } catch (error) {
+      logger.error("onReferralCreated error", { refereeId, ...errorInfo(error) });
+    }
+  }
+);
+
+/**
+ * Mark a customer's referral complete once their first delivery lands, which
+ * releases both bonuses through `onReferralCompleted`.
+ *
+ * "First" is checked against delivered orders, so a referral recorded after
+ * an account already has deliveries never qualifies.
+ */
+async function completeReferralOnFirstDelivery(customerId: unknown): Promise<void> {
+  if (typeof customerId !== "string" || !customerId) return;
+
+  const referralRef = db.collection("referrals").doc(customerId);
+  const referral = (await referralRef.get()).data();
+  if (!referral || referral.status !== "pending" || !referral.referrerId) return;
+
+  const delivered = await db
+    .collection("couriers")
+    .where("userId", "==", customerId)
+    .where("status", "==", "delivered")
+    .limit(2)
+    .get();
+  if (delivered.size !== 1) return;
+
+  await referralRef.update({
+    status: "completed",
+    completedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export const onReferralCompleted = onDocumentUpdated(
   "referrals/{referralId}",
   async (event) => {
@@ -1205,6 +1301,7 @@ export const onReferralCompleted = onDocumentUpdated(
         if (current.data()?.bonusPaidAt) return false;
 
         tx.update(referralRef, {
+          bonusPaid: true,
           bonusPaidAt: FieldValue.serverTimestamp(),
         });
 
@@ -1591,6 +1688,171 @@ export const lookupReferralCode = onCall(async (request) => {
   }
 
   return { found: true, referrerId: snap.docs[0].id };
+});
+
+// ==================== SUPPORT CHAT ====================
+
+/**
+ * Route support messages to whoever has to read them next.
+ *
+ * Threads live at `orders/support_{uid}` (see firestore.rules). Until this
+ * existed nothing told anyone a customer had written in, and there was no
+ * inbox to read it from, so every message went unanswered. A customer's
+ * message now updates the thread summary the admin inbox lists and alerts the
+ * admins; an admin's reply notifies the customer.
+ */
+export const onSupportMessageCreated = onDocumentCreated(
+  "orders/{threadId}/messages/{messageId}",
+  async (event) => {
+    const message = event.data?.data();
+    const threadId = event.params.threadId;
+    if (!message || !threadId.startsWith("support_")) return;
+
+    const ownerId = threadId.slice("support_".length);
+    const fromCustomer = message.senderId === ownerId;
+    const preview = String(message.text ?? "").slice(0, 140);
+
+    try {
+      const owner = (await db.collection("users").doc(ownerId).get()).data();
+      await db.collection("orders").doc(threadId).set(
+        {
+          userId: ownerId,
+          userName: owner?.fullName ?? "Customer",
+          lastMessage: preview,
+          lastSenderId: String(message.senderId ?? ""),
+          needsReply: fromCustomer,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      if (!fromCustomer) {
+        await sendToUser(
+          ownerId,
+          { title: "Dilivvafast Support replied", body: preview },
+          { type: "support_reply" }
+        );
+        return;
+      }
+
+      const admins = await db.collection("users").where("role", "==", "admin").get();
+      const tokens = admins.docs
+        .map((d) => d.data().fcmToken)
+        .filter((t): t is string => typeof t === "string" && t.length > 0);
+      if (tokens.length === 0) {
+        logger.warn("Support message received but no admin FCM tokens registered", {
+          threadId,
+        });
+        return;
+      }
+      await messaging.sendEachForMulticast({
+        tokens,
+        notification: {
+          title: `Support: ${owner?.fullName ?? "Customer"}`,
+          body: preview,
+        },
+        data: { type: "support_message", userId: ownerId },
+      });
+    } catch (error) {
+      logger.error("onSupportMessageCreated error", { threadId, ...errorInfo(error) });
+    }
+  }
+);
+
+// ==================== ACCOUNT DELETION ====================
+
+/** Order states in which someone is still relying on this account. */
+const ACTIVE_ORDER_STATES = [
+  "pending",
+  "accepted",
+  "picked_up",
+  "in_transit",
+  "pickedUp",
+  "inTransit",
+];
+
+/**
+ * Delete the caller's account and personal data (required by Google Play).
+ *
+ * The client used to delete the profile document and then the Auth user.
+ * Firebase routinely refuses the second step with `requires-recent-login`,
+ * which left a signed-in account with no profile: the router waits for a
+ * profile that will never arrive. The Admin SDK has no such requirement, so
+ * both steps now happen here, with the Auth user removed last.
+ *
+ * Kept: delivery records, ratings and the wallet/payout ledgers, which the
+ * other party and the accounts rely on. They reference only the uid, which no
+ * longer resolves to a person once the profile is gone. See PLAY_STORE.md.
+ */
+export const deleteMyAccount = onCall(async (request) => {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "delete_account", 5, 60 * 10);
+
+  const [asCustomer, asDriver, investorSnap] = await Promise.all([
+    db
+      .collection("couriers")
+      .where("userId", "==", uid)
+      .where("status", "in", ACTIVE_ORDER_STATES)
+      .limit(1)
+      .get(),
+    db
+      .collection("couriers")
+      .where("driverId", "==", uid)
+      .where("status", "in", ACTIVE_ORDER_STATES)
+      .limit(1)
+      .get(),
+    db.collection("investors").doc(uid).get(),
+  ]);
+
+  if (!asCustomer.empty || !asDriver.empty) {
+    throw new HttpsError(
+      "failed-precondition",
+      "You have a delivery in progress. Finish or cancel it, then try again."
+    );
+  }
+  const investor = investorSnap.data();
+  if ((investor?.activeBikes ?? 0) > 0 || (investor?.pendingWithdrawal ?? 0) > 0) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Your investor account has active bikes or a pending withdrawal. " +
+        "Contact support to close it."
+    );
+  }
+
+  const byUser = async (collection: string, field: string) => {
+    const snap = await db.collection(collection).where(field, "==", uid).get();
+    await Promise.all(snap.docs.map((d) => d.ref.delete()));
+  };
+
+  // Profile plus its sub-collections (notifications, saved addresses, cards),
+  // which are not removed with their parent document.
+  await db.recursiveDelete(db.collection("users").doc(uid));
+  await db.recursiveDelete(db.collection("orders").doc(`support_${uid}`));
+  await Promise.all([
+    byUser("notifications", "userId"),
+    byUser("driver_applications", "userId"),
+    byUser("referrals", "refereeId"),
+    db.collection("driver_locations").doc(uid).delete(),
+    db.collection("investors").doc(uid).delete(),
+  ]);
+
+  // Identity documents and the profile photo. Best effort: a storage outage
+  // must not leave the account half-deleted, so failures are logged for
+  // follow-up instead of aborting.
+  try {
+    const bucket = getStorage().bucket();
+    await Promise.all([
+      bucket.deleteFiles({ prefix: `drivers/${uid}/` }),
+      bucket.deleteFiles({ prefix: `driver_applications/${uid}/` }),
+      bucket.deleteFiles({ prefix: `profile_photos/${uid}.` }),
+    ]);
+  } catch (error) {
+    logger.error("deleteMyAccount: storage cleanup failed", { uid, ...errorInfo(error) });
+  }
+
+  await getAuth().deleteUser(uid);
+  await writeAuditLog({ actorUid: uid, action: "delete_account", targetUid: uid });
+  return { success: true };
 });
 
 // ==================== AI SUPPORT PROXY ====================

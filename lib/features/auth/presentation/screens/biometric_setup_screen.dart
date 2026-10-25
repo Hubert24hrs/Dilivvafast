@@ -317,7 +317,7 @@ class _BiometricSetupScreenState extends ConsumerState<BiometricSetupScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),

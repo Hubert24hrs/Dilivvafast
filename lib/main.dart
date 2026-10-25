@@ -20,7 +20,6 @@ import 'package:dilivvafast/core/config/mapbox_init_stub.dart'
     if (dart.library.html) 'package:dilivvafast/core/config/mapbox_init_web.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 // Global flag — set to true only after Firebase.initializeApp() succeeds.
 bool _firebaseReady = false;
@@ -32,9 +31,6 @@ void main() async {
   // Wrap entire app in error zone.
   runZonedGuarded(
     () async {
-      // Initialise Hive for local storage.
-      await Hive.initFlutter();
-
       // Set up global error handlers (Crashlytics wired in later after Firebase init).
       _setupPreFirebaseErrorHandlers();
 
@@ -224,7 +220,7 @@ class _FirebaseInitErrorScreen extends StatelessWidget {
               Text(
                 'Service Unavailable',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),

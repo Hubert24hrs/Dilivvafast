@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class HelpCenterScreen extends StatelessWidget {
@@ -69,7 +71,7 @@ class HelpCenterScreen extends StatelessWidget {
                 title: Text(
                   faq['question']!,
                   style: TextStyle(
-                    color: context.palette.onBrand,
+                    color: context.palette.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -112,14 +114,15 @@ class HelpCenterScreen extends StatelessWidget {
                   Text(
                     'Need Additional Assistance?',
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Our support team is available 24/7 to assist with active orders, account issues, or billing.',
+                    'Ask Maya for instant answers, or message our support '
+                    'team about orders, accounts or payments.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: context.palette.textSecondary,
@@ -127,22 +130,33 @@ class HelpCenterScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  // The assistant and the support chat both existed but
+                  // nothing in the app opened either from here.
+                  FilledButton.icon(
+                    onPressed: () => context.push('/support/chat'),
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Ask Maya'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => context.push('/support-chat'),
+                    icon: const Icon(Icons.forum_outlined),
+                    label: const Text('Message support'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
                     onPressed: () async {
                       final Uri emailUri = Uri(
                         scheme: 'mailto',
-                        path: 'support@dilivvafast.app',
+                        path: AppConstants.supportEmail,
                         queryParameters: {'subject': 'Dilivvafast App Support'},
                       );
                       if (await canLaunchUrl(emailUri)) {
                         await launchUrl(emailUri);
                       }
                     },
-                    icon: const Icon(Icons.email),
-                    label: const Text('Email Support'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.palette.brand,
-                    ),
+                    icon: const Icon(Icons.email_outlined),
+                    label: const Text('Email support'),
                   ),
                 ],
               ),

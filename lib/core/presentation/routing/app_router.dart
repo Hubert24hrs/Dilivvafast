@@ -31,6 +31,7 @@ import 'package:dilivvafast/features/notification/presentation/screens/notificat
 import 'package:dilivvafast/features/driver/presentation/screens/driver_application_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_promos_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_zones_screen.dart';
+import 'package:dilivvafast/features/admin/presentation/screens/admin_support_screen.dart';
 
 // Phase 4 screens
 import 'package:dilivvafast/features/payment/presentation/screens/top_up_screen.dart';
@@ -43,7 +44,6 @@ import 'package:dilivvafast/features/profile/presentation/screens/settings_scree
 // Phase 6 screens
 import 'package:dilivvafast/features/admin/presentation/screens/admin_analytics_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/chatbot_screen.dart';
-import 'package:dilivvafast/features/referral/presentation/screens/referral_screen.dart';
 
 // Phase 7 screens (new)
 import 'package:dilivvafast/features/auth/presentation/screens/biometric_setup_screen.dart';
@@ -511,6 +511,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'adminZones',
         builder: (context, state) => const AdminZonesScreen(),
       ),
+      GoRoute(
+        path: '/admin/support',
+        name: 'adminSupport',
+        builder: (context, state) => const AdminSupportScreen(),
+      ),
+      GoRoute(
+        path: '/admin/support/:userId',
+        name: 'adminSupportThread',
+        builder: (context, state) =>
+            SupportChatScreen(userId: state.pathParameters['userId']),
+      ),
 
       // ========== INVESTOR ROUTES ==========
       ShellRoute(
@@ -572,12 +583,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/support/chat',
         name: 'supportChat',
         builder: (context, state) => const ChatbotScreen(),
-      ),
-      // Referral System
-      GoRoute(
-        path: '/referral',
-        name: 'referral',
-        builder: (context, state) => const ReferralScreen(),
       ),
       // Biometric Setup (post-registration)
       GoRoute(

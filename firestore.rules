@@ -205,6 +205,8 @@ service cloud.firestore {
          financialsFrozen() &&
          !affects(['driverId', 'proofOfDeliveryUrl', 'pickedUpAt',
                    'deliveredAt']) &&
+         (!affects(['rating', 'ratingComment']) ||
+          resource.data.status == 'delivered') &&
          (!affects(['status']) ||
           (request.resource.data.status == 'cancelled' &&
            resource.data.status in ['pending', 'accepted']))) ||
@@ -326,7 +328,11 @@ service cloud.firestore {
         function isOwnThread() {
           return isAuthenticated() && orderId == 'support_' + request.auth.uid;
         }
-        allow read, create: if isOwnThread() || isAdmin();
+        allow read: if isOwnThread() || isAdmin();
+        // The sender is who they say they are; onSupportMessageCreated uses
+        // it to decide whether to alert the admins or the customer.
+        allow create: if (isOwnThread() || isAdmin()) &&
+          request.resource.data.senderId == request.auth.uid;
         allow update, delete: if isAdmin();
       }
     }
@@ -353,8 +359,18 @@ service cloud.firestore {
         resource.data.get('referrerId', '') == request.auth.uid ||
         isAdmin()
       );
+      // One referral per account, keyed by the referee's uid, so a code
+      // cannot be redeemed repeatedly. The referrer is resolved and the
+      // referral completed server-side (onReferralCreated and the delivery
+      // trigger); a client can only record the code it was given.
       allow create: if isAuthenticated() &&
-        request.resource.data.refereeId == request.auth.uid;
+        referralId == request.auth.uid &&
+        request.resource.data.refereeId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.referralCode is string &&
+        request.resource.data.keys().hasOnly(
+          ['refereeId', 'referralCode', 'status', 'bonusPaid', 'createdAt']) &&
+        request.resource.data.get('bonusPaid', false) == false;
       allow update, delete: if isAdmin();
     }
 
@@ -526,13 +542,25 @@ service cloud.firestore {
 
     // ==================== RATINGS ====================
 
-    match /ratings/{ratingId} {
+    // One rating per delivery, keyed by the order id, and only from the
+    // customer who received it, about the courier who actually did it. The
+    // previous rule accepted a rating for any courier from any signed-in
+    // user, with no delivery behind it — an open door to fake reviews.
+    match /ratings/{orderId} {
+      function ratedOrder() {
+        return get(/databases/$(database)/documents/couriers/$(orderId)).data;
+      }
+
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid &&
-        request.resource.data.get('rating', 0) is number &&
-        request.resource.data.get('rating', 0) >= 1 &&
-        request.resource.data.get('rating', 0) <= 5;
+        ratedOrder().userId == request.auth.uid &&
+        ratedOrder().status == 'delivered' &&
+        request.resource.data.driverId == ratedOrder().get('driverId', '') &&
+        request.resource.data.get('orderId', '') == orderId &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
       allow update, delete: if isAdmin();
     }
 

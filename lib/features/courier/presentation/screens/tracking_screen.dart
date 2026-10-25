@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:dilivvafast/core/presentation/widgets/delivery_map_widget.dart';
+import 'package:dilivvafast/core/presentation/widgets/live_map.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class TrackingScreen extends ConsumerWidget {
   const TrackingScreen({super.key, required this.orderId});
@@ -36,7 +37,7 @@ class TrackingScreen extends ConsumerWidget {
         ),
         error: (e, _) => Center(
           child: Text(
-            'Error: $e',
+            friendlyError(e),
             style: TextStyle(color: context.palette.danger),
           ),
         ),
@@ -64,15 +65,7 @@ class TrackingScreen extends ConsumerWidget {
           // Live map
           Stack(
             children: [
-              DeliveryMapWidget(
-                height: 200,
-                pickupLat: order.pickupGeoPoint.latitude,
-                pickupLng: order.pickupGeoPoint.longitude,
-                dropoffLat: order.dropoffGeoPoint.latitude,
-                dropoffLng: order.dropoffGeoPoint.longitude,
-                pickupLabel: 'Pickup',
-                dropoffLabel: 'Dropoff',
-              ),
+              _TrackingMap(order: order),
               // Distance overlay
               Positioned(
                 top: 8,
@@ -231,6 +224,33 @@ class TrackingScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
+
+          // Rating. Nothing linked to the rating screen before, so no
+          // courier ever received a rating.
+          if (order.status == OrderStatus.delivered && order.rating == null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/rate/${order.id}'),
+                  icon: const Icon(Icons.star_rounded),
+                  label: const Text('Rate your courier'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFC1F11D),
+                    foregroundColor: const Color(0xFF111827),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Action buttons
           if (order.status != OrderStatus.delivered &&
@@ -483,4 +503,44 @@ class _TimelineStep {
   final OrderStatus status;
   final IconData icon;
   const _TimelineStep(this.label, this.status, this.icon);
+}
+
+/// Pickup, drop-off and — once a courier is assigned — their live position.
+///
+/// The position comes from driver_locations, which the courier's app now
+/// actually writes while they are online (see driverLocationSyncProvider).
+/// It was never written before, so this map could not have shown a courier.
+class _TrackingMap extends ConsumerWidget {
+  const _TrackingMap({required this.order});
+
+  final CourierOrderModel order;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final driverId = order.driverId;
+    final live =
+        driverId != null &&
+        (order.status == OrderStatus.accepted ||
+            order.status == OrderStatus.pickedUp ||
+            order.status == OrderStatus.inTransit);
+    final position = live
+        ? ref.watch(driverLocationProvider(driverId)).value
+        : null;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        height: 220,
+        child: LiveMap(
+          pickupLat: order.pickupGeoPoint.latitude,
+          pickupLng: order.pickupGeoPoint.longitude,
+          dropoffLat: order.dropoffGeoPoint.latitude,
+          dropoffLng: order.dropoffGeoPoint.longitude,
+          driverLat: position?.latitude,
+          driverLng: position?.longitude,
+          showUserLocation: false,
+        ),
+      ),
+    );
+  }
 }

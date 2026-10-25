@@ -1,11 +1,8 @@
 # Deployment
 
-Nothing in this repository has ever been deployed. `firebase.json` previously
-declared only Firestore rules, so the Cloud Functions and Storage rules have
-never reached any project.
-
-Staging first. Production only once staging has passed a real end-to-end
-delivery.
+Staging (`dilivvafast-staging`) runs the current backend and has passed the
+full end-to-end delivery test below. Production (`fast-delivery-d8d5c`) has
+not been deployed from this branch yet — see Part 4 and PLAY_STORE.md.
 
 ---
 
@@ -21,10 +18,17 @@ delivery.
 | Firestore rules + indexes | ✅ including the negotiation (`bids`) rules |
 | Storage bucket (us-east1) + storage rules | ✅ |
 | Auth — Email/Password + Google | ✅ |
-| Cloud Functions | ✅ all 18 live, callables answer (unauthenticated calls are refused) |
-| `PAYSTACK_SECRET_KEY`, `ANTHROPIC_API_KEY` | ⚠️ **random placeholders** — top-up and the AI chat return "unavailable" until real values are set |
+| Cloud Functions | ✅ all 21 live on **Node.js 22**, callables answer (unauthenticated calls are refused) |
+| `PAYSTACK_SECRET_KEY`, `ANTHROPIC_API_KEY` | ⚠️ **random placeholders** — wallet top-up fails and Maya falls back to built-in answers until real values are set |
 | `serviceAccountTokenCreator` for document signing | ❌ not granted — admins cannot open driver documents yet |
 | Staging Android app `com.dilivvafast.app.staging` | ✅ registered, debug SHA-1 added; build with `--flavor staging` |
+
+### Node.js runtime
+
+Functions run on `nodejs22` (`firebase.json`). Google decommissioned the
+Node.js 20 runtime on 30 October 2026; after that date a project still on 20
+cannot deploy functions at all. Production must be deployed with this
+`firebase.json`.
 
 ### Gotcha seen on the first functions deploy
 
@@ -175,8 +179,34 @@ manually from the console, and confirm:
 - [ ] A `payouts/{driverId}_{YYYY-MM-DD}` document exists.
 - [ ] Running it a second time credits **nothing further**.
 
-Payout idempotency is currently unproven by any automated test — the emulator
-skips scheduled functions. This manual check is the only evidence there is.
+The automated staging run (`test/e2e/delivery_flow.mjs`, see
+"Automated staging end-to-end test" below) already
+proves the payout is paid once and not again on a re-run; this manual pass is
+for what only a phone can show — pushes, maps and Paystack checkout.
+
+---
+
+### Automated staging end-to-end test
+
+`test/e2e/delivery_flow.mjs` drives the deployed staging backend with the
+Firebase client SDK, as a real customer and a real driver, so every rule and
+every Cloud Function runs as it does for the app. Each run creates throwaway
+accounts and ends by deleting them through `deleteMyAccount`.
+
+```bash
+cd test/e2e
+npm install
+GCLOUD_TOKEN=$(gcloud auth print-access-token) GCLOUD_BIN=gcloud node delivery_flow.mjs
+```
+
+It covers: sign-up with a referral code → booking at the customer's price →
+server pricing → driver counter-offer → customer raises → accept (and a
+second accept refused) → live position → picked up → in transit → delivered →
+5★ rating → both referral bonuses → support message reaches the inbox →
+nightly payout pays the driver → a re-run pays nothing more → both accounts
+delete themselves, keeping the delivery record.
+
+Last run: **25/25 passed**, 25 October 2026, functions on Node.js 22.
 
 ---
 

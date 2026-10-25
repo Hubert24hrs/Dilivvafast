@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 
@@ -14,6 +15,7 @@ class ReferEarnScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider).value;
     final referralCode = currentUser?.referralCode ?? '---';
+    final uid = ref.watch(currentUserIdProvider) ?? '';
 
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
@@ -30,7 +32,7 @@ class ReferEarnScreen extends ConsumerWidget {
             Text(
               'Earn ₦500 per Friend!',
               style: TextStyle(
-                color: context.palette.onBrand,
+                color: context.palette.textPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -111,8 +113,12 @@ class ReferEarnScreen extends ConsumerWidget {
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: () {
+                  // The referee's reward is a wallet bonus paid after their
+                  // first delivery (onReferralCompleted), not a discount.
                   final text =
-                      'Join Dilivvafast using my referral code $referralCode and get ₦500 off your first delivery! Download at https://dilivvafast.app';
+                      'Join Dilivvafast with my referral code $referralCode '
+                      'and get a ₦500 wallet bonus after your first delivery! '
+                      '${AppConstants.playStoreUrl}';
                   // ignore: deprecated_member_use
                   Share.share(text);
                 },
@@ -149,7 +155,11 @@ class ReferEarnScreen extends ConsumerWidget {
               stream: ref
                   .watch(firestoreProvider)
                   .collection('referrals')
-                  .where('referralCode', isEqualTo: referralCode)
+                  // By referrer: the rules can prove that query only returns
+                  // this user's referrals. Listing by code was always denied,
+                  // so the list never loaded. `referrerId` is filled in by
+                  // onReferralCreated.
+                  .where('referrerId', isEqualTo: uid)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -182,7 +192,7 @@ class ReferEarnScreen extends ConsumerWidget {
                   children: docs.map((d) {
                     final data = d.data() as Map<String, dynamic>;
                     final status = data['status'] ?? 'pending';
-                    final bonusPaid = data['bonusPaid'] ?? false;
+                    final bonusPaid = data['bonusPaid'] == true;
 
                     return Card(
                       color: context.palette.surfaceRaised,
@@ -197,7 +207,7 @@ class ReferEarnScreen extends ConsumerWidget {
                         ),
                         title: Text(
                           'Referral #${d.id.substring(0, 6)}',
-                          style: TextStyle(color: context.palette.onBrand),
+                          style: TextStyle(color: context.palette.textPrimary),
                         ),
                         subtitle: Text(
                           'Status: $status',

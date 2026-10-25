@@ -328,13 +328,48 @@ class FirebaseCourierRepository implements ICourierRepository {
     int rating,
     String? comment,
   ) async {
+    if (rating < 1 || rating > 5) {
+      return const Left(FirestoreFailure('Choose between 1 and 5 stars.'));
+    }
     try {
-      await _couriersRef.doc(orderId).update({
+      final orderRef = _couriersRef.doc(orderId);
+      final order = await orderRef.get();
+      final driverId = order.data()?['driverId'] as String?;
+      final userId = order.data()?['userId'] as String?;
+      if (driverId == null || userId == null) {
+        return const Left(FirestoreFailure('This delivery has no courier.'));
+      }
+
+      // Two writes, one batch. The order keeps the customer's own record of
+      // the rating; ratings/{orderId} is what onRatingCreated averages into
+      // the courier's profile. Before this, only the order was written, so
+      // the trigger never fired and every courier stayed unrated. Keying the
+      // rating by order id makes it one rating per delivery.
+      final batch = _firestore.batch();
+      batch.update(orderRef, {
         'rating': rating,
         'ratingComment': comment,
         FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
       });
+      batch
+          .set(_firestore.collection(FirestoreConstants.ratings).doc(orderId), {
+            'orderId': orderId,
+            'userId': userId,
+            'driverId': driverId,
+            'rating': rating,
+            'comment': comment,
+            FirestoreConstants.fieldCreatedAt: FieldValue.serverTimestamp(),
+          });
+      await batch.commit();
       return const Right(unit);
+    } on FirebaseException catch (e) {
+      return Left(
+        FirestoreFailure(
+          e.code == 'permission-denied'
+              ? 'You have already rated this delivery.'
+              : 'Could not save your rating. Please try again.',
+        ),
+      );
     } catch (e) {
       return Left(FirestoreFailure(e.toString()));
     }

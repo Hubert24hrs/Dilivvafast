@@ -7,6 +7,7 @@ import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
 import 'package:dilivvafast/features/investor/presentation/widgets/earnings_chart.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 /// Provider for a single bike by ID
 final bikeDetailProvider = StreamProvider.family<BikeModel?, String>((
@@ -97,7 +98,7 @@ class InvestorBikeDetailScreen extends ConsumerWidget {
         ),
         error: (e, _) => Center(
           child: Text(
-            'Error: $e',
+            friendlyError(e),
             style: TextStyle(color: context.palette.danger),
           ),
         ),

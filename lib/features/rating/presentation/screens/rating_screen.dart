@@ -45,7 +45,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             Text(
               'How was your delivery?',
               style: TextStyle(
-                color: context.palette.onBrand,
+                color: context.palette.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
@@ -167,25 +167,39 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     setState(() => _isSubmitting = true);
     try {
       final courierRepo = ref.read(courierRepositoryProvider);
-      await courierRepo.rateOrder(
+      final result = await courierRepo.rateOrder(
         widget.orderId,
         _rating,
         _commentController.text.trim(),
       );
-      if (mounted) {
-        context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Thank you for your rating!'),
-            backgroundColor: Color(0xFF4CAF50),
+      if (!mounted) return;
+      // This used to say "thank you" whatever happened — rateOrder returns
+      // its failure rather than throwing, and the result was ignored.
+      result.fold(
+        (failure) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: context.palette.danger,
           ),
-        );
-      }
+        ),
+        (_) {
+          context.pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Thank you for your rating!'),
+              backgroundColor: Color(0xFF4CAF50),
+            ),
+          );
+        },
+      );
     } catch (e) {
+      debugPrint('Rating submit failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit: $e'),
+            content: const Text(
+              'Could not save your rating. Please try again.',
+            ),
             backgroundColor: context.palette.danger,
           ),
         );

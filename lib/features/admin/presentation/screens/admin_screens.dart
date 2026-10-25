@@ -182,7 +182,7 @@ class AdminUsersScreen extends ConsumerWidget {
                           Text(
                             u.fullName,
                             style: TextStyle(
-                              color: context.palette.onBrand,
+                              color: context.palette.textPrimary,
                               fontSize: 14,
                             ),
                           ),

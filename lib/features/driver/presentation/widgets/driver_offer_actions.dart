@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
@@ -85,6 +86,7 @@ class _DriverOfferActionsState extends ConsumerState<DriverOfferActions> {
 
     if (mine != null && mine.status != BidStatus.withdrawn) {
       return _OfferStatus(
+        orderId: widget.order.id,
         bid: mine,
         busy: _sending,
         onWithdraw: _withdraw,
@@ -189,12 +191,14 @@ class _DriverOfferActionsState extends ConsumerState<DriverOfferActions> {
 
 class _OfferStatus extends StatelessWidget {
   const _OfferStatus({
+    required this.orderId,
     required this.bid,
     required this.busy,
     required this.onWithdraw,
     required this.onOfferAgain,
   });
 
+  final String orderId;
   final CourierBid bid;
   final bool busy;
   final VoidCallback onWithdraw;
@@ -240,7 +244,16 @@ class _OfferStatus extends StatelessWidget {
               ),
             ),
           ),
-          if (bid.status == BidStatus.open)
+          if (bid.status == BidStatus.accepted)
+            FilledButton(
+              onPressed: () => context.push('/driver/active/$orderId'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _lime,
+                foregroundColor: _ink,
+              ),
+              child: const Text('Open job'),
+            )
+          else if (bid.status == BidStatus.open)
             TextButton(
               onPressed: busy ? null : onWithdraw,
               child: const Text('Withdraw'),

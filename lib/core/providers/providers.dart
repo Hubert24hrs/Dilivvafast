@@ -42,6 +42,7 @@ import 'package:dilivvafast/core/domain/entities/driver_presence.dart';
 import 'package:dilivvafast/core/services/fare_calculator_service.dart';
 import 'package:dilivvafast/core/infrastructure/notification/notification_service.dart';
 import 'package:dilivvafast/core/constants/firestore_constants.dart';
+import 'package:dilivvafast/core/presentation/routing/app_router.dart';
 
 // ==================== FIREBASE INSTANCE PROVIDERS ====================
 
@@ -67,6 +68,7 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   return FirebaseAuthRepository(
     auth: ref.watch(firebaseAuthProvider),
     firestore: ref.watch(firestoreProvider),
+    functions: ref.watch(firebaseFunctionsProvider),
   );
 });
 
@@ -359,9 +361,34 @@ final locationTrackingServiceProvider = Provider<LocationTrackingService>((
   return service;
 });
 
-/// FCM notification service
+/// Publishes the driver's live position while — and only while — they are
+/// online.
+///
+/// Nothing ever called LocationTrackingService.startTracking, so no driver
+/// position was ever written and customer tracking showed no courier at all.
+/// Watching this provider from the driver screens keeps tracking in step with
+/// the online switch: going online starts it (and asks for foreground
+/// location permission, in context), going offline stops it and clears the
+/// last position from the public presence record.
+final driverLocationSyncProvider = Provider<void>((ref) {
+  final online = ref.watch(driverOnlineProvider);
+  final uid = ref.watch(currentUserIdProvider);
+  final tracker = ref.read(locationTrackingServiceProvider);
+  if (uid == null) return;
+  if (online) {
+    tracker.startTracking(uid);
+  } else if (tracker.isTracking) {
+    tracker.stopTracking(uid);
+  }
+});
+
+/// FCM notification service. Tapping a notification opens the screen it is
+/// about, via the app router.
 final fcmServiceProvider = Provider<FCMService>((ref) {
-  return FCMService(firestore: ref.watch(firestoreProvider));
+  return FCMService(
+    firestore: ref.watch(firestoreProvider),
+    onOpenRoute: (route) => ref.read(routerProvider).push(route),
+  );
 });
 
 /// Stream one courier's live position, for the tracking map.

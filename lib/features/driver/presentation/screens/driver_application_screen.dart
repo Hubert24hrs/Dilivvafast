@@ -581,6 +581,23 @@ class _DriverApplicationScreenState
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    // An application without documents cannot be vetted. Previously this was
+    // not checked, and the uploads were never attached to the application
+    // even when present — see below.
+    final missing = _uploadedDocs.entries
+        .where((e) => e.value == null)
+        .map((e) => e.key.replaceAll('_', ' '))
+        .toList();
+    if (missing.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please upload your ${missing.join(', ')}.'),
+          backgroundColor: context.palette.danger,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -598,6 +615,12 @@ class _DriverApplicationScreenState
         bankName: _bankNameController.text.trim(),
         accountNumber: _accountNumberController.text.trim(),
         accountName: _accountNameController.text.trim(),
+        // The uploaded documents. These were never attached before, so every
+        // application reached the admin review screen with no documents and
+        // no way to open any.
+        licenseUrl: _uploadedDocs['drivers_license'],
+        vehiclePhotoUrl: _uploadedDocs['vehicle_photo'],
+        governmentIdUrl: _uploadedDocs['government_id'],
         createdAt: DateTime.now(),
       );
 
@@ -616,10 +639,13 @@ class _DriverApplicationScreenState
         _showSuccessDialog();
       }
     } catch (e) {
+      debugPrint('Driver application submit failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: const Text(
+              'Could not submit your application. Please try again.',
+            ),
             backgroundColor: context.palette.danger,
           ),
         );

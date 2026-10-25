@@ -22,6 +22,8 @@ class LiveMap extends StatefulWidget {
     this.pickupLng,
     this.dropoffLat,
     this.dropoffLng,
+    this.driverLat,
+    this.driverLng,
     this.zoom = 15,
     this.showUserLocation = true,
     this.bottomPadding = 0,
@@ -33,6 +35,10 @@ class LiveMap extends StatefulWidget {
   final double? pickupLng;
   final double? dropoffLat;
   final double? dropoffLng;
+
+  /// The assigned courier's live position, from driver_locations.
+  final double? driverLat;
+  final double? driverLng;
   final double zoom;
   final bool showUserLocation;
 
@@ -71,6 +77,7 @@ class _LiveMapState extends State<LiveMap> {
   bool get _hasPickup => widget.pickupLat != null && widget.pickupLng != null;
   bool get _hasDropoff =>
       widget.dropoffLat != null && widget.dropoffLng != null;
+  bool get _hasDriver => widget.driverLat != null && widget.driverLng != null;
 
   Point _point(double lat, double lng) =>
       Point(coordinates: Position(lng, lat));
@@ -134,7 +141,15 @@ class _LiveMapState extends State<LiveMap> {
         old.dropoffLat != widget.dropoffLat ||
         old.pickupLng != widget.pickupLng ||
         old.dropoffLng != widget.dropoffLng;
-    if (!moved || _map == null) return;
+    final driverMoved =
+        old.driverLat != widget.driverLat || old.driverLng != widget.driverLng;
+    if (_map == null) return;
+    if (!moved) {
+      // The courier moving should redraw the marker, not yank the camera
+      // away from wherever the customer has panned to.
+      if (driverMoved) _drawRoute();
+      return;
+    }
     _map!
         .easeTo(
           CameraOptions(
@@ -178,6 +193,17 @@ class _LiveMapState extends State<LiveMap> {
             circleRadius: 8,
             circleColor: const Color(0xFFFF6B00).toARGB32(),
             circleStrokeWidth: 3,
+            circleStrokeColor: Colors.white.toARGB32(),
+          ),
+        );
+      }
+      if (_hasDriver) {
+        await circles.create(
+          CircleAnnotationOptions(
+            geometry: _point(widget.driverLat!, widget.driverLng!),
+            circleRadius: 10,
+            circleColor: const Color(0xFF2E7DF6).toARGB32(),
+            circleStrokeWidth: 4,
             circleStrokeColor: Colors.white.toARGB32(),
           ),
         );

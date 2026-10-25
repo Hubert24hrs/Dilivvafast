@@ -55,7 +55,7 @@ class GlobalErrorWidget extends StatelessWidget {
                 Text(
                   'Something went wrong',
                   style: TextStyle(
-                    color: context.palette.onBrand,
+                    color: context.palette.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),

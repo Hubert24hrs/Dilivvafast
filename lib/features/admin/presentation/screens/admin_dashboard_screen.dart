@@ -72,7 +72,7 @@ class AdminDashboardScreen extends ConsumerWidget {
             Text(
               'Recent Orders',
               style: TextStyle(
-                color: context.palette.onBrand,
+                color: context.palette.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

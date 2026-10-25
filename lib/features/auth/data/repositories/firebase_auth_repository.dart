@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
@@ -11,12 +12,17 @@ import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/auth/domain/repositories/i_auth_repository.dart';
 
 class FirebaseAuthRepository implements IAuthRepository {
-  FirebaseAuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseAuthRepository({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions? _functions;
 
   @override
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -201,46 +207,35 @@ class FirebaseAuthRepository implements IAuthRepository {
 
   @override
   Future<Either<Failure, Unit>> deleteAccount() async {
-    final user = _auth.currentUser;
-    if (user == null) {
+    if (_auth.currentUser == null) {
       return Left(const AuthFailure('No authenticated user found to delete.'));
     }
     try {
-      final uid = user.uid;
-
-      // 1. Delete this user's notifications.
-      //
-      // These live in the top-level `notifications` collection keyed by
-      // userId — the per-user sub-collection this previously cleared is not
-      // where the app writes them, so deletion left the records behind.
-      final notifsSnap = await _firestore
-          .collection(FirestoreConstants.notifications)
-          .where(FirestoreConstants.fieldUserId, isEqualTo: uid)
-          .get();
-
-      final batch = _firestore.batch();
-      for (final doc in notifsSnap.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 2. Delete user doc
-      batch.delete(_firestore.collection(FirestoreConstants.users).doc(uid));
-      await batch.commit();
-
-      // 3. Delete Firebase Auth user
-      await user.delete();
+      // Deletion runs server-side in `deleteMyAccount`. Doing it here meant
+      // deleting the profile and then calling `user.delete()`, which Firebase
+      // routinely refuses with `requires-recent-login` — leaving an account
+      // that could sign in but had no profile, stuck on the splash screen.
+      await (_functions ?? FirebaseFunctions.instance)
+          .httpsCallable('deleteMyAccount')
+          .call<Map<String, dynamic>>();
+      // The Auth user no longer exists; drop the local session with it.
+      await _auth.signOut();
       return const Right(unit);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        return Left(
-          const AuthFailure(
-            'This operation requires recent authentication. Please log in again.',
-          ),
-        );
-      }
-      return Left(AuthFailure(_mapAuthError(e.code), code: e.code));
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('deleteMyAccount failed: ${e.code} ${e.message}');
+      return Left(
+        AuthFailure(
+          e.code == 'failed-precondition' && e.message != null
+              ? e.message!
+              : 'Could not delete your account. Please try again.',
+          code: e.code,
+        ),
+      );
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      debugPrint('deleteMyAccount failed: $e');
+      return Left(
+        const ServerFailure('Could not delete your account. Please try again.'),
+      );
     }
   }
 
@@ -288,17 +283,24 @@ class FirebaseAuthRepository implements IAuthRepository {
     );
   }
 
+  /// Records the code a new user signed up with. Keyed by their uid, so an
+  /// account has at most one referral; `onReferralCreated` resolves the
+  /// referrer and the first delivery releases both bonuses.
   Future<void> _saveReferral(String refereeId, String referralCode) async {
     try {
-      await _firestore.collection(FirestoreConstants.referrals).add({
-        'refereeId': refereeId,
-        'referralCode': referralCode,
-        'status': 'pending',
-        'bonusPaid': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (_) {
+      await _firestore
+          .collection(FirestoreConstants.referrals)
+          .doc(refereeId)
+          .set({
+            'refereeId': refereeId,
+            'referralCode': referralCode.trim().toUpperCase(),
+            'status': 'pending',
+            'bonusPaid': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
       // Non-critical — don't fail registration if referral save fails
+      debugPrint('Could not record referral: $e');
     }
   }
 

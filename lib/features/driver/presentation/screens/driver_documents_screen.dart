@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class DriverDocumentsScreen extends ConsumerStatefulWidget {
   const DriverDocumentsScreen({super.key});
@@ -90,7 +91,7 @@ class _DriverDocumentsScreenState extends ConsumerState<DriverDocumentsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload document: $e'),
+            content: Text(friendlyError(e)),
             backgroundColor: context.palette.danger,
           ),
         );
@@ -139,7 +140,7 @@ class _DriverDocumentsScreenState extends ConsumerState<DriverDocumentsScreen> {
                     ? 'Account Verified'
                     : 'Verification Pending',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -207,7 +208,7 @@ class _DriverDocumentsScreenState extends ConsumerState<DriverDocumentsScreen> {
         title: Text(
           title,
           style: TextStyle(
-            color: context.palette.onBrand,
+            color: context.palette.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),

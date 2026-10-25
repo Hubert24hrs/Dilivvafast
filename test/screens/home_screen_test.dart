@@ -115,12 +115,25 @@ void main() {
         'City',
         'Request history',
         'Couriers',
+        'Saved addresses',
+        'Promotions',
+        'Refer & earn',
         'Notifications',
         'Safety',
         'Settings',
         'Help',
         'Support',
       ]) {
+        // The list is longer than a phone screen; it scrolls, as inDrive's
+        // does, and builds rows lazily.
+        await tester.scrollUntilVisible(
+          find.text(label),
+          120,
+          scrollable: find.descendant(
+            of: find.byType(Drawer),
+            matching: find.byType(Scrollable),
+          ),
+        );
         expect(find.text(label), findsOneWidget, reason: label);
       }
     });

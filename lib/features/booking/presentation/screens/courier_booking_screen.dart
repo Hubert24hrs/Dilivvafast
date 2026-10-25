@@ -197,7 +197,12 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                     selected: state.paymentMethod,
                     onChanged: controller.setPaymentMethod,
                   ),
-                  const SizedBox(height: 18),
+                  _PromoRow(
+                    code: state.promoCode,
+                    onAdd: () => context.push('/customer/promotions'),
+                    onRemove: () => controller.setPromoCode(''),
+                  ),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 58,
                     child: FilledButton(
@@ -727,6 +732,55 @@ class _PaymentPicker extends StatelessWidget {
           if (entry.key != labels.keys.last) const SizedBox(width: 8),
         ],
       ],
+    );
+  }
+}
+
+/// The promo code this request will carry, or a way to add one. The discount
+/// itself is validated and applied server-side when the order is created.
+class _PromoRow extends StatelessWidget {
+  const _PromoRow({
+    required this.code,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final String code;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    if (code.isEmpty) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: onAdd,
+          icon: const Icon(Icons.local_offer_outlined, size: 18),
+          label: const Text('Add a promo code'),
+          style: TextButton.styleFrom(foregroundColor: _ink),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.local_offer, size: 18, color: Color(0xFF16A34A)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Promo $code will be applied',
+              style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Remove promo code',
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: onRemove,
+          ),
+        ],
+      ),
     );
   }
 }

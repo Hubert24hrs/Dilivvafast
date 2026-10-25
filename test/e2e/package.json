@@ -1,0 +1,12 @@
+{
+  "name": "dilivvafast-e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end delivery lifecycle against the deployed staging backend.",
+  "scripts": {
+    "staging": "node delivery_flow.mjs"
+  },
+  "dependencies": {
+    "firebase": "^11.0.0"
+  }
+}

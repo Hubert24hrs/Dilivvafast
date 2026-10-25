@@ -35,6 +35,7 @@ class CourierBookingState {
     this.error,
     this.createdOrderId,
     this.packageDetailsExpanded = false,
+    this.promoCode = '',
   });
 
   final CourierVehicle vehicleType;
@@ -61,6 +62,10 @@ class CourierBookingState {
   final String? createdOrderId;
   final bool packageDetailsExpanded;
 
+  /// A promo code from the Promotions screen. Validated and redeemed by
+  /// `onCourierCreated`; an unknown or used code simply gives no discount.
+  final String promoCode;
+
   CourierBookingState copyWith({
     CourierVehicle? vehicleType,
     String? pickupAddress,
@@ -85,6 +90,7 @@ class CourierBookingState {
     String? error,
     String? createdOrderId,
     bool? packageDetailsExpanded,
+    String? promoCode,
   }) {
     return CourierBookingState(
       vehicleType: vehicleType ?? this.vehicleType,
@@ -111,6 +117,7 @@ class CourierBookingState {
       createdOrderId: createdOrderId,
       packageDetailsExpanded:
           packageDetailsExpanded ?? this.packageDetailsExpanded,
+      promoCode: promoCode ?? this.promoCode,
     );
   }
 
@@ -262,6 +269,8 @@ class CourierBookingController extends Notifier<CourierBookingState> {
   void setNotes(String n) => state = state.copyWith(notes: n);
 
   void setProposedPrice(double p) => state = state.copyWith(proposedPrice: p);
+  void setPromoCode(String code) =>
+      state = state.copyWith(promoCode: code.trim().toUpperCase());
 
   void setPaymentMethod(PaymentMethod m) =>
       state = state.copyWith(paymentMethod: m);
@@ -365,6 +374,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
         paymentMethod: state.paymentMethod,
         trackingCode: trackingCode,
         notes: state.notes.isNotEmpty ? state.notes : null,
+        promoCode: state.promoCode.isNotEmpty ? state.promoCode : null,
         // Earnings and commission are set by the server from the agreed
         // price. firestore.rules rejects an order created with either one
         // non-zero — which this used to send, so every booking was refused.
@@ -383,9 +393,11 @@ class CourierBookingController extends Notifier<CourierBookingState> {
           return null;
         },
         (createdOrder) {
+          // A code is redeemed once; do not carry it into the next request.
           state = state.copyWith(
             isSubmitting: false,
             createdOrderId: createdOrder.id,
+            promoCode: '',
           );
           return createdOrder.id;
         },

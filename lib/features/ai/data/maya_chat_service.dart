@@ -1,3 +1,4 @@
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
@@ -104,7 +105,7 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'resource-exhausted') {
         return 'I am handling a lot of questions right now — please try '
-            'again in a few minutes, or email support@dilivvafast.ng.';
+            'again in a few minutes, or email ${AppConstants.supportEmail}.';
       }
       debugPrint('Maya chat error: ${e.code}');
       return _getFallbackResponse(userMessage);

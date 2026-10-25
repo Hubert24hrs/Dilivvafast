@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:dilivvafast/core/presentation/theme/theme_controller.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+
+/// The signed-in user's notification switches, stored on their profile as
+/// `notificationPrefs` and honoured server-side by `sendToUser`.
+final notificationPrefsProvider = StreamProvider<Map<String, bool>>((ref) {
+  final uid = ref.watch(currentUserIdProvider);
+  if (uid == null) return Stream.value(const {});
+  return ref
+      .watch(firestoreProvider)
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((doc) {
+        final raw = doc.data()?['notificationPrefs'];
+        if (raw is! Map) return const <String, bool>{};
+        return {
+          for (final e in raw.entries)
+            if (e.value is bool) e.key.toString(): e.value as bool,
+        };
+      });
+});
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -15,13 +36,31 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _orderUpdates = true;
-  bool _promotions = false;
+  /// These switches used to be plain widget state: nothing saved them and
+  /// nothing read them, so switching notifications off changed nothing.
+  Future<void> _setPref(String key, bool value) async {
+    final uid = ref.read(currentUserIdProvider);
+    if (uid == null) return;
+    try {
+      await ref.read(firestoreProvider).collection('users').doc(uid).update({
+        'notificationPrefs.$key': value,
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(friendlyError(e)),
+          backgroundColor: context.palette.danger,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
+    final prefs = ref.watch(notificationPrefsProvider).value ?? const {};
+    final pushOn = prefs['push'] ?? true;
 
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
@@ -81,7 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Text(
                               user.fullName,
                               style: TextStyle(
-                                color: context.palette.onBrand,
+                                color: context.palette.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -136,51 +175,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               icon: Icons.notifications_active,
               title: 'Push Notifications',
               subtitle: 'Receive push notifications',
-              value: _notificationsEnabled,
-              onChanged: (v) => setState(() => _notificationsEnabled = v),
+              value: pushOn,
+              onChanged: (v) => _setPref('push', v),
               color: context.palette.brand,
             ),
             _switchTile(
               icon: Icons.local_shipping,
               title: 'Order Updates',
-              subtitle: 'Status changes for your deliveries',
-              value: _orderUpdates,
-              onChanged: (v) => setState(() => _orderUpdates = v),
+              subtitle: 'Offers and status changes for your deliveries',
+              value: pushOn && (prefs['orderUpdates'] ?? true),
+              onChanged: pushOn ? (v) => _setPref('orderUpdates', v) : null,
               color: const Color(0xFF4CAF50),
             ),
             _switchTile(
               icon: Icons.campaign,
               title: 'Promotions',
               subtitle: 'Deals, discounts, and offers',
-              value: _promotions,
-              onChanged: (v) => setState(() => _promotions = v),
+              value: pushOn && (prefs['promotions'] ?? false),
+              onChanged: pushOn ? (v) => _setPref('promotions', v) : null,
               color: const Color(0xFFFF9800),
             ),
             const SizedBox(height: 24),
 
-            // About section
+            // About section. These open the in-app pages: the GitHub Pages
+            // links they replaced included a support.html that was never
+            // published.
             _sectionHeader('About'),
             const SizedBox(height: 8),
             _linkTile(
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              onTap: () => context.push('/help'),
+            ),
+            _linkTile(
               icon: Icons.description,
               title: 'Terms of Service',
-              onTap: () => _openUrl(
-                'https://hubert24hrs.github.io/Dilivvafast/terms.html',
-              ),
+              onTap: () => context.push('/legal/terms'),
             ),
             _linkTile(
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
-              onTap: () => _openUrl(
-                'https://hubert24hrs.github.io/Dilivvafast/privacy.html',
-              ),
+              onTap: () => context.push('/legal/privacy'),
             ),
             _linkTile(
-              icon: Icons.help_outline,
-              title: 'Help & Support',
-              onTap: () => _openUrl(
-                'https://hubert24hrs.github.io/Dilivvafast/support.html',
-              ),
+              icon: Icons.info_outline,
+              title: 'About Dilivvafast',
+              onTap: () => context.push('/about'),
             ),
             const SizedBox(height: 24),
 
@@ -204,11 +244,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       fontSize: 14,
                     ),
                   ),
-                  Text(
-                    '1.0.0',
-                    style: TextStyle(
-                      color: context.palette.textMuted,
-                      fontSize: 14,
+                  // Was hard-coded to 1.0.0, which never matched the build.
+                  FutureBuilder<PackageInfo>(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (context, snap) => Text(
+                      snap.hasData
+                          ? '${snap.data!.version} (${snap.data!.buildNumber})'
+                          : '',
+                      style: TextStyle(
+                        color: context.palette.textMuted,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],
@@ -238,7 +284,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Delete account
             Center(
               child: TextButton(
-                onPressed: () => _confirmDeleteAccount(context, ref),
+                onPressed: () => context.push('/settings/delete-account'),
                 child: Text(
                   'Delete Account',
                   style: TextStyle(
@@ -271,7 +317,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required String title,
     required String subtitle,
     required bool value,
-    required ValueChanged<bool> onChanged,
+    required ValueChanged<bool>? onChanged,
     required Color color,
   }) {
     return Container(
@@ -350,13 +396,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
@@ -390,82 +429,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
             child: const Text(
               'Log Out',
-              style: TextStyle(color: Color(0xFFFF5252)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: context.palette.surfaceRaised,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Delete Account',
-          style: TextStyle(
-            color: context.palette.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be permanently wiped.',
-          style: TextStyle(color: context.palette.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.palette.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogCtx);
-              if (!context.mounted) return;
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFFF5252)),
-                ),
-              );
-
-              final result = await ref
-                  .read(authRepositoryProvider)
-                  .deleteAccount();
-
-              if (!context.mounted) return;
-              Navigator.pop(context); // Dismiss loading dialog
-
-              result.fold(
-                (failure) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(failure.message),
-                      backgroundColor: context.palette.danger,
-                    ),
-                  );
-                },
-                (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Your account has been deleted successfully.',
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  context.go('/login');
-                },
-              );
-            },
-            child: const Text(
-              'Delete permanently',
               style: TextStyle(color: Color(0xFFFF5252)),
             ),
           ),

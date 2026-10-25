@@ -85,7 +85,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 child: Text(
                   _emailSent ? 'Check Your Email' : 'Forgot Password?',
                   style: TextStyle(
-                    color: context.palette.onBrand,
+                    color: context.palette.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),

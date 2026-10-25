@@ -30,7 +30,7 @@ const db = admin.firestore();
 const CUSTOMER = "itest_customer";
 
 /** Triggers are asynchronous; poll until the field appears or we give up. */
-async function waitFor(ref, predicate, { timeoutMs = 20000, everyMs = 250 } = {}) {
+async function waitFor(ref, predicate, { timeoutMs = 45000, everyMs = 250 } = {}) {
   const deadline = Date.now() + timeoutMs;
   let last;
   while (Date.now() < deadline) {
@@ -91,6 +91,15 @@ before(async () => {
     perKmRate: 100,
     currentSurgeMultiplier: 1.0,
   });
+
+  // Warm the functions emulator. The first trigger loads the whole codebase
+  // and can start 20s+ after its write; without this the first pricing tests
+  // timed out and their late trigger then failed against a document the next
+  // test had already cleaned up.
+  const warm = db.collection("couriers").doc("warmup");
+  await warm.set(baseOrder());
+  await waitFor(warm, (d) => d.fareAuthoritative === true, { timeoutMs: 120000 });
+  await warm.delete();
 });
 
 beforeEach(async () => {
@@ -456,5 +465,139 @@ describe("price negotiation", () => {
     const order = await pricedRequest();
     const res = await call("raiseOffer", CUSTOMER, { orderId: order.id, amount: 1000 });
     assert.equal(res.error?.status, "INVALID_ARGUMENT");
+  });
+});
+
+// ── Referrals ────────────────────────────────────────────────────────────────
+
+describe("referrals", () => {
+  const REFERRER = "itest_referrer";
+  let n = 0;
+
+  // Every test gets its own referee. Triggers can run seconds late, and a
+  // shared document id let one test's late trigger rewrite the next test's
+  // referral.
+  async function newReferee(code) {
+    const uid = `itest_referee_${++n}_${Date.now()}`;
+    await db.collection("users").doc(uid).set({
+      role: "customer",
+      referralCode: code,
+      walletBalance: 0,
+    });
+    return uid;
+  }
+
+  beforeEach(async () => {
+    await db.collection("users").doc(REFERRER).set({
+      role: "customer",
+      referralCode: "ITREF001",
+      walletBalance: 0,
+    });
+  });
+
+  async function deliverOrderFor(userId) {
+    const ref = db.collection("couriers").doc();
+    await ref.set(baseOrder({ userId }));
+    await waitFor(ref, (d) => d.fareAuthoritative === true);
+    await ref.update({ status: "delivered", driverId: "itest_driver_a" });
+    return ref;
+  }
+
+  test("the code is resolved to the referrer when the referral is recorded", async () => {
+    const referee = await newReferee("ITREFA01");
+    const ref = db.collection("referrals").doc(referee);
+    await ref.set({ refereeId: referee, referralCode: "itref001", status: "pending" });
+    const r = await waitFor(ref, (d) => !!d.referrerId);
+    assert.equal(r.referrerId, REFERRER);
+  });
+
+  test("a self-referral is marked invalid", async () => {
+    const referee = await newReferee("ITSELF01");
+    const ref = db.collection("referrals").doc(referee);
+    await ref.set({ refereeId: referee, referralCode: "ITSELF01", status: "pending" });
+    const r = await waitFor(ref, (d) => d.status !== "pending");
+    assert.equal(r.status, "invalid");
+  });
+
+  test("the referee's first delivery pays both sides once", async () => {
+    const referee = await newReferee("ITREFB01");
+    const ref = db.collection("referrals").doc(referee);
+    await ref.set({ refereeId: referee, referralCode: "ITREF001", status: "pending" });
+    await waitFor(ref, (d) => !!d.referrerId);
+
+    await deliverOrderFor(referee);
+    const done = await waitFor(ref, (d) => d.bonusPaid === true);
+    assert.equal(done.status, "completed");
+
+    const users = db.collection("users");
+    await waitFor(users.doc(REFERRER), (d) => d.walletBalance === 500);
+    await waitFor(users.doc(referee), (d) => d.walletBalance === 500);
+
+    // A second delivery is not a first delivery.
+    await deliverOrderFor(referee);
+    await new Promise((r) => setTimeout(r, 5000));
+    assert.equal((await users.doc(REFERRER).get()).data().walletBalance, 500);
+  });
+});
+
+// ── Support chat ─────────────────────────────────────────────────────────────
+
+describe("support chat relay", () => {
+  test("a customer message flags the thread for a reply; a reply clears it", async () => {
+    await db.collection("users").doc(CUSTOMER).set({ role: "customer", fullName: "Ada Obi" });
+    const thread = db.collection("orders").doc(`support_${CUSTOMER}`);
+    await thread.collection("messages").add({ senderId: CUSTOMER, text: "Where is my parcel?" });
+
+    const open = await waitFor(thread, (d) => d.needsReply === true);
+    assert.equal(open.userName, "Ada Obi");
+    assert.equal(open.lastMessage, "Where is my parcel?");
+
+    await thread.collection("messages").add({ senderId: "itest_admin", text: "On its way" });
+    const answered = await waitFor(thread, (d) => d.needsReply === false);
+    assert.equal(answered.lastMessage, "On its way");
+  });
+});
+
+// ── Account deletion ─────────────────────────────────────────────────────────
+
+describe("deleteMyAccount", () => {
+  const LEAVER = "itest_leaver";
+
+  beforeEach(async () => {
+    await deleteCollection("rate_limits");
+    delete tokens[LEAVER];
+  });
+
+  test("removes the profile, personal records and the sign-in", async () => {
+    await signIn(LEAVER);
+    const user = db.collection("users").doc(LEAVER);
+    await user.set({ role: "customer", fullName: "Leaving User" });
+    await user.collection("saved_addresses").doc("home").set({ label: "Home" });
+    await db.collection("notifications").doc("n_leaver").set({ userId: LEAVER, title: "Hi" });
+    await db.collection("driver_applications").doc("a_leaver").set({
+      userId: LEAVER,
+      accountNumber: "0123456789",
+    });
+
+    const res = await call("deleteMyAccount", LEAVER, {});
+    assert.ok(res.result?.success, JSON.stringify(res));
+
+    assert.equal((await user.get()).exists, false);
+    assert.equal((await user.collection("saved_addresses").doc("home").get()).exists, false);
+    assert.equal((await db.collection("notifications").doc("n_leaver").get()).exists, false);
+    assert.equal((await db.collection("driver_applications").doc("a_leaver").get()).exists, false);
+    await assert.rejects(admin.auth().getUser(LEAVER), /no user record/i);
+  });
+
+  test("refuses while one of their deliveries is in progress", async () => {
+    await signIn(LEAVER);
+    await db.collection("users").doc(LEAVER).set({ role: "customer" });
+    const order = db.collection("couriers").doc();
+    await order.set(baseOrder({ userId: LEAVER, status: "in_transit" }));
+
+    const res = await call("deleteMyAccount", LEAVER, {});
+    assert.equal(res.error?.status, "FAILED_PRECONDITION", JSON.stringify(res));
+    assert.equal((await db.collection("users").doc(LEAVER).get()).exists, true);
+    await admin.auth().getUser(LEAVER);
   });
 });

@@ -79,7 +79,7 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
                   Text(
                     '₦${(ref.watch(currentUserProvider).value?.walletBalance ?? 0).toStringAsFixed(2)}',
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
@@ -448,7 +448,7 @@ class _TopUpScreenState extends ConsumerState<TopUpScreen> {
               Text(
                 'Payment Processing',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),

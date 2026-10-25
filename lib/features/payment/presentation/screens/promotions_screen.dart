@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
+import 'package:dilivvafast/features/booking/presentation/controllers/courier_booking_controller.dart';
 
 class AppliedPromoNotifier extends Notifier<Map<String, dynamic>?> {
   @override
@@ -89,6 +90,10 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
       }
 
       ref.read(appliedPromoProvider.notifier).set(promoData);
+      // The code has to reach the booking for the server to redeem it.
+      // Applying used to stop at appliedPromoProvider, which nothing read,
+      // so no order ever carried a promo code.
+      ref.read(courierBookingControllerProvider.notifier).setPromoCode(code);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -112,7 +117,16 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Shown only while the booking still carries it; placing the order
+    // resets the booking, and a used code should not look active.
+    final pendingCode = ref.watch(
+      courierBookingControllerProvider.select((b) => b.promoCode),
+    );
     final appliedPromo = ref.watch(appliedPromoProvider);
+    final activePromo =
+        appliedPromo != null && appliedPromo['code'] == pendingCode
+        ? appliedPromo
+        : null;
 
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
@@ -188,7 +202,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
               ),
             ),
 
-            if (appliedPromo != null) ...[
+            if (activePromo != null) ...[
               const SizedBox(height: 20),
               Card(
                 color: context.palette.success.withValues(alpha: 0.15),
@@ -202,14 +216,14 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     color: context.palette.success,
                   ),
                   title: Text(
-                    'Active Code: ${appliedPromo['code']}',
+                    'Active Code: ${activePromo['code']}',
                     style: TextStyle(
-                      color: context.palette.onBrand,
+                      color: context.palette.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
-                    '${_describeDiscount(appliedPromo)} discount applied to '
+                    '${_describeDiscount(activePromo)} discount applied to '
                     'next booking',
                     style: TextStyle(color: context.palette.textSecondary),
                   ),
@@ -220,6 +234,9 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                     ),
                     onPressed: () {
                       ref.read(appliedPromoProvider.notifier).set(null);
+                      ref
+                          .read(courierBookingControllerProvider.notifier)
+                          .setPromoCode('');
                     },
                   ),
                 ),
@@ -297,7 +314,7 @@ class _PromotionsScreenState extends ConsumerState<PromotionsScreen> {
                         title: Text(
                           code,
                           style: TextStyle(
-                            color: context.palette.onBrand,
+                            color: context.palette.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

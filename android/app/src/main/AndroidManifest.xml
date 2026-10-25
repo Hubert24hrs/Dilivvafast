@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -10,6 +11,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- The app shows no ads and never reads the advertising ID, but Firebase
+         Analytics adds these. Removing them lets the Play Console's
+         "Advertising ID" declaration truthfully say no. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
     
     <application
         android:label="@string/app_name"
@@ -18,6 +26,23 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- Pairs with the AD_ID permission removal above. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+
+        <!-- geolocator declares its service with foregroundServiceType="location"
+             for an optional background mode the app never uses: tracking runs
+             only while the app is open, startForeground is never called, and no
+             FOREGROUND_SERVICE permission is held. The type alone would make Play
+             demand a foreground-service declaration and video, so it is
+             stripped. The service itself must stay — geolocator binds to it for
+             every position stream, foreground ones included, and silently
+             streams nothing if it is missing. See PLAY_STORE.md. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:remove="android:foregroundServiceType" />
         
         <!-- FCM Default Notification Channel -->
         <meta-data

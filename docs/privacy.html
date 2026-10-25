@@ -49,105 +49,90 @@
   </header>
 
   <div class="container">
-    <p class="badge">Effective date: 1 August 2026</p>
+    <p class="badge">Effective date: 25 October 2026</p>
 
     <p>
-      Dilivvafast Technologies ("Dilivvafast", "we", "us", or "our") operates the Dilivvafast mobile
-      delivery application (the "Service"). This Privacy Policy explains how we collect, use, disclose,
-      and protect your personal data when you use our Service. By using Dilivvafast, you agree to the
-      collection and use of information in accordance with this policy.
+      Dilivvafast Technologies ("Dilivvafast", "we", "us") runs the Dilivvafast courier app. This
+      policy explains what we collect, why, who we share it with, and how to delete it.
     </p>
 
-    <h2>1. Information We Collect</h2>
+    <h2>1. Information we collect</h2>
     <ul>
-      <li><strong>Account information:</strong> Full name, email address, phone number, and password when you register.</li>
-      <li><strong>Location data:</strong> Real-time GPS coordinates are collected while the app is in use (and in the background for active drivers) to enable delivery tracking and courier matching.</li>
-      <li><strong>Device information:</strong> Device type, OS version, push notification token, and app version for service delivery and diagnostics.</li>
-      <li><strong>Payment information:</strong> Wallet top-up amounts and transaction history. Card details are processed directly by Paystack and are never stored on our servers.</li>
-      <li><strong>Profile photos and documents:</strong> Optionally uploaded for account personalisation or driver onboarding.</li>
-      <li><strong>Usage data:</strong> Delivery history, in-app activity, and crash reports collected through Firebase Analytics and Crashlytics.</li>
+      <li><strong>Account:</strong> name, email address, phone number and profile photo.</li>
+      <li><strong>Location:</strong> precise location while you use the app — for customers to set
+        pickup and drop-off points, and for couriers while they are online, so customers can follow
+        an active delivery. We do not collect location when the app is closed.</li>
+      <li><strong>Courier onboarding:</strong> driver's licence, government ID, vehicle photo and bank
+        details for payouts. These are visible only to you and our review team.</li>
+      <li><strong>Deliveries and payments:</strong> addresses, package details, fares, wallet
+        transactions and ratings. Card payments are handled by Paystack; we never see or store card
+        numbers.</li>
+      <li><strong>Messages:</strong> chats with your courier or customer, chats with our support team,
+        and questions you ask our in-app assistant, Maya.</li>
+      <li><strong>Device and diagnostics:</strong> device model, OS version, push-notification token,
+        app usage events and crash reports (Firebase Analytics and Crashlytics).</li>
     </ul>
+    <p>We do not show ads and do not use your device's advertising ID.</p>
 
-    <h2>2. How We Use Your Information</h2>
-    <ul>
-      <li>To create and manage your Dilivvafast account.</li>
-      <li>To match customers with available courier drivers.</li>
-      <li>To provide real-time delivery tracking.</li>
-      <li>To process payments and maintain wallet balances.</li>
-      <li>To send push notifications about order status updates, promotions, and account alerts.</li>
-      <li>To improve app performance, fix bugs, and develop new features.</li>
-      <li>To comply with legal obligations and prevent fraud.</li>
-    </ul>
-
-    <h2>3. Location Data</h2>
+    <h2>2. How we use it</h2>
     <p>
-      Location data is the core of our delivery service. For <strong>customers</strong>, we collect
-      foreground location to display the delivery map and show nearby couriers. For
-      <strong>drivers</strong>, background location is collected during active delivery sessions to
-      provide real-time tracking to customers. Location data is not sold to third parties.
+      To run your account, match deliveries with couriers, show live tracking, process payments and
+      payouts, send notifications you have not switched off, provide support, prevent fraud, and fix
+      and improve the app.
     </p>
 
-    <h2>4. Data Sharing</h2>
-    <p>We share personal data only in the following circumstances:</p>
+    <h2>3. Who we share it with</h2>
     <ul>
-      <li><strong>Delivery matching:</strong> Your pickup/drop-off address and name are shared with the assigned courier driver.</li>
-      <li><strong>Service providers:</strong> Firebase (Google), Paystack, and Mapbox receive data necessary to provide their respective services (hosting, payments, maps).</li>
-      <li><strong>Legal requirements:</strong> We may disclose information if required by law, court order, or to protect the rights and safety of our users.</li>
+      <li><strong>The other side of a delivery:</strong> your courier sees your name, phone number and
+        addresses; customers see their courier's first name, rating, vehicle and live location during
+        the delivery.</li>
+      <li><strong>Service providers:</strong>
+        <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google Firebase</a>
+        (hosting, sign-in, database, notifications, analytics),
+        <a href="https://paystack.com/privacy" target="_blank" rel="noopener">Paystack</a> (payments),
+        <a href="https://www.mapbox.com/legal/privacy" target="_blank" rel="noopener">Mapbox</a> (maps and
+        address search) and
+        <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic</a>
+        (messages you send to Maya, used only to generate her replies — please don't share passwords or
+        card details with her).</li>
+      <li><strong>Legal requirements:</strong> when required by law or to protect someone's safety.</li>
     </ul>
     <p>We do not sell your personal data.</p>
 
-    <h2>5. Data Retention</h2>
+    <h2>4. Retention and deletion</h2>
     <p>
-      We retain your account data as long as your account is active. Delivery records are retained for
-      7 years for accounting and legal compliance. You may request deletion of your account at any time
-      from Settings → Delete Account, which permanently removes your profile and personal data from our
-      systems.
+      You can delete your account at any time in <strong>Settings → Delete Account</strong>. This
+      permanently deletes your profile, saved addresses, notifications, support chats, uploaded courier
+      documents and bank details, and signs you out everywhere. Any wallet balance is forfeited.
+    </p>
+    <p>
+      Delivery and payment records are kept for up to 7 years for accounting, tax and dispute handling.
+      They are no longer linked to your name.
+    </p>
+    <p>
+      If you can't use the app, see <a href="delete-account.html">how to request deletion by email</a>.
     </p>
 
-    <h2>6. Security</h2>
+    <h2>5. Security</h2>
     <p>
-      Your data is stored on Google Firebase infrastructure, which employs industry-standard encryption
-      at rest and in transit. Access to Firestore data is governed by strict security rules that restrict
-      each user to their own data. Passwords are never stored in plaintext — authentication is managed
-      entirely by Firebase Authentication.
+      Data is stored on Google Firebase, encrypted in transit and at rest. Access rules limit each user
+      to their own data, and payment and payout logic runs only on our servers.
     </p>
 
-    <h2>7. Your Rights</h2>
-    <p>Depending on your jurisdiction, you may have the right to:</p>
-    <ul>
-      <li>Access the personal data we hold about you.</li>
-      <li>Correct inaccurate or incomplete data.</li>
-      <li>Request deletion of your account and personal data.</li>
-      <li>Object to or restrict processing in certain circumstances.</li>
-      <li>Data portability where technically feasible.</li>
-    </ul>
-    <p>To exercise these rights, contact us at <a href="mailto:privacy@dilivvafast.ng">privacy@dilivvafast.ng</a>.</p>
-
-    <h2>8. Children's Privacy</h2>
+    <h2>6. Your rights</h2>
     <p>
-      Dilivvafast is not directed to children under the age of 16. We do not knowingly collect personal
-      data from children. If we become aware that a child has provided us with personal data, we will
-      delete it promptly.
+      You can ask to access, correct or delete your personal data, or object to how we use it, by
+      emailing <a href="mailto:privacy@dilivvafast.ng">privacy@dilivvafast.ng</a>.
     </p>
 
-    <h2>9. Third-Party Services</h2>
-    <p>Our app uses the following third-party services, each governed by their own privacy policies:</p>
-    <ul>
-      <li><a href="https://firebase.google.com/support/privacy" target="_blank">Google Firebase</a> — Authentication, database, analytics, and cloud functions.</li>
-      <li><a href="https://paystack.com/privacy" target="_blank">Paystack</a> — Payment processing.</li>
-      <li><a href="https://www.mapbox.com/legal/privacy" target="_blank">Mapbox</a> — Map rendering and geocoding.</li>
-    </ul>
+    <h2>7. Children</h2>
+    <p>Dilivvafast is not for anyone under 16, and couriers must be 18 or older.</p>
 
-    <h2>10. Changes to This Policy</h2>
-    <p>
-      We may update this Privacy Policy from time to time. We will notify you of significant changes
-      through the app or by email. Continued use of Dilivvafast after changes are posted constitutes
-      acceptance of the updated policy.
-    </p>
+    <h2>8. Changes</h2>
+    <p>We will tell you in the app before significant changes take effect.</p>
 
-    <h2>11. Contact Us</h2>
+    <h2>9. Contact</h2>
     <p>
-      If you have questions or concerns about this Privacy Policy, please contact us at:<br/>
       <a href="mailto:privacy@dilivvafast.ng">privacy@dilivvafast.ng</a><br/>
       Dilivvafast Technologies, Lagos, Nigeria.
     </p>
@@ -155,6 +140,7 @@
     <footer>
       &copy; 2026 Dilivvafast Technologies. All rights reserved.<br/>
       <a href="terms.html">Terms of Service</a> &nbsp;|&nbsp; <a href="privacy.html">Privacy Policy</a>
+      &nbsp;|&nbsp; <a href="delete-account.html">Delete your account</a>
     </footer>
   </div>
 </body>

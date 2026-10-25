@@ -20,4 +20,21 @@ class AppConstants {
   // a guessed handle can never send customers to someone else's account.
   static const String facebookUrl = '';
   static const String instagramUrl = '';
+
+  // Contact details and hosted legal pages, kept in one place: they were
+  // spelled three ways (.app, .ng, .com) across the app and the hosted
+  // policy. Google Play shows the support address on the store listing and
+  // requires the privacy and account-deletion pages to be live — see
+  // PLAY_STORE.md before release.
+  static const String supportEmail = 'support@dilivvafast.ng';
+  static const String privacyEmail = 'privacy@dilivvafast.ng';
+  static const String legalEmail = 'legal@dilivvafast.ng';
+  static const String legalPagesBaseUrl =
+      'https://hubert24hrs.github.io/Dilivvafast';
+  static const String privacyPolicyUrl = '$legalPagesBaseUrl/privacy.html';
+  static const String termsUrl = '$legalPagesBaseUrl/terms.html';
+  static const String accountDeletionUrl =
+      '$legalPagesBaseUrl/delete-account.html';
+  static const String playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.dilivvafast.app';
 }

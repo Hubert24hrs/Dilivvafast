@@ -3,10 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 
+/// A customer's conversation with support, at `orders/support_{uid}`.
+///
+/// Customers open their own thread. An admin opens a customer's thread from
+/// the support inbox by passing [userId], and replies as Support;
+/// `onSupportMessageCreated` notifies whichever side has to answer next.
 class SupportChatScreen extends ConsumerStatefulWidget {
-  const SupportChatScreen({super.key});
+  const SupportChatScreen({super.key, this.userId});
+
+  /// The customer whose thread to show. Null means the signed-in user's own.
+  final String? userId;
 
   @override
   ConsumerState<SupportChatScreen> createState() => _SupportChatScreenState();
@@ -14,6 +23,7 @@ class SupportChatScreen extends ConsumerStatefulWidget {
 
 class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
   final _msgCtrl = TextEditingController();
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -21,38 +31,51 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     super.dispose();
   }
 
-  Future<void> _sendMessage() async {
+  bool get _asSupport => widget.userId != null;
+
+  Future<void> _sendMessage(String threadId) async {
     final text = _msgCtrl.text.trim();
-    if (text.isEmpty) return;
-
     final uid = ref.read(currentUserIdProvider);
-    if (uid == null) return;
+    if (text.isEmpty || uid == null || _sending) return;
 
-    _msgCtrl.clear();
-    final threadId = 'support_$uid';
-
-    await ref
-        .read(firestoreProvider)
-        .collection('orders')
-        .doc(threadId)
-        .collection('messages')
-        .add({
-          'senderId': uid,
-          'senderName': 'Customer',
-          'text': text,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(firestoreProvider)
+          .collection('orders')
+          .doc(threadId)
+          .collection('messages')
+          .add({
+            'senderId': uid,
+            'senderName': _asSupport ? 'Support' : 'Customer',
+            'text': text,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+      // Cleared only once it is stored; this used to clear first, so a
+      // failed send silently threw the message away.
+      _msgCtrl.clear();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(friendlyError(e)),
+          backgroundColor: context.palette.danger,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final uid = ref.watch(currentUserIdProvider);
-    final threadId = 'support_${uid ?? "guest"}';
+    final threadId = 'support_${widget.userId ?? uid ?? 'guest'}';
 
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        title: const Text('Chat with Support'),
+        title: Text(_asSupport ? 'Support conversation' : 'Chat with Support'),
         backgroundColor: context.palette.surfaceRaised,
       ),
       body: Column(
@@ -69,6 +92,16 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            friendlyError(snapshot.error!),
+                            style: TextStyle(
+                              color: context.palette.textSecondary,
+                            ),
+                          ),
+                        );
+                      }
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(
                           child: CircularProgressIndicator(
@@ -147,7 +180,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                               child: Text(
                                 text,
                                 style: TextStyle(
-                                  color: context.palette.onBrand,
+                                  color: isMe
+                                      ? context.palette.onBrand
+                                      : context.palette.textPrimary,
                                 ),
                               ),
                             ),
@@ -157,27 +192,31 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                     },
                   ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: context.palette.surfaceRaised,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgCtrl,
-                    style: TextStyle(color: context.palette.textPrimary),
-                    decoration: const InputDecoration(
-                      hintText: 'Type your message...',
-                      border: InputBorder.none,
+          SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              color: context.palette.surfaceRaised,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _msgCtrl,
+                      style: TextStyle(color: context.palette.textPrimary),
+                      decoration: const InputDecoration(
+                        hintText: 'Type your message...',
+                        border: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => _sendMessage(threadId),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send, color: context.palette.brand),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                  IconButton(
+                    tooltip: 'Send',
+                    icon: Icon(Icons.send, color: context.palette.brand),
+                    onPressed: _sending ? null : () => _sendMessage(threadId),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

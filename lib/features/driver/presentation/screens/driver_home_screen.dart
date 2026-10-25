@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
@@ -9,6 +10,7 @@ import 'package:dilivvafast/features/driver/presentation/controllers/driver_rout
 import 'package:dilivvafast/features/driver/presentation/widgets/driver_offer_actions.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class DriverHomeScreen extends ConsumerWidget {
   const DriverHomeScreen({super.key});
@@ -19,6 +21,19 @@ class DriverHomeScreen extends ConsumerWidget {
     final routeCtrl = ref.read(driverRouteControllerProvider.notifier);
     final user = ref.watch(currentUserProvider).value;
     final earnings = ref.watch(driverOrdersProvider).value ?? [];
+    // Publish this driver's live position while they are online.
+    ref.watch(driverLocationSyncProvider);
+    // Jobs this driver has won and not yet finished. Without this banner an
+    // accepted job vanished from the screen (it is no longer pending), and
+    // there was no way to reach the active-delivery screen at all.
+    final activeJobs = earnings
+        .where(
+          (o) =>
+              o.status == OrderStatus.accepted ||
+              o.status == OrderStatus.pickedUp ||
+              o.status == OrderStatus.inTransit,
+        )
+        .toList();
 
     final todayEarnings = earnings
         .where(
@@ -47,6 +62,10 @@ class DriverHomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    for (final job in activeJobs) ...[
+                      _ActiveJobBanner(order: job),
+                      const SizedBox(height: 12),
+                    ],
                     // Stats row
                     _buildStatsRow(
                       context,
@@ -325,7 +344,7 @@ class DriverHomeScreen extends ConsumerWidget {
               Text(
                 'Set Your Route',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -648,7 +667,7 @@ class DriverHomeScreen extends ConsumerWidget {
         child: CircularProgressIndicator(color: context.palette.brand),
       ),
       error: (e, _) =>
-          Text('Error: $e', style: const TextStyle(color: Colors.red)),
+          Text(friendlyError(e), style: const TextStyle(color: Colors.red)),
       data: (orders) {
         if (!orders.any((o) => o.vehicleType == myService)) {
           return const SizedBox.shrink();
@@ -737,6 +756,68 @@ class DriverHomeScreen extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// A job this driver has won, pinned above everything else on driver home.
+class _ActiveJobBanner extends StatelessWidget {
+  const _ActiveJobBanner({required this.order});
+
+  final CourierOrderModel order;
+
+  @override
+  Widget build(BuildContext context) {
+    final step = switch (order.status) {
+      OrderStatus.accepted => 'Go to pickup',
+      OrderStatus.pickedUp => 'Package collected',
+      _ => 'On the way to drop-off',
+    };
+    return Material(
+      color: const Color(0xFF111827),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/driver/active/${order.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.local_shipping_rounded,
+                color: Color(0xFFC1F11D),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Active job · $step',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      order.status == OrderStatus.accepted
+                          ? order.pickupAddress
+                          : order.dropoffAddress,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFD1D5DB),
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -165,6 +165,9 @@ class AppDrawer extends ConsumerWidget {
           '/customer/wallet',
           tab: true,
         ),
+        _Item(Icons.place_outlined, 'Saved addresses', '/customer/addresses'),
+        _Item(Icons.local_offer_outlined, 'Promotions', '/customer/promotions'),
+        _Item(Icons.card_giftcard_outlined, 'Refer & earn', '/customer/refer'),
         ...shared,
       ],
       AppMode.driver => const [
@@ -219,6 +222,9 @@ class AppDrawer extends ConsumerWidget {
           tab: true,
         ),
         _Item(Icons.insights_outlined, 'Analytics', '/admin/analytics'),
+        _Item(Icons.support_agent_outlined, 'Support inbox', '/admin/support'),
+        _Item(Icons.local_offer_outlined, 'Promo codes', '/admin/promos'),
+        _Item(Icons.map_outlined, 'Delivery zones', '/admin/zones'),
         ...shared,
       ],
     };

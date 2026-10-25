@@ -47,7 +47,7 @@ class FareBreakdownCard extends StatelessWidget {
               Text(
                 'Fare Breakdown',
                 style: TextStyle(
-                  color: context.palette.onBrand,
+                  color: context.palette.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

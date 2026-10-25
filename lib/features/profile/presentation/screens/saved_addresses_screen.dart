@@ -256,7 +256,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
                         title: Text(
                           label,
                           style: TextStyle(
-                            color: context.palette.onBrand,
+                            color: context.palette.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

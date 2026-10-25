@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -88,9 +89,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     children: [
                       _infoRow('Developer', 'Dilivvafast Technologies Ltd'),
                       Divider(color: context.palette.border),
-                      _infoRow('Website', 'https://dilivvafast.app'),
-                      Divider(color: context.palette.border),
-                      _infoRow('Contact Email', 'support@dilivvafast.app'),
+                      _infoRow('Contact Email', AppConstants.supportEmail),
                     ],
                   ),
                 ),

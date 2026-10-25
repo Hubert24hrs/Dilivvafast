@@ -499,6 +499,76 @@ describe("price negotiation (inDrive-style offers)", () => {
   });
 });
 
+describe("ratings", () => {
+  // Ratings are keyed by order id: one per delivery, from that delivery's
+  // customer, about that delivery's courier, once it has been delivered.
+  async function seedOrder(id, overrides = {}) {
+    await seed(async (db) => {
+      await setDoc(doc(db, "couriers", id), {
+        userId: CUSTOMER,
+        driverId: DRIVER,
+        status: "delivered",
+        ...overrides,
+      });
+    });
+  }
+
+  const rating = (orderId, data = {}) => ({
+    orderId,
+    userId: CUSTOMER,
+    driverId: DRIVER,
+    rating: 5,
+    comment: "Great",
+    createdAt: new Date(),
+    ...data,
+  });
+
+  test("the customer rates their delivered order", async () => {
+    await seedOrder("r1");
+    await assertSucceeds(setDoc(doc(asCustomer(), "ratings", "r1"), rating("r1")));
+  });
+
+  test("a delivery can only be rated once", async () => {
+    await seedOrder("r2");
+    await assertSucceeds(setDoc(doc(asCustomer(), "ratings", "r2"), rating("r2")));
+    await assertFails(
+      setDoc(doc(asCustomer(), "ratings", "r2"), rating("r2", { rating: 1 }))
+    );
+  });
+
+  test("no rating before the delivery is complete", async () => {
+    await seedOrder("r3", { status: "in_transit" });
+    await assertFails(setDoc(doc(asCustomer(), "ratings", "r3"), rating("r3")));
+  });
+
+  test("nobody else can rate someone's delivery", async () => {
+    await seedOrder("r4");
+    await assertFails(
+      setDoc(doc(asOther(), "ratings", "r4"), rating("r4", { userId: OTHER_CUSTOMER }))
+    );
+  });
+
+  test("a rating cannot be pinned on a different courier", async () => {
+    // Regression: the old rule accepted a rating for any courier from any
+    // signed-in user, with no delivery behind it.
+    await seedOrder("r5");
+    await assertFails(
+      setDoc(doc(asCustomer(), "ratings", "r5"), rating("r5", { driverId: "driver_2" }))
+    );
+  });
+
+  test("a rating must be 1 to 5 stars", async () => {
+    await seedOrder("r6");
+    await assertFails(setDoc(doc(asCustomer(), "ratings", "r6"), rating("r6", { rating: 6 })));
+    await assertFails(setDoc(doc(asCustomer(), "ratings", "r6"), rating("r6", { rating: 0 })));
+  });
+
+  test("a customer cannot rate the order before it is delivered", async () => {
+    await seedOrder("r7", { status: "in_transit" });
+    await assertFails(updateDoc(doc(asCustomer(), "couriers", "r7"), { rating: 5 }));
+  });
+});
+
 describe("support threads", () => {
   test("a user reads only their own support thread", async () => {
     await seed(async (db) => {
@@ -792,6 +862,75 @@ describe("legitimate access still works", () => {
         status: "pending",
         amount: 5000,
       })
+    );
+  });
+});
+
+describe("referrals", () => {
+  const referral = (overrides = {}) => ({
+    refereeId: CUSTOMER,
+    referralCode: "ABCD1234",
+    status: "pending",
+    bonusPaid: false,
+    ...overrides,
+  });
+
+  test("a new user records the code they were given, keyed by their uid", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "referrals", CUSTOMER), referral())
+    );
+  });
+
+  test("a referral cannot be filed under a random id (one per account)", async () => {
+    await assertFails(setDoc(doc(asCustomer(), "referrals", "r1"), referral()));
+  });
+
+  test("a client cannot name the referrer, complete it or mark it paid", async () => {
+    await assertFails(
+      setDoc(doc(asCustomer(), "referrals", CUSTOMER), referral({ referrerId: OTHER_CUSTOMER }))
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "referrals", CUSTOMER), referral({ status: "completed" }))
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "referrals", CUSTOMER), referral({ bonusPaid: true }))
+    );
+  });
+
+  test("the referrer lists their referrals by referrerId", async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "referrals", OTHER_CUSTOMER), {
+        refereeId: OTHER_CUSTOMER,
+        referrerId: CUSTOMER,
+        status: "pending",
+      });
+    });
+    await assertSucceeds(
+      getDocs(query(collection(asCustomer(), "referrals"), where("referrerId", "==", CUSTOMER)))
+    );
+    // Listing by code cannot be proven safe by the rules, so it is refused.
+    await assertFails(
+      getDocs(query(collection(asCustomer(), "referrals"), where("referralCode", "==", "ABCD1234")))
+    );
+  });
+});
+
+describe("support messages", () => {
+  test("a user cannot post as someone else, even in their own thread", async () => {
+    await assertFails(
+      setDoc(
+        doc(asCustomer(), "orders", `support_${CUSTOMER}`, "messages", "m2"),
+        { senderId: ADMIN, text: "Refund approved" }
+      )
+    );
+  });
+
+  test("an admin replies in any thread as themselves", async () => {
+    await assertSucceeds(
+      setDoc(
+        doc(asAdmin(), "orders", `support_${CUSTOMER}`, "messages", "m3"),
+        { senderId: ADMIN, text: "We're on it" }
+      )
     );
   });
 });

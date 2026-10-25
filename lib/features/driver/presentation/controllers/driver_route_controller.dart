@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/services/route_matching_service.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 /// State for the driver route + en-route order discovery.
 class DriverRouteState {
@@ -133,10 +134,7 @@ class DriverRouteController extends Notifier<DriverRouteState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to build route: $e',
-      );
+      state = state.copyWith(isLoading: false, error: friendlyError(e));
     }
   }
 

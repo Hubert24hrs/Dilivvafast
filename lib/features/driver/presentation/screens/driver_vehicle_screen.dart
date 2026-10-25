@@ -100,7 +100,7 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
             Text(
               'Dispatch Vehicle Information',
               style: TextStyle(
-                color: context.palette.onBrand,
+                color: context.palette.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),

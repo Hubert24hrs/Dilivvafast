@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
 
-  static const String termsMarkdown = '''
+  static const String termsMarkdown =
+      '''
 # Terms of Service
 
 **Effective Date:** January 1, 2026
@@ -44,7 +46,7 @@ These Terms are governed by the laws of the Federal Republic of Nigeria.
 
 ## 7. Contact Us
 
-For questions regarding these Terms, contact legal@dilivvafast.app.
+For questions regarding these Terms, contact ${AppConstants.legalEmail}.
 ''';
 
   @override
@@ -58,9 +60,7 @@ For questions regarding these Terms, contact legal@dilivvafast.app.
           IconButton(
             icon: const Icon(Icons.open_in_browser),
             onPressed: () async {
-              final Uri url = Uri.parse(
-                'https://hubert24hrs.github.io/Dilivvafast/terms.html',
-              );
+              final Uri url = Uri.parse(AppConstants.termsUrl);
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
               }

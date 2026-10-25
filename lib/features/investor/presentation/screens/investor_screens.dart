@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class InvestorHomeScreen extends ConsumerWidget {
   const InvestorHomeScreen({super.key});
@@ -116,7 +117,7 @@ class InvestorHomeScreen extends ConsumerWidget {
                 child: CircularProgressIndicator(color: context.palette.brand),
               ),
               error: (e, _) => Text(
-                'Error: $e',
+                friendlyError(e),
                 style: TextStyle(color: context.palette.danger),
               ),
               data: (bikes) {
@@ -161,7 +162,7 @@ class InvestorHomeScreen extends ConsumerWidget {
                                     Text(
                                       '${bike.make} ${bike.model}',
                                       style: TextStyle(
-                                        color: context.palette.onBrand,
+                                        color: context.palette.textPrimary,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -252,7 +253,7 @@ class InvestorBikesScreen extends ConsumerWidget {
         loading: () => Center(
           child: CircularProgressIndicator(color: context.palette.brand),
         ),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(friendlyError(e))),
         data: (bikes) {
           if (bikes.isEmpty) {
             return Center(
@@ -289,7 +290,7 @@ class InvestorBikesScreen extends ConsumerWidget {
                         Text(
                           '${b.make} ${b.model}',
                           style: TextStyle(
-                            color: context.palette.onBrand,
+                            color: context.palette.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -346,7 +347,7 @@ class InvestorEarningsScreen extends ConsumerWidget {
         loading: () => Center(
           child: CircularProgressIndicator(color: context.palette.brand),
         ),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(friendlyError(e))),
         data: (earnings) {
           if (earnings.isEmpty) {
             return Center(

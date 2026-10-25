@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
 class DriverEarningsScreen extends ConsumerStatefulWidget {
   const DriverEarningsScreen({super.key});
@@ -61,7 +62,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
         ),
         error: (e, _) => Center(
           child: Text(
-            'Error: $e',
+            friendlyError(e),
             style: TextStyle(color: context.palette.danger),
           ),
         ),
@@ -333,7 +334,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
           Text(
             value,
             style: TextStyle(
-              color: context.palette.onBrand,
+              color: context.palette.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -515,7 +516,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
                 Text(
                   route,
                   style: TextStyle(
-                    color: context.palette.onBrand,
+                    color: context.palette.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
