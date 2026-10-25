@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
@@ -309,7 +310,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final mode = user.effectiveMode;
       if (isAuthRoute) return mode.homeRoute;
 
-      if (_enrollmentRoutes.contains(location)) return null;
+      if (_enrollmentRoutes.contains(location) &&
+          (location != '/investor/join' || AppConstants.investorModeEnabled)) {
+        return null;
+      }
 
       // Keep people out of surfaces they are not entitled to, sending them to
       // that mode's onboarding rather than a screen that would fail to load.
@@ -673,7 +677,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// Where to send someone who reached a mode they are not entitled to.
 String _entryPointFor(AppMode mode) => switch (mode) {
   AppMode.driver => '/driver/apply',
-  AppMode.investor => '/investor/join',
+  AppMode.investor =>
+    AppConstants.investorModeEnabled ? '/investor/join' : '/customer/home',
   // There is no self-service route into admin.
   AppMode.admin || AppMode.customer => '/customer/home',
 };

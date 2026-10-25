@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
@@ -49,7 +50,25 @@ void main() {
       );
 
       expect(user.accessFor(AppMode.driver), ModeAccess.pending);
-      expect(user.accessFor(AppMode.investor), ModeAccess.approved);
+      expect(
+        user.accessFor(AppMode.investor),
+        AppConstants.investorModeEnabled
+            ? ModeAccess.approved
+            : ModeAccess.none,
+      );
+    });
+
+    test('investor mode stays closed while it is switched off', () {
+      final user = buildUser(
+        investorStatus: ModeAccess.approved,
+        activeMode: AppMode.investor,
+      );
+      if (AppConstants.investorModeEnabled) {
+        expect(user.effectiveMode, AppMode.investor);
+      } else {
+        expect(user.canEnter(AppMode.investor), isFalse);
+        expect(user.effectiveMode, AppMode.customer);
+      }
     });
 
     test('admin is derived from role, never self-granted', () {

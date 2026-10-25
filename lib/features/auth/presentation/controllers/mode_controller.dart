@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
@@ -68,6 +69,13 @@ class ModeController extends AsyncNotifier<void> {
     if (user == null) {
       return const ModeSwitchFailed(
         'You need to be signed in to switch modes.',
+      );
+    }
+
+    if (mode == AppMode.investor && !AppConstants.investorModeEnabled) {
+      return const ModeUnavailable(
+        AppMode.investor,
+        'Investing in bikes is not available yet.',
       );
     }
 

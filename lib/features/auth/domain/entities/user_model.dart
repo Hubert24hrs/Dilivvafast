@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 
 part 'user_model.freezed.dart';
@@ -122,7 +123,8 @@ extension UserModelX on UserModel {
   ModeAccess accessFor(AppMode mode) => switch (mode) {
     AppMode.customer => ModeAccess.approved,
     AppMode.driver => driverStatus,
-    AppMode.investor => investorStatus,
+    AppMode.investor =>
+      AppConstants.investorModeEnabled ? investorStatus : ModeAccess.none,
     AppMode.admin =>
       role == UserRole.admin ? ModeAccess.approved : ModeAccess.none,
   };

@@ -21,6 +21,13 @@ class AppConstants {
   static const String facebookUrl = '';
   static const String instagramUrl = '';
 
+  /// Investor mode (funding bikes for a share of their earnings) is switched
+  /// off for the first Play release. The Play Console financial-features
+  /// declaration covers only the wallet and referral rewards; an investment
+  /// product may need licensing paperwork first. While false, nobody can
+  /// enter or enrol in investor mode, whatever their stored status.
+  static const bool investorModeEnabled = false;
+
   // Contact details and hosted legal pages, kept in one place. They used to
   // name addresses at dilivvafast.ng / .app / .com, none of which exist, so
   // every message bounced. Google Play shows the support address on the
