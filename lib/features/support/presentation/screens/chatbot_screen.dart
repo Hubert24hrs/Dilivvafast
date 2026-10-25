@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/features/ai/data/maya_chat_service.dart';
 
@@ -89,7 +90,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         _messages.add(
           _ChatMessage(
             text:
-                'Oops! Something went wrong. Please try again or contact support@dilivvafast.ng 📧',
+                'Oops! Something went wrong. Please try again or contact '
+                '${AppConstants.supportEmail} 📧',
             isUser: false,
           ),
         );

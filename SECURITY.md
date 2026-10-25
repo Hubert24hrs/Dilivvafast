@@ -12,7 +12,7 @@ Last reviewed: 2026-09-07.
 
 ## Reporting a vulnerability
 
-Email **security@dilivvafast.ng**. Please do not open a public GitHub issue.
+Email **dilivvafastsupport@gmail.com**. Please do not open a public GitHub issue.
 
 ---
 

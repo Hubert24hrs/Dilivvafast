@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "220414378908-5vfqmcsleneof901ull6ra45ak7q3s2a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dilivvafast.app",
+            "certificate_hash": "5eaa989b6ab946a0335722faaaa4068b43c1db01"
+          }
+        },
+        {
           "client_id": "220414378908-98gpk6js7ka1l1u4v618fqqfk90ta0fb.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

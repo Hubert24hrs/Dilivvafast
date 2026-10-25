@@ -59,10 +59,9 @@ Then check these open in a browser:
 If you later host them on your own domain, change `legalPagesBaseUrl` in
 `lib/core/constants/app_constants.dart`.
 
-**Contact addresses.** The app and the pages use `support@dilivvafast.ng`,
-`privacy@dilivvafast.ng` and `legal@dilivvafast.ng` (set in `AppConstants`
-and the three HTML pages). Make sure those mailboxes exist and are read, or
-change them to addresses you own. Play shows the support address publicly.
+**Contact address.** The app and the pages use `dilivvafastsupport@gmail.com` for
+support, privacy and legal (set in `AppConstants` and the three HTML pages).
+Play shows it publicly on the store listing; check that inbox regularly.
 
 ---
 

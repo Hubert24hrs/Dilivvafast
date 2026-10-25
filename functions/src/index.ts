@@ -231,7 +231,11 @@ export const initializePaystackPayment = onCall(
           amount: Math.round(amount * 100), // kobo
           email,
           reference,
-          callback_url: "https://dilivvafast.com/payment/callback",
+          // Where Paystack sends the browser after checkout. This pointed at
+          // dilivvafast.com, a domain that does not exist, so every payer
+          // landed on an error page. The wallet is credited by verification
+          // and the webhook, never by this page.
+          callback_url: "https://hubert24hrs.github.io/Dilivvafast/payment-complete.html",
           currency: "NGN",
           metadata: {
             userId: uid,

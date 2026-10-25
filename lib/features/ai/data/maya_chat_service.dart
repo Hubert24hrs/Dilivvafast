@@ -29,7 +29,8 @@ class MayaChatService {
   List<MayaMessage> get history => List.unmodifiable(_conversationHistory);
 
   /// System prompt defining Maya's personality and knowledge
-  static const String _systemPrompt = '''
+  static const String _systemPrompt =
+      '''
 You are Maya, the friendly and knowledgeable AI assistant for Dilivvafast — Nigeria's premier on-demand logistics and delivery platform.
 
 Your personality:
@@ -65,7 +66,7 @@ Important policies:
 - Insurance: Available for items valued above ₦50,000
 - Response time SLA: Critical issues within 1 hour, general within 24 hours
 
-Always try to resolve issues yourself. If you truly cannot help (e.g., billing disputes requiring manual review), advise contacting support@dilivvafast.ng or calling +234-800-DELIVER.
+Always try to resolve issues yourself. If you truly cannot help (e.g., billing disputes requiring manual review), advise emailing ${AppConstants.supportEmail} or using Message support in the Help Centre.
 ''';
 
   /// Send a message and get Maya's response.
@@ -140,7 +141,7 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
       return "💳 **Payment Options:**\n• Debit/Credit card (Visa, Mastercard)\n• Bank transfer\n• USSD payment\n• Wallet balance\n\nTop up your wallet: **Profile → Wallet → Top Up**\n\nAll payments are processed securely via Paystack.";
     }
     if (lower.contains('refund')) {
-      return "💵 Refunds are processed within 3-5 business days to your original payment method. For wallet payments, refunds are instant.\n\nIf you haven't received your refund, contact support@dilivvafast.ng.";
+      return "💵 Refunds are processed within 3-5 business days to your original payment method. For wallet payments, refunds are instant.\n\nIf you haven't received your refund, contact ${AppConstants.supportEmail}.";
     }
     if (lower.contains('hello') ||
         lower.contains('hi') ||
@@ -148,7 +149,7 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
       return "Hey there! 👋 I'm Maya, your Dilivvafast assistant. How can I help you today?\n\nI can help with:\n• 📦 Tracking deliveries\n• 💰 Pricing questions\n• ❌ Cancellations & refunds\n• 🚗 Becoming a driver\n• 💳 Payment issues";
     }
 
-    return "Thanks for reaching out! 😊 I'm Maya, and I'm here to help.\n\nCould you give me a bit more detail about what you need? I can assist with tracking, pricing, payments, cancellations, or any other delivery questions.\n\nFor urgent issues, email **support@dilivvafast.ng** or call **+234-800-DELIVER**.";
+    return "Thanks for reaching out! 😊 I'm Maya, and I'm here to help.\n\nCould you give me a bit more detail about what you need? I can assist with tracking, pricing, payments, cancellations, or any other delivery questions.\n\nFor urgent issues, email **${AppConstants.supportEmail}** or tap **Message support** in the Help Centre.";
   }
 
   /// Clear conversation history
