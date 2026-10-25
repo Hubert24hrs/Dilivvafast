@@ -33,6 +33,30 @@ Done and verified in code:
 - The whole delivery flow is tested end to end against the staging backend
   (`test/e2e/delivery_flow.mjs`, see DEPLOYMENT.md).
 
+### Play Console progress (25 October 2026)
+
+App **Dilivvafast** (`com.dilivvafast.app`) exists in the *Hubert.dev*
+personal developer account. Production Firebase is on Blaze (billing account
+*Suskii Errands*, $10/month budget alert) with the live Paystack key and a
+placeholder Anthropic key; the upload key's SHA-1 is registered.
+
+| Item | State |
+|---|---|
+| Legal pages on GitHub Pages | ✅ live |
+| Upload key + `key.properties` | ✅ created (back them up) |
+| Signed bundle 1.1.0 (3) | ✅ `build/app/outputs/bundle/productionRelease/app-production-release.aab` |
+| Privacy policy, ads, advertising ID, government, health, financial features | ✅ submitted |
+| Content rating (IARC) | ✅ Everyone / PEGI 3 / Google Play 3+ |
+| Store settings (category, contact email) | ✅ Maps & navigation, dilivvafastsupport@gmail.com |
+| Store listing text | ✅ saved (text in `play_store/listing.md`) |
+| Store graphics | ⏳ upload `play_store/icon-512.png`, `play_store/feature-graphic-1024x500.png` and ≥2 phone screenshots |
+| Production backend deploy | ⏳ run the command in step 3 |
+| Upload bundle to Internal testing | ⏳ drag the `.aab` onto the release page |
+| Sign-in details (reviewer account) | ⏳ needs a test account's email and password |
+| Target audience (18+) | ⏳ unlocks after sign-in details |
+| Data safety | ⏳ fully drafted; final Save unlocks after target audience |
+| Closed test: 12 testers × 14 days | ⏳ then apply for production |
+
 ---
 
 ## 1. Publish the legal pages (you, 2 minutes)
