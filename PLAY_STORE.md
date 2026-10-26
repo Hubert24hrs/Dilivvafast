@@ -49,7 +49,7 @@ placeholder Anthropic key; the upload key's SHA-1 is registered.
 | Content rating (IARC) | ✅ Everyone / PEGI 3 / Google Play 3+ |
 | Store settings (category, contact email) | ✅ Maps & navigation, dilivvafastsupport@gmail.com |
 | Store listing text | ✅ saved (text in `play_store/listing.md`) |
-| Store graphics | ⏳ upload `play_store/icon-512.png`, `play_store/feature-graphic-1024x500.png` and ≥2 phone screenshots |
+| Store graphics | ✅ icon and feature graphic uploaded · ⏳ ≥2 phone screenshots from a real phone |
 | Production backend deploy | ⏳ run the command in step 3 |
 | Upload bundle to Internal testing | ⏳ drag the `.aab` onto the release page |
 | Sign-in details (reviewer account) | ⏳ needs a test account's email and password |
