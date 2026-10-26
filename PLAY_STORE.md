@@ -50,7 +50,7 @@ placeholder Anthropic key; the upload key's SHA-1 is registered.
 | Store settings (category, contact email) | ✅ Maps & navigation, dilivvafastsupport@gmail.com |
 | Store listing text | ✅ saved (text in `play_store/listing.md`) |
 | Store graphics | ✅ icon and feature graphic uploaded · ⏳ ≥2 phone screenshots from a real phone |
-| Production backend deploy | ⏳ run the command in step 3 |
+| Production backend deploy | ✅ rules, indexes, storage rules and all 21 functions live (Node.js 22) |
 | Upload bundle to Internal testing | ⏳ drag the `.aab` onto the release page |
 | Sign-in details (reviewer account) | ⏳ needs a test account's email and password |
 | Target audience (18+) | ⏳ unlocks after sign-in details |

@@ -1,8 +1,12 @@
 # Deployment
 
 Staging (`dilivvafast-staging`) runs the current backend and has passed the
-full end-to-end delivery test below. Production (`fast-delivery-d8d5c`) has
-not been deployed from this branch yet — see Part 4 and PLAY_STORE.md.
+full end-to-end delivery test below. Production (`fast-delivery-d8d5c`) was
+deployed from the same commit on 26 October 2026: Firestore rules and
+indexes, Storage rules (bucket `fast-delivery-d8d5c.firebasestorage.app`,
+us-east1) and all 21 functions on Node.js 22, on the Blaze plan with a
+$10/month budget alert. Live Paystack key set; Anthropic key is a
+placeholder.
 
 ---
 
@@ -240,6 +244,16 @@ permission errors; it is faster than diagnosing live.
 ---
 
 ## Deploy-time gotchas found during the audit
+
+- **`cloudbilling.googleapis.com` 429 "Quota exceeded … for consumer
+  project_number:563584335869".** That project is the Firebase CLI's own,
+  shared by every CLI user, and its per-minute quota can stay exhausted for
+  a long time. Bill the CLI's calls to your project instead:
+  `GOOGLE_CLOUD_QUOTA_PROJECT=fast-delivery-d8d5c firebase deploy …`
+  (the Cloud Billing API must be enabled on that project).
+- **First 2nd-gen deploy on a project:** the Firestore-triggered functions
+  fail with "Permission denied while using the Eventarc Service Agent".
+  Wait about five minutes and deploy functions again; seen on both projects.
 
 - **Functions discovery timeout.** The default is 10s and is not always enough
   on a cold machine. The failure reads "Cannot determine backend
