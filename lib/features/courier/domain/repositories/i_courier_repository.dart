@@ -94,6 +94,21 @@ abstract class ICourierRepository {
   /// to other couriers instead of ending (`courierCancelJob`).
   Future<Either<Failure, Unit>> courierCancelJob(String orderId, String reason);
 
+  // ── Paying the courier directly (no wallet) ───────────────────────────────
+
+  /// The customer switches between paying in cash and by bank transfer.
+  Future<Either<Failure, Unit>> setPaymentMethod(
+    String orderId,
+    PaymentMethod method,
+  );
+
+  /// The customer says they have transferred the fare to the courier's
+  /// account. Only the courier can then confirm it arrived.
+  Future<Either<Failure, Unit>> markPaymentSent(String orderId);
+
+  /// The courier confirms they received the fare (cash or transfer).
+  Future<Either<Failure, Unit>> confirmPaymentReceived(String orderId);
+
   /// Get order by tracking code
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(
     String trackingCode,

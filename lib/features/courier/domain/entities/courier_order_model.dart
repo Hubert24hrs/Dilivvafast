@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:dilivvafast/core/domain/entities/bank_account.dart';
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 
 part 'courier_order_model.freezed.dart';
@@ -41,18 +42,30 @@ enum PackageCategory {
   other,
 }
 
+/// How the customer pays their courier. There is no in-app wallet or card:
+/// the money goes straight from the customer to the courier once the
+/// delivery is done, as cash or as a bank transfer to the courier's account.
 enum PaymentMethod {
-  @JsonValue('wallet')
-  wallet,
-  @JsonValue('card')
-  card,
   @JsonValue('cash')
   cash,
+  @JsonValue('transfer')
+  transfer;
+
+  String get label => switch (this) {
+    PaymentMethod.cash => 'Cash',
+    PaymentMethod.transfer => 'Bank transfer',
+  };
 }
 
+/// pending → (customer, transfer only) sent → (courier) paid.
+///
+/// `sent` is the customer saying "I've made the transfer"; only the courier
+/// can confirm the money arrived. Enforced in firestore.rules.
 enum PaymentStatus {
   @JsonValue('pending')
   pending,
+  @JsonValue('sent')
+  sent,
   @JsonValue('paid')
   paid,
   @JsonValue('refunded')
@@ -202,9 +215,21 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     /// The fare the server computed from distance, weight and zone pricing.
     /// Shown to the customer as guidance and used to bound offers.
     @Default(0.0) double recommendedFare,
-    @Default(PaymentMethod.wallet) PaymentMethod paymentMethod,
-    @Default(PaymentStatus.pending) PaymentStatus paymentStatus,
-    String? paystackReference,
+
+    /// Orders from builds that offered "wallet" or "card" read as cash.
+    // ignore: invalid_annotation_target
+    @JsonKey(unknownEnumValue: PaymentMethod.cash)
+    @Default(PaymentMethod.cash)
+    PaymentMethod paymentMethod,
+    // ignore: invalid_annotation_target
+    @JsonKey(unknownEnumValue: PaymentStatus.pending)
+    @Default(PaymentStatus.pending)
+    PaymentStatus paymentStatus,
+
+    /// The courier's bank details, copied onto the order by the server when
+    /// their offer is accepted, so the customer can pay them by transfer.
+    /// Null until then, or if the courier has not added an account.
+    @BankAccountConverter() BankAccount? courierBank,
     String? promoCode,
     @Default(0.0) double discountAmount,
     required String trackingCode,
@@ -230,6 +255,9 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     @NullableTimestampConverter() DateTime? arrivedAt,
     @NullableTimestampConverter() DateTime? pickedUpAt,
     @NullableTimestampConverter() DateTime? deliveredAt,
+
+    /// When the courier confirmed they were paid.
+    @NullableTimestampConverter() DateTime? paidAt,
     @NullableTimestampConverter() DateTime? estimatedDeliveryTime,
     @GeoPointListConverter() @Default([]) List<GeoPoint> polylinePoints,
   }) = _CourierOrderModel;
@@ -305,7 +333,6 @@ extension CourierOrderModelX on CourierOrderModel {
       'recommendedFare': recommendedFare,
       'paymentMethod': paymentMethod.name,
       'paymentStatus': paymentStatus.name,
-      'paystackReference': paystackReference,
       'promoCode': promoCode,
       'discountAmount': discountAmount,
       'trackingCode': trackingCode,

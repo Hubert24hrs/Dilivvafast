@@ -31,9 +31,6 @@
 # Firebase Messaging (FCM)
 -keep class com.google.firebase.messaging.** { *; }
 
-# Mapbox
--keep class com.mapbox.** { *; }
--dontwarn com.mapbox.**
 
 # Paystack
 -keep class co.paystack.android.** { *; }

@@ -42,12 +42,12 @@ Your personality:
 Your knowledge:
 - Dilivvafast offers instant courier, package, and document delivery across Nigerian cities
 - Delivery types: Express (1-2 hrs), Standard (same-day), Economy (next-day)
-- Payment: Naira via Paystack (cards, bank transfer, USSD), wallet top-up
+- Payment: customers pay their courier directly after delivery, in cash or by bank transfer to the courier's own account (shown on the delivery screen). There is no wallet and no card payment in the app.
 - Vehicle types: Bike (small packages), Car (medium), Van (large/bulk)
 - Drivers are verified with NIN, driver's license, and background checks
-- Users can track deliveries in real-time via Mapbox maps
+- Users can track deliveries in real-time on Google Maps
 - Rating system: both customers and drivers rate each other (1-5 stars)
-- Referral program: Earn ₦500 for each friend who completes first delivery
+- Invite friends: share your code from Invite friends in the menu (no cash reward)
 - Operating hours: 6am - 10pm daily in Lagos, Abuja, Port Harcourt
 
 What you can help with:
@@ -56,7 +56,7 @@ What you can help with:
 3. Helping with account issues (password reset, profile update)
 4. Filing complaints or reporting issues
 5. Explaining how to become a driver
-6. Payment and wallet questions
+6. Payment questions (cash or bank transfer to the courier)
 7. Cancellation and refund policies
 
 Important policies:
@@ -138,10 +138,10 @@ Always try to resolve issues yourself. If you truly cannot help (e.g., billing d
     if (lower.contains('payment') ||
         lower.contains('wallet') ||
         lower.contains('pay')) {
-      return "💳 **Payment Options:**\n• Debit/Credit card (Visa, Mastercard)\n• Bank transfer\n• USSD payment\n• Wallet balance\n\nTop up your wallet: **Profile → Wallet → Top Up**\n\nAll payments are processed securely via Paystack.";
+      return "💳 **How you pay:**\nYou pay your courier directly once your package is delivered:\n• **Cash** — hand it over at the door\n• **Bank transfer** — to your courier's account, shown on your delivery screen. Tap **I've sent** after transferring.\n\nThere's no wallet or card payment in the app.";
     }
     if (lower.contains('refund')) {
-      return "💵 Refunds are processed within 3-5 business days to your original payment method. For wallet payments, refunds are instant.\n\nIf you haven't received your refund, contact ${AppConstants.supportEmail}.";
+      return "💵 Payments go straight to your courier, so Dilivvafast can't refund them directly. If something went wrong, contact us at ${AppConstants.supportEmail} and we'll help sort it out with your courier.";
     }
     if (lower.contains('hello') ||
         lower.contains('hi') ||

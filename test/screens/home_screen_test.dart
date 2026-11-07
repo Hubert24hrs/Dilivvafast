@@ -117,7 +117,7 @@ void main() {
         'Couriers',
         'Saved addresses',
         'Promotions',
-        'Refer & earn',
+        'Invite friends',
         'Notifications',
         'Safety',
         'Settings',
@@ -136,6 +136,8 @@ void main() {
         );
         expect(find.text(label), findsOneWidget, reason: label);
       }
+      // There is no wallet: customers pay couriers directly.
+      expect(find.text('Wallet'), findsNothing);
     });
 
     testWidgets('ends with the Driver mode button', (tester) async {

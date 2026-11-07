@@ -8,6 +8,7 @@ import 'package:dilivvafast/core/presentation/widgets/live_map.dart';
 import 'package:dilivvafast/core/presentation/widgets/reason_sheet.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/courier/presentation/widgets/pay_courier_card.dart';
 
 const _ink = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
@@ -242,13 +243,23 @@ class _DriverActiveDeliveryScreenState
                       ],
                     ),
                   ),
-                  Text(
-                    '₦${fare.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: _ink,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₦${fare.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: _ink,
+                        ),
+                      ),
+                      // The customer pays the courier directly.
+                      Text(
+                        order.paymentMethod.label,
+                        style: const TextStyle(color: _muted, fontSize: 13),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -384,9 +395,7 @@ class _DriverActiveDeliveryScreenState
         if (next == OrderStatus.delivered) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Delivered — nice work. Earnings are paid out daily.',
-              ),
+              content: Text('Delivered — nice work. Now collect your payment.'),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -583,25 +592,23 @@ class _FinishedPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: delivered
-                ? context.palette.successSubtle
-                : context.palette.dangerSubtle,
-            borderRadius: BorderRadius.circular(14),
+        if (delivered)
+          CollectPaymentCard(order: order)
+        else
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: context.palette.dangerSubtle,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              order.status == OrderStatus.cancelled
+                  ? 'The customer cancelled this delivery'
+                        '${order.cancelReason != null ? ': ${order.cancelReason}' : '.'}'
+                  : 'This delivery could not be completed.',
+              style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
+            ),
           ),
-          child: Text(
-            delivered
-                ? 'Delivered. You earn ₦${order.driverEarnings.toStringAsFixed(0)} '
-                      'on this job, paid into your wallet in the daily payout.'
-                : order.status == OrderStatus.cancelled
-                ? 'The customer cancelled this delivery'
-                      '${order.cancelReason != null ? ': ${order.cancelReason}' : '.'}'
-                : 'This delivery could not be completed.',
-            style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
-          ),
-        ),
         const SizedBox(height: 12),
         SizedBox(
           height: 54,

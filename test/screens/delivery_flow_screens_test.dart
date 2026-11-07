@@ -206,7 +206,7 @@ void main() {
       expect(repo.updates, [OrderStatus.delivered]);
     });
 
-    testWidgets('a delivered job shows earnings and a way back', (
+    testWidgets('a delivered job asks the courier to collect payment', (
       tester,
     ) async {
       await _phone(tester);
@@ -218,7 +218,9 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.textContaining('₦1120'), findsOneWidget);
+      // The customer pays the courier directly: no wallet payout.
+      expect(find.text('Delivered — collect ₦1400'), findsOneWidget);
+      expect(find.text("I've received ₦1400"), findsOneWidget);
       expect(find.text('Back to requests'), findsOneWidget);
     });
 
@@ -302,6 +304,13 @@ void main() {
         ),
       );
       await tester.pump();
+      // Paying the courier comes first, then the rating below it.
+      expect(find.text('Pay your courier'), findsOneWidget);
+      await tester.dragUntilVisible(
+        find.text('Rate your courier'),
+        find.byType(ListView),
+        const Offset(0, -200),
+      );
       expect(find.text('Rate your courier'), findsOneWidget);
     });
 
@@ -389,9 +398,19 @@ void main() {
         notificationRouteFor({'type': 'order_update', 'orderId': 'o1'}),
         '/customer/track/o1',
       );
+      // The wallet is gone, so its old referral-bonus push opens nothing.
+      expect(notificationRouteFor({'type': 'referral_bonus'}), isNull);
       expect(
-        notificationRouteFor({'type': 'referral_bonus'}),
-        '/customer/wallet',
+        notificationRouteFor({'type': 'referral_completed'}),
+        '/customer/refer',
+      );
+      expect(
+        notificationRouteFor({'type': 'payment_sent', 'orderId': 'o1'}),
+        '/driver/active/o1',
+      );
+      expect(
+        notificationRouteFor({'type': 'payment_received', 'orderId': 'o1'}),
+        '/customer/track/o1',
       );
       expect(
         notificationRouteFor({'type': 'weekly_report'}),

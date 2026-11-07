@@ -4,11 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:dilivvafast/core/domain/entities/bank_account.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/core/presentation/utils/friendly_error.dart';
 
+/// What a courier has collected. Customers pay couriers directly — cash or a
+/// bank transfer to the courier's own account — so this is the fare of each
+/// delivered job, not a balance held by Dilivvafast.
 class DriverEarningsScreen extends ConsumerStatefulWidget {
   const DriverEarningsScreen({super.key});
 
@@ -28,7 +32,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(driverOrdersProvider);
-    final walletAsync = ref.watch(walletBalanceProvider);
+    final bank = ref.watch(currentUserProvider).value?.payoutAccount;
 
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
@@ -48,11 +52,12 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Bank account',
             icon: Icon(
-              Icons.account_balance_wallet_outlined,
+              Icons.account_balance_outlined,
               color: context.palette.brand,
             ),
-            onPressed: () => context.push('/wallet/top-up'),
+            onPressed: () => context.push('/driver/bank-account'),
           ),
         ],
       ),
@@ -67,12 +72,11 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
           ),
         ),
         data: (orders) {
-          final walletBalance = walletAsync.value ?? 0.0;
           final deliveredOrders = orders
               .where((o) => o.status == OrderStatus.delivered)
               .toList();
 
-          return _buildBody(deliveredOrders, walletBalance);
+          return _buildBody(deliveredOrders, bank);
         },
       ),
     );
@@ -80,7 +84,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
 
   Widget _buildBody(
     List<CourierOrderModel> deliveredOrders,
-    double walletBalance,
+    BankAccount? bank,
   ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -90,20 +94,14 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
     final todayOrders = deliveredOrders.where(
       (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(today),
     );
-    final todayEarnings = todayOrders.fold(
-      0.0,
-      (sum, o) => sum + o.driverEarnings,
-    );
+    final todayEarnings = todayOrders.fold(0.0, (sum, o) => sum + o.totalFare);
     final todayTrips = todayOrders.length;
 
     // Weekly earnings
     final weekOrders = deliveredOrders.where(
       (o) => o.deliveredAt != null && o.deliveredAt!.isAfter(weekStart),
     );
-    final weeklyEarnings = weekOrders.fold(
-      0.0,
-      (sum, o) => sum + o.driverEarnings,
-    );
+    final weeklyEarnings = weekOrders.fold(0.0, (sum, o) => sum + o.totalFare);
     final weeklyTrips = weekOrders.length;
 
     // Build per-day data for chart
@@ -117,7 +115,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
                 o.deliveredAt!.isAfter(day) &&
                 o.deliveredAt!.isBefore(nextDay),
           )
-          .fold(0.0, (sum, o) => sum + o.driverEarnings);
+          .fold(0.0, (sum, o) => sum + o.totalFare);
     });
 
     // Recent trips (last 10)
@@ -133,10 +131,10 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Wallet balance card
-          _buildWalletCard(
-            walletBalance,
+          _buildCollectedCard(
+            weeklyEarnings,
             todayEarnings,
+            bank,
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
 
           const SizedBox(height: 20),
@@ -218,7 +216,11 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
     );
   }
 
-  Widget _buildWalletCard(double walletBalance, double todayEarnings) {
+  Widget _buildCollectedCard(
+    double weekTotal,
+    double todayTotal,
+    BankAccount? bank,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -237,40 +239,17 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Wallet Balance',
-                style: TextStyle(
-                  color: context.palette.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: context.palette.textMuted,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Withdraw',
-                  style: TextStyle(
-                    color: context.palette.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            'Collected this week',
+            style: TextStyle(
+              color: context.palette.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
-            _currencyFormat.format(walletBalance),
+            _currencyFormat.format(weekTotal),
             style: TextStyle(
               color: context.palette.textPrimary,
               fontSize: 36,
@@ -279,22 +258,50 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.trending_up,
-                color: context.palette.textSecondary,
-                size: 16,
+          Text(
+            '+${_currencyFormat.format(todayTotal)} today · paid to you '
+            'directly in cash or by transfer',
+            style: TextStyle(
+              color: context.palette.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          InkWell(
+            onTap: () => context.push('/driver/bank-account'),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: context.palette.surfaceRaised.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '+${_currencyFormat.format(todayEarnings)} today',
-                style: TextStyle(
-                  color: context.palette.textSecondary,
-                  fontSize: 13,
-                ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.account_balance_outlined,
+                    size: 18,
+                    color: context.palette.textPrimary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      bank == null
+                          ? 'Add your bank account for transfers'
+                          : '${bank.bankName} · ${bank.accountNumber}',
+                      style: TextStyle(
+                        color: context.palette.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.palette.textPrimary,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -535,7 +542,7 @@ class _DriverEarningsScreenState extends ConsumerState<DriverEarningsScreen> {
             ),
           ),
           Text(
-            '+${_currencyFormat.format(order.driverEarnings)}',
+            '+${_currencyFormat.format(order.totalFare)}',
             style: TextStyle(
               color: context.palette.success,
               fontSize: 14,

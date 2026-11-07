@@ -15,9 +15,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:dilivvafast/core/config/mapbox_init_stub.dart'
-    if (dart.library.io) 'package:dilivvafast/core/config/mapbox_init_mobile.dart'
-    if (dart.library.html) 'package:dilivvafast/core/config/mapbox_init_web.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
 
@@ -40,10 +37,6 @@ void main() async {
       } catch (e) {
         debugPrint('Could not load .env file: $e');
       }
-
-      // MUST run after dotenv.load() — the Mapbox token is read from .env, and
-      // initialising earlier silently registers an empty token.
-      MapboxInit.init();
 
       // -----------------------------------------------------------------------
       // Firebase initialisation — MUST NOT be silent on failure.

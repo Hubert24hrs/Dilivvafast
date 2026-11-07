@@ -29,12 +29,6 @@ class DatabaseService {
     });
   }
 
-  Future<void> updateWalletBalance(String uid, double amount) async {
-    await _db.collection('users').doc(uid).update({
-      'walletBalance': FieldValue.increment(amount),
-    });
-  }
-
   // --- Couriers ---
   Future<void> createCourierRequest(CourierOrderModel courier) async {
     await _db.collection('couriers').add(courier.toFirestore());

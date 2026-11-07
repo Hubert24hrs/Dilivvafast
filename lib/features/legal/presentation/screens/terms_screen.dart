@@ -29,7 +29,7 @@ Dilivvafast provides an on-demand logistics matching platform connecting senders
 ## 3. Payments & Cancellations
 
 - Delivery fees are displayed before order confirmation.
-- Payments are processed securely through Paystack or via internal wallet balance.
+- You pay your courier directly after delivery, in cash or by bank transfer to the courier's own account. Dilivvafast does not collect or hold payments.
 - Cancellations requested before a driver is dispatched incur no fee. Cancellations made en-route may incur a nominal cancellation fee.
 
 ## 4. Prohibited Items & Conduct

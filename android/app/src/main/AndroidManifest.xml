@@ -27,6 +27,12 @@
         android:usesCleartextTraffic="false"
         android:enableOnBackInvokedCallback="true">
 
+        <!-- Google Maps (Maps SDK for Android). Filled from MAPS_API_KEY at
+             build time — see android/app/build.gradle.kts. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsApiKey}" />
+
         <!-- Pairs with the AD_ID permission removal above. -->
         <meta-data
             android:name="google_analytics_adid_collection_enabled"

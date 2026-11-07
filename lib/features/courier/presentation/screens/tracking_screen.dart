@@ -11,6 +11,7 @@ import 'package:dilivvafast/core/presentation/widgets/reason_sheet.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
+import 'package:dilivvafast/features/courier/presentation/widgets/pay_courier_card.dart';
 
 const _ink = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
@@ -201,7 +202,12 @@ class _TripView extends StatelessWidget {
                 const SizedBox(height: 14),
                 _Progress(status: order.status),
                 const SizedBox(height: 16),
-                // Rating comes first once delivered, as in inDrive.
+                // Paying the courier directly: cash or a bank transfer.
+                if (showPayCourier(order)) ...[
+                  PayCourierCard(order: order),
+                  const SizedBox(height: 12),
+                ],
+                // Then rating, once delivered, as in inDrive.
                 if (order.status == OrderStatus.delivered &&
                     order.rating == null) ...[
                   SizedBox(
@@ -694,15 +700,15 @@ class _DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String pay(PaymentMethod m) => switch (m) {
-      PaymentMethod.wallet => 'Wallet',
-      PaymentMethod.cash => 'Cash',
-      PaymentMethod.card => 'Card',
+    final paid = switch (order.paymentStatus) {
+      PaymentStatus.paid => ' · paid',
+      PaymentStatus.sent => ' · sent',
+      _ => ' · after delivery',
     };
     final rows = [
       ('Package', order.packageDescription),
       ('Recipient', '${order.recipientName} · ${order.recipientPhone}'),
-      ('Payment', pay(order.paymentMethod)),
+      ('Payment', '${order.paymentMethod.label}$paid'),
       ('Fare', '₦${order.totalFare.toStringAsFixed(0)}'),
     ];
     return Container(

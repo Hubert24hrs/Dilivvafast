@@ -129,7 +129,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       'support chat are deleted.\n'
                       '• Driver documents and bank details you uploaded are '
                       'deleted.\n'
-                      '• Any wallet balance is forfeited.\n'
                       '• Delivery and payment records are kept for accounting '
                       'and disputes, no longer linked to your name.\n'
                       '• You will be signed out on every device.',

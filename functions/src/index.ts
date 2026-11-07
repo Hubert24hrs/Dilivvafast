@@ -15,7 +15,7 @@
  * price, role or user id.
  */
 
-import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
@@ -30,7 +30,6 @@ import {
 import { getMessaging, MulticastMessage } from "firebase-admin/messaging";
 import { getAuth } from "firebase-admin/auth";
 import { getStorage } from "firebase-admin/storage";
-import * as crypto from "crypto";
 import axios from "axios";
 
 initializeApp();
@@ -41,13 +40,14 @@ setGlobalOptions({ region: "us-central1", maxInstances: 20 });
 
 // Secrets are supplied by Cloud Secret Manager, never by build-time config and
 // never by the mobile client. Set with:
-//   firebase functions:secrets:set PAYSTACK_SECRET_KEY
-const PAYSTACK_SECRET_KEY = defineSecret("PAYSTACK_SECRET_KEY");
+//   firebase functions:secrets:set ANTHROPIC_API_KEY
+//
+// There is no payment provider: customers pay couriers directly (cash, or a
+// bank transfer to the courier's own account) and the app holds no money.
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
 const PLATFORM_COMMISSION_RATE = 0.2;
 const MINIMUM_FARE = 500;
-const REFERRAL_BONUS = 500;
 
 // ==================== SHARED HELPERS ====================
 
@@ -191,248 +191,6 @@ async function sendToUser(
     await pruneTokenIfStale(uid, error);
   }
 }
-
-// ==================== PAYMENT: INITIALIZE ====================
-
-/**
- * Create a Paystack transaction and hand the client an authorization URL.
- * The amount is echoed to Paystack but never trusted as proof of payment —
- * only `verifyPaystackPayment` (or the webhook) can credit a wallet.
- */
-export const initializePaystackPayment = onCall(
-  { secrets: [PAYSTACK_SECRET_KEY] },
-  async (request) => {
-    const uid = requireAuth(request);
-    await enforceRateLimit(uid, "payment_init", 10, 60 * 10);
-
-    const amount = Number(request.data?.amount);
-    const email = String(request.data?.email ?? "").trim();
-
-    if (!Number.isFinite(amount) || amount < 100) {
-      throw new HttpsError("invalid-argument", "Minimum top-up is ₦100.");
-    }
-    if (amount > 1_000_000) {
-      throw new HttpsError("invalid-argument", "Amount exceeds the per-transaction limit.");
-    }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      throw new HttpsError("invalid-argument", "A valid email is required.");
-    }
-
-    // The reference is minted server-side. A client-supplied reference would
-    // let a caller pin a reference it had already had verified elsewhere.
-    const reference = `DF-${uid.slice(0, 8)}-${Date.now()}-${crypto
-      .randomBytes(4)
-      .toString("hex")}`;
-
-    try {
-      const response = await axios.post(
-        "https://api.paystack.co/transaction/initialize",
-        {
-          amount: Math.round(amount * 100), // kobo
-          email,
-          reference,
-          // Where Paystack sends the browser after checkout. This pointed at
-          // dilivvafast.com, a domain that does not exist, so every payer
-          // landed on an error page. The wallet is credited by verification
-          // and the webhook, never by this page.
-          callback_url: "https://hubert24hrs.github.io/Dilivvafast/payment-complete.html",
-          currency: "NGN",
-          metadata: {
-            userId: uid,
-            custom_fields: [
-              { display_name: "User ID", variable_name: "user_id", value: uid },
-            ],
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${PAYSTACK_SECRET_KEY.value()}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 15000,
-        }
-      );
-
-      // Record the intent so the webhook can attribute the payment even if the
-      // client never comes back to call verify.
-      await db.collection("payment_intents").doc(reference).set({
-        uid,
-        amount,
-        status: "initialized",
-        createdAt: FieldValue.serverTimestamp(),
-      });
-
-      return {
-        success: true,
-        authorizationUrl: response.data.data.authorization_url,
-        reference: response.data.data.reference,
-      };
-    } catch (error) {
-      // Never surface the provider's raw error to the client.
-      logger.error("initializePaystackPayment failed", { uid, ...errorInfo(error) });
-      throw new HttpsError("internal", "Could not start the payment. Please try again.");
-    }
-  }
-);
-
-// ==================== PAYMENT: CREDIT (shared core) ====================
-
-/**
- * Verify a reference with Paystack and credit the wallet exactly once.
- *
- * Idempotency: `processed_payments/{reference}` is created inside the same
- * transaction that moves the money. A second call — a retried client, a
- * duplicate webhook, a malicious replay — finds the marker and returns without
- * crediting again. This was the most serious defect in the previous revision:
- * the same reference could be verified unlimited times for unlimited credit.
- *
- * Ownership: the wallet credited is the one named in Paystack's own metadata,
- * not one supplied by the caller, so a reference belonging to another user
- * cannot be redirected.
- */
-async function creditVerifiedPayment(
-  reference: string,
-  expectedUid: string | null
-): Promise<{ credited: boolean; amount: number; uid: string }> {
-  const response = await axios.get(
-    `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
-    {
-      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY.value()}` },
-      timeout: 15000,
-    }
-  );
-
-  const data = response.data?.data;
-  if (!data || data.status !== "success") {
-    throw new HttpsError("failed-precondition", "Payment was not completed.");
-  }
-
-  const paidUid: string | undefined = data.metadata?.userId;
-  if (!paidUid) {
-    logger.error("Paystack reference carries no userId metadata", { reference });
-    throw new HttpsError("failed-precondition", "Payment could not be attributed.");
-  }
-  if (expectedUid && paidUid !== expectedUid) {
-    logger.warn("Caller tried to claim another user's payment", {
-      reference,
-      expectedUid,
-      paidUid,
-    });
-    throw new HttpsError("permission-denied", "This payment belongs to another account.");
-  }
-
-  const amountNaira = toKoboPrecision(data.amount / 100);
-  const markerRef = db.collection("processed_payments").doc(reference);
-
-  const credited = await db.runTransaction(async (tx) => {
-    const marker = await tx.get(markerRef);
-    if (marker.exists) return false; // already credited — replay
-
-    const userRef = db.collection("users").doc(paidUid);
-    const userSnap = await tx.get(userRef);
-    if (!userSnap.exists) {
-      throw new HttpsError("not-found", "Account not found.");
-    }
-
-    tx.set(markerRef, {
-      reference,
-      uid: paidUid,
-      amount: amountNaira,
-      channel: data.channel ?? "unknown",
-      processedAt: FieldValue.serverTimestamp(),
-    });
-
-    tx.update(userRef, {
-      walletBalance: FieldValue.increment(amountNaira),
-    });
-
-    tx.set(db.collection("transactions").doc(), {
-      userId: paidUid,
-      type: "top_up",
-      amount: amountNaira,
-      description: "Wallet top-up via Paystack",
-      paystackReference: reference,
-      status: "completed",
-      createdAt: FieldValue.serverTimestamp(),
-    });
-
-    return true;
-  });
-
-  return { credited, amount: amountNaira, uid: paidUid };
-}
-
-export const verifyPaystackPayment = onCall(
-  { secrets: [PAYSTACK_SECRET_KEY] },
-  async (request) => {
-    const uid = requireAuth(request);
-    await enforceRateLimit(uid, "payment_verify", 20, 60 * 10);
-
-    const reference = String(request.data?.reference ?? "").trim();
-    if (!reference || reference.length > 128) {
-      throw new HttpsError("invalid-argument", "A payment reference is required.");
-    }
-
-    try {
-      const result = await creditVerifiedPayment(reference, uid);
-      return {
-        success: true,
-        alreadyProcessed: !result.credited,
-        amount: result.amount,
-        message: result.credited
-          ? `₦${result.amount.toLocaleString()} credited to your wallet.`
-          : "This payment has already been credited.",
-      };
-    } catch (error) {
-      if (error instanceof HttpsError) throw error;
-      logger.error("verifyPaystackPayment failed", { uid, reference, ...errorInfo(error) });
-      throw new HttpsError("internal", "Could not verify the payment.");
-    }
-  }
-);
-
-/**
- * Paystack webhook. Signature-verified, so a forged POST cannot mint credit.
- * Shares the same idempotent credit path as the callable, which means a
- * customer who closes the app mid-payment still gets their wallet funded.
- */
-export const paystackWebhook = onRequest(
-  { secrets: [PAYSTACK_SECRET_KEY] },
-  async (req, res) => {
-    const signature = req.headers["x-paystack-signature"];
-    const expected = crypto
-      .createHmac("sha512", PAYSTACK_SECRET_KEY.value())
-      .update(JSON.stringify(req.body))
-      .digest("hex");
-
-    if (typeof signature !== "string" || signature !== expected) {
-      logger.warn("Rejected webhook with bad signature");
-      res.status(401).send("invalid signature");
-      return;
-    }
-
-    const event = req.body?.event;
-    const reference = req.body?.data?.reference;
-
-    if (event !== "charge.success" || !reference) {
-      res.status(200).send("ignored");
-      return;
-    }
-
-    try {
-      // expectedUid is null: the webhook is trusted to act for whoever the
-      // verified metadata names.
-      const result = await creditVerifiedPayment(String(reference), null);
-      logger.info("Webhook processed", { reference, credited: result.credited });
-      res.status(200).send("ok");
-    } catch (error) {
-      logger.error("Webhook processing failed", { reference, ...errorInfo(error) });
-      // 200 so Paystack does not hot-loop retries on a permanent failure;
-      // the error is captured above for investigation.
-      res.status(200).send("error logged");
-    }
-  }
-);
 
 // ==================== PROMOTIONS ====================
 
@@ -886,7 +644,11 @@ async function assignOffer(
   let agreed: number;
   try {
     agreed = await db.runTransaction(async (tx) => {
-      const [orderSnap, bidSnap] = await Promise.all([tx.get(orderRef), tx.get(bidRef)]);
+      const [orderSnap, bidSnap, driverSnap] = await Promise.all([
+        tx.get(orderRef),
+        tx.get(bidRef),
+        tx.get(db.collection("users").doc(driverId)),
+      ]);
       const order = orderSnap.data();
       const bid = bidSnap.data();
 
@@ -912,6 +674,10 @@ async function assignOffer(
         totalFare: split.totalFare,
         platformCommission: split.platformCommission,
         driverEarnings: split.driverEarnings,
+        // The customer pays this courier directly; for a bank transfer they
+        // need the courier's account. Copied from the courier's own profile
+        // (owner-only) onto this one order, which only the two of them read.
+        courierBank: payoutAccountOf(driverSnap.data()),
         acceptedAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -958,6 +724,22 @@ async function assignOffer(
   );
 
   return agreed;
+}
+
+/**
+ * A courier's bank account, as saved on their profile, if it is usable:
+ * a bank name, a ten-digit NUBAN and an account name. Anything else → null.
+ */
+function payoutAccountOf(
+  user: FirebaseFirestore.DocumentData | undefined
+): { bankName: string; accountNumber: string; accountName: string } | null {
+  const a = user?.payoutAccount;
+  if (!a || typeof a !== "object") return null;
+  const bankName = String(a.bankName ?? "").trim().slice(0, 60);
+  const accountNumber = String(a.accountNumber ?? "").trim();
+  const accountName = String(a.accountName ?? "").trim().slice(0, 80);
+  if (!bankName || !/^\d{10}$/.test(accountNumber) || !accountName) return null;
+  return { bankName, accountNumber, accountName };
 }
 
 /**
@@ -1046,6 +828,13 @@ export const onCourierStatusChanged = onDocumentUpdated(
     const orderId = event.params.orderId;
 
     if (!before || !after) return;
+
+    // Direct payment: the customer marks a transfer as sent, the courier
+    // confirms the money arrived. Each side hears about the other's step.
+    if ((before.paymentStatus ?? "pending") !== (after.paymentStatus ?? "pending")) {
+      await notifyPaymentStep(orderId, after);
+    }
+
     if (before.status === after.status) return;
 
     // Keys are the snake_case @JsonValue forms CourierOrderModel serialises
@@ -1132,6 +921,39 @@ export const onCourierStatusChanged = onDocumentUpdated(
   }
 );
 
+/** Tell the other side of a delivery about a payment step. */
+async function notifyPaymentStep(
+  orderId: string,
+  order: FirebaseFirestore.DocumentData
+): Promise<void> {
+  const amount = `₦${Number(order.totalFare || 0).toFixed(0)}`;
+  try {
+    if (order.paymentStatus === "sent" && order.driverId) {
+      await sendToUser(
+        String(order.driverId),
+        {
+          title: "Transfer sent 💸",
+          body: `The customer says they sent ${amount} to your bank account. Check, then confirm in the app.`,
+        },
+        { type: "payment_sent", orderId },
+        "order"
+      );
+    } else if (order.paymentStatus === "paid" && order.userId) {
+      await sendToUser(
+        String(order.userId),
+        {
+          title: "Payment received ✅",
+          body: `Your courier confirmed they received ${amount}. Thank you!`,
+        },
+        { type: "payment_received", orderId },
+        "order"
+      );
+    }
+  } catch (error) {
+    logger.error("payment notification failed", { orderId, ...errorInfo(error) });
+  }
+}
+
 // ==================== COURIER CANCELS A JOB ====================
 
 /**
@@ -1174,6 +996,7 @@ export const courierCancelJob = onCall(async (request) => {
       driverEarnings: 0,
       acceptedAt: FieldValue.delete(),
       arrivedAt: null,
+      courierBank: FieldValue.delete(),
       lastCourierCancel: {
         driverId: uid,
         reason: reason || null,
@@ -1210,116 +1033,6 @@ export const courierCancelJob = onCall(async (request) => {
 
   return { success: true };
 });
-
-// ==================== SCHEDULED: DRIVER PAYOUT ====================
-
-/**
- * Daily driver payout.
- *
- * Idempotency: each driver-day is keyed `payouts/{driverId}_{YYYY-MM-DD}` and
- * created with `tx.create`, which fails if the document already exists. Pub/Sub
- * delivers at-least-once, so without this a redelivery — or a manual re-run —
- * paid every driver twice. The wallet increment and the ledger entry share the
- * transaction, so a retry after a partial failure cannot double-credit either.
- */
-export const processDriverPayout = onSchedule(
-  { schedule: "0 1 * * *", timeZone: "Africa/Lagos" },
-  async () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const periodKey = yesterday.toISOString().slice(0, 10); // YYYY-MM-DD
-
-    try {
-      const ordersSnapshot = await db
-        .collection("couriers")
-        .where("status", "==", "delivered")
-        .where("deliveredAt", ">=", yesterday)
-        .where("deliveredAt", "<", today)
-        .get();
-
-      if (ordersSnapshot.empty) {
-        logger.info("No delivered orders to pay out", { periodKey });
-        return;
-      }
-
-      const earningsByDriver: Record<string, { total: number; orderIds: string[] }> = {};
-      for (const doc of ordersSnapshot.docs) {
-        const order = doc.data();
-        if (!order.driverId || !order.driverEarnings) continue;
-        const entry = earningsByDriver[order.driverId] ?? { total: 0, orderIds: [] };
-        entry.total += Number(order.driverEarnings) || 0;
-        entry.orderIds.push(doc.id);
-        earningsByDriver[order.driverId] = entry;
-      }
-
-      let paid = 0;
-      let skipped = 0;
-
-      for (const [driverId, entry] of Object.entries(earningsByDriver)) {
-        const amount = toKoboPrecision(entry.total);
-        if (amount <= 0) continue;
-
-        const payoutRef = db.collection("payouts").doc(`${driverId}_${periodKey}`);
-
-        try {
-          await db.runTransaction(async (tx) => {
-            const existing = await tx.get(payoutRef);
-            if (existing.exists) {
-              throw new Error("ALREADY_PAID");
-            }
-
-            // create() rather than set(): if a concurrent run wrote this doc
-            // between the read and the commit, the transaction aborts.
-            tx.create(payoutRef, {
-              driverId,
-              periodKey,
-              amount,
-              orderCount: entry.orderIds.length,
-              orderIds: entry.orderIds,
-              status: "completed",
-              createdAt: FieldValue.serverTimestamp(),
-            });
-
-            tx.update(db.collection("users").doc(driverId), {
-              walletBalance: FieldValue.increment(amount),
-            });
-
-            tx.set(db.collection("transactions").doc(), {
-              userId: driverId,
-              type: "delivery_earning",
-              amount,
-              description: `Daily earnings for ${periodKey}`,
-              payoutId: payoutRef.id,
-              status: "completed",
-              createdAt: FieldValue.serverTimestamp(),
-            });
-          });
-          paid++;
-        } catch (error) {
-          if ((error as Error).message === "ALREADY_PAID") {
-            skipped++;
-            continue;
-          }
-          logger.error("Payout failed for driver", { driverId, periodKey, ...errorInfo(error) });
-        }
-      }
-
-      logger.info("Payout run complete", { periodKey, paid, skipped });
-    } catch (error) {
-      // Rethrow so Cloud Scheduler records the run as FAILED. Swallowing this
-      // made a missing index look like a quiet night: the query failed, the
-      // run "succeeded", and no driver was paid. A retry is safe — each
-      // driver-day payout is created at most once (see above).
-      logger.error("processDriverPayout error", { periodKey, ...errorInfo(error) });
-      throw error;
-    }
-  }
-);
 
 // ==================== RATING CREATED ====================
 
@@ -1427,8 +1140,8 @@ export const onReferralCreated = onDocumentCreated(
 );
 
 /**
- * Mark a customer's referral complete once their first delivery lands, which
- * releases both bonuses through `onReferralCompleted`.
+ * Mark a customer's referral complete once their first delivery lands
+ * (`onReferralCompleted` then tells the referrer).
  *
  * "First" is checked against delivered orders, so a referral recorded after
  * an account already has deliveries never qualifies.
@@ -1454,6 +1167,11 @@ async function completeReferralOnFirstDelivery(customerId: unknown): Promise<voi
   });
 }
 
+/**
+ * A referred friend made their first delivery. There is no cash bonus any
+ * more — bonuses were paid into the in-app wallet, which has been removed
+ * (customers pay couriers directly) — so the referrer is simply told.
+ */
 export const onReferralCompleted = onDocumentUpdated(
   "referrals/{referralId}",
   async (event) => {
@@ -1462,48 +1180,17 @@ export const onReferralCompleted = onDocumentUpdated(
     if (!before || !after) return;
     if (before.status === "completed" || after.status !== "completed") return;
 
-    const referralRef = event.data!.after.ref;
-    const { referrerId, refereeId } = after;
-    if (!referrerId || !refereeId) return;
+    const { referrerId } = after;
+    if (!referrerId) return;
 
     try {
-      const credited = await db.runTransaction(async (tx) => {
-        const current = await tx.get(referralRef);
-        if (current.data()?.bonusPaidAt) return false;
-
-        tx.update(referralRef, {
-          bonusPaid: true,
-          bonusPaidAt: FieldValue.serverTimestamp(),
-        });
-
-        for (const uid of [referrerId, refereeId]) {
-          tx.update(db.collection("users").doc(uid), {
-            walletBalance: FieldValue.increment(REFERRAL_BONUS),
-          });
-          tx.set(db.collection("transactions").doc(), {
-            userId: uid,
-            type: "referral_bonus",
-            amount: REFERRAL_BONUS,
-            description:
-              uid === referrerId
-                ? "Referral bonus — your friend completed their first delivery!"
-                : "Welcome bonus — thanks for joining Dilivvafast!",
-            status: "completed",
-            createdAt: FieldValue.serverTimestamp(),
-          });
-        }
-        return true;
-      });
-
-      if (!credited) return;
-
       await sendToUser(
         referrerId,
         {
-          title: "Referral Bonus! 🎉",
-          body: `You earned ₦${REFERRAL_BONUS} — your friend just completed their first delivery!`,
+          title: "Your friend made their first delivery 🎉",
+          body: "Thanks for inviting them to Dilivvafast.",
         },
-        { type: "referral_bonus" }
+        { type: "referral_completed" }
       );
     } catch (error) {
       logger.error("onReferralCompleted error", errorInfo(error));
@@ -1592,9 +1279,11 @@ export const weeklyDriverReport = onSchedule(
         const totalDeliveries = ordersSnapshot.size;
         if (totalDeliveries === 0) continue;
 
+        // Customers pay couriers directly, so a week's takings are the fares
+        // of the jobs delivered.
         let totalEarnings = 0;
         ordersSnapshot.forEach((doc) => {
-          totalEarnings += Number(doc.data().driverEarnings) || 0;
+          totalEarnings += Number(doc.data().totalFare) || 0;
         });
         totalEarnings = toKoboPrecision(totalEarnings);
 
@@ -1614,7 +1303,7 @@ export const weeklyDriverReport = onSchedule(
           driverId,
           {
             title: "📊 Weekly Report",
-            body: `Last week: ${totalDeliveries} deliveries, ₦${totalEarnings.toLocaleString()} earned. Keep it up!`,
+            body: `Last week: ${totalDeliveries} deliveries, ₦${totalEarnings.toLocaleString()} collected. Keep it up!`,
           },
           { type: "weekly_report" }
         );
@@ -1698,6 +1387,20 @@ export const reviewDriverApplication = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Decision must be approved, rejected or suspended.");
   }
 
+  // Customers pay couriers directly, so an approved courier starts with the
+  // bank account from their application (if it is complete and they have
+  // not already saved one). They can change it later in the app.
+  let payoutAccount: ReturnType<typeof payoutAccountOf> = null;
+  if (decision === "approved" && applicationId) {
+    const [application, target] = await Promise.all([
+      db.collection("driver_applications").doc(applicationId).get(),
+      db.collection("users").doc(targetUid).get(),
+    ]);
+    if (!payoutAccountOf(target.data())) {
+      payoutAccount = payoutAccountOf({ payoutAccount: application.data() });
+    }
+  }
+
   // The application record and the entitlement must agree, so they move
   // together.
   const batch = db.batch();
@@ -1706,6 +1409,7 @@ export const reviewDriverApplication = onCall(async (request) => {
     driverStatus: decision,
     ...(decision === "approved" && vehicleType ? { vehicleType } : {}),
     ...(decision === "approved" && vehiclePlate ? { vehiclePlate } : {}),
+    ...(payoutAccount ? { payoutAccount } : {}),
     updatedAt: FieldValue.serverTimestamp(),
   });
 
@@ -1952,9 +1656,10 @@ const ACTIVE_ORDER_STATES = [
  * profile that will never arrive. The Admin SDK has no such requirement, so
  * both steps now happen here, with the Auth user removed last.
  *
- * Kept: delivery records, ratings and the wallet/payout ledgers, which the
- * other party and the accounts rely on. They reference only the uid, which no
- * longer resolves to a person once the profile is gone. See PLAY_STORE.md.
+ * Kept: delivery records and ratings, which the other party and the accounts
+ * rely on. They reference only the uid, which no longer resolves to a person
+ * once the profile is gone — and a courier's bank details are stripped from
+ * their past deliveries. See PLAY_STORE.md.
  */
 export const deleteMyAccount = onCall(async (request) => {
   const uid = requireAuth(request);
@@ -2000,6 +1705,12 @@ export const deleteMyAccount = onCall(async (request) => {
   // which are not removed with their parent document.
   await db.recursiveDelete(db.collection("users").doc(uid));
   await db.recursiveDelete(db.collection("orders").doc(`support_${uid}`));
+  const asCourier = await db.collection("couriers").where("driverId", "==", uid).get();
+  await Promise.all(
+    asCourier.docs
+      .filter((d) => d.data().courierBank != null)
+      .map((d) => d.ref.update({ courierBank: FieldValue.delete() }))
+  );
   await Promise.all([
     byUser("notifications", "userId"),
     byUser("driver_applications", "userId"),

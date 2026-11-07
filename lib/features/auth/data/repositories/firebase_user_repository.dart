@@ -51,14 +51,6 @@ class FirebaseUserRepository implements IUserRepository {
   }
 
   @override
-  Stream<double> watchWalletBalance(String userId) {
-    return _usersRef.doc(userId).snapshots().map((doc) {
-      final data = doc.data();
-      return (data?['walletBalance'] as num?)?.toDouble() ?? 0.0;
-    });
-  }
-
-  @override
   Future<Either<Failure, Unit>> updateUser(
     String userId,
     Map<String, dynamic> data,

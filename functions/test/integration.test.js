@@ -341,6 +341,12 @@ async function call(name, uid, data) {
   return res.json();
 }
 
+const DRIVER_A_BANK = {
+  bankName: "GTBank",
+  accountNumber: "0123456789",
+  accountName: "Tunde Bakare",
+};
+
 describe("price negotiation", () => {
   before(async () => {
     for (const [uid, name] of [
@@ -355,6 +361,7 @@ describe("price negotiation", () => {
         totalDeliveries: 120,
         vehicleType: "motorcycle",
         vehiclePlate: "LAG-123AB",
+        ...(uid === DRIVER_A ? { payoutAccount: DRIVER_A_BANK } : {}),
       });
     }
     await db.collection("users").doc(CUSTOMER).set({ role: "customer" });
@@ -417,6 +424,9 @@ describe("price negotiation", () => {
     const o = (await order.get()).data();
     assert.equal(o.driverId, DRIVER_B);
     assert.equal(o.status, "accepted");
+    // DRIVER_B has no bank account saved: the customer will be told to pay
+    // in cash or ask in the chat.
+    assert.equal(o.courierBank, null);
     assert.equal(o.agreedFare, 1600);
     assert.equal(o.totalFare, 1600);
     assert.equal(o.platformCommission, 320);
@@ -459,6 +469,17 @@ describe("price negotiation", () => {
 
     const capped = await call("raiseOffer", CUSTOMER, { orderId: order.id, amount: 1e9 });
     assert.equal(capped.result?.offeredFare, 4500, "clamped to 3x recommended");
+  });
+
+  test("accepting a courier hands the customer that courier's bank details", async () => {
+    const order = await pricedRequest();
+    await placeBid(order, DRIVER_A, 1500);
+    await waitFor(order.collection("bids").doc(DRIVER_A), (d) => !!d.driverName);
+
+    const res = await call("acceptBid", CUSTOMER, { orderId: order.id, driverId: DRIVER_A });
+    assert.ok(res.result, JSON.stringify(res));
+    const o = (await order.get()).data();
+    assert.deepEqual(o.courierBank, DRIVER_A_BANK);
   });
 
   test("an offer cannot be lowered through raiseOffer", async () => {
@@ -520,6 +541,8 @@ describe("price negotiation", () => {
     assert.equal(o.agreedFare, undefined);
     assert.equal(o.driverEarnings, 0);
     assert.equal(o.lastCourierCancel.driverId, DRIVER_A);
+    // The dropped courier's bank details leave the order with them.
+    assert.equal(o.courierBank, undefined);
     assert.equal((await order.collection("bids").doc(DRIVER_A).get()).data().status, "cancelled");
     assert.equal((await db.collection("users").doc(DRIVER_A).get()).data().cancelledJobs, 1);
 
@@ -585,7 +608,6 @@ describe("referrals", () => {
     await db.collection("users").doc(uid).set({
       role: "customer",
       referralCode: code,
-      walletBalance: 0,
     });
     return uid;
   }
@@ -594,7 +616,6 @@ describe("referrals", () => {
     await db.collection("users").doc(REFERRER).set({
       role: "customer",
       referralCode: "ITREF001",
-      walletBalance: 0,
     });
   });
 
@@ -622,24 +643,21 @@ describe("referrals", () => {
     assert.equal(r.status, "invalid");
   });
 
-  test("the referee's first delivery pays both sides once", async () => {
+  test("the referee's first delivery completes the referral — no wallet credit", async () => {
     const referee = await newReferee("ITREFB01");
     const ref = db.collection("referrals").doc(referee);
     await ref.set({ refereeId: referee, referralCode: "ITREF001", status: "pending" });
     await waitFor(ref, (d) => !!d.referrerId);
 
     await deliverOrderFor(referee);
-    const done = await waitFor(ref, (d) => d.bonusPaid === true);
-    assert.equal(done.status, "completed");
+    const done = await waitFor(ref, (d) => d.status === "completed");
+    assert.notEqual(done.bonusPaid, true);
 
+    // There is no wallet: nobody is credited anything.
+    await new Promise((r) => setTimeout(r, 3000));
     const users = db.collection("users");
-    await waitFor(users.doc(REFERRER), (d) => d.walletBalance === 500);
-    await waitFor(users.doc(referee), (d) => d.walletBalance === 500);
-
-    // A second delivery is not a first delivery.
-    await deliverOrderFor(referee);
-    await new Promise((r) => setTimeout(r, 5000));
-    assert.equal((await users.doc(REFERRER).get()).data().walletBalance, 500);
+    assert.equal((await users.doc(REFERRER).get()).data().walletBalance, undefined);
+    assert.equal((await users.doc(referee).get()).data().walletBalance, undefined);
   });
 });
 

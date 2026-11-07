@@ -11,9 +11,6 @@ abstract class IUserRepository {
   /// Stream user profile changes
   Stream<UserModel?> watchUser(String userId);
 
-  /// Stream wallet balance
-  Stream<double> watchWalletBalance(String userId);
-
   /// Update user profile fields
   Future<Either<Failure, Unit>> updateUser(
     String userId,

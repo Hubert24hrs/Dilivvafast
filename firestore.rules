@@ -66,11 +66,23 @@ service cloud.firestore {
            !(resource.data.get(field, 'none') in ['approved', 'suspended']));
       }
 
+      // The bank account customers pay this courier into by transfer. Copied
+      // onto an order by the server (assignOffer) only when this courier is
+      // hired, so it must be well-formed: a bank, a 10-digit NUBAN, a name.
+      function validPayoutAccount(a) {
+        return a is map &&
+          a.keys().hasOnly(['bankName', 'accountNumber', 'accountName']) &&
+          a.bankName is string && a.bankName.size() > 0 && a.bankName.size() <= 60 &&
+          a.accountNumber is string && a.accountNumber.matches('^[0-9]{10}$') &&
+          a.accountName is string && a.accountName.size() > 1 &&
+          a.accountName.size() <= 80;
+      }
+
       allow read: if isOwner(userId) || isAdmin();
 
-      // Financial and reputation fields must start at zero. Previously only
-      // `role` was constrained on create, so a patched client could register
-      // with an arbitrary opening wallet balance.
+      // Financial and reputation fields must start at zero. `walletBalance`
+      // is a legacy field (there is no wallet any more) that stays frozen so
+      // no client can write one.
       allow create: if isOwner(userId) &&
         request.resource.data.role == 'customer' &&
         request.resource.data.get('driverStatus', 'none') == 'none' &&
@@ -78,12 +90,15 @@ service cloud.firestore {
         request.resource.data.get('walletBalance', 0) == 0 &&
         request.resource.data.get('rating', 0) == 0 &&
         request.resource.data.get('totalDeliveries', 0) == 0 &&
-        request.resource.data.get('isVerified', false) == false;
+        request.resource.data.get('isVerified', false) == false &&
+        !('payoutAccount' in request.resource.data);
 
       allow update: if isAdmin() || (
         isOwner(userId) &&
         !affects(['role', 'walletBalance', 'rating', 'totalDeliveries',
                   'isVerified', 'createdAt', 'referralCode']) &&
+        (!affects(['payoutAccount']) ||
+         validPayoutAccount(request.resource.data.payoutAccount)) &&
         selfServiceStatus('driverStatus') &&
         selfServiceStatus('investorStatus')
       );
@@ -117,7 +132,8 @@ service cloud.firestore {
       allow create, update: if isOwner(driverId) &&
         request.resource.data.driverId == driverId &&
         !request.resource.data.keys().hasAny(
-          ['email', 'phone', 'walletBalance', 'fcmToken', 'role']);
+          ['email', 'phone', 'walletBalance', 'payoutAccount', 'fcmToken',
+           'role']);
       allow delete: if isOwner(driverId) || isAdmin();
     }
 
@@ -154,13 +170,48 @@ service cloud.firestore {
       function financialsFrozen() {
         return !affects(['totalFare', 'baseFare', 'driverEarnings',
                          'platformCommission', 'surgeMultiplier',
-                         'discountAmount', 'paymentStatus', 'userId',
-                         'createdAt', 'trackingCode', 'paystackReference',
+                         'discountAmount', 'userId',
+                         'createdAt', 'trackingCode',
                          // Negotiation: the customer's offer moves only
                          // through the raiseOffer callable, the agreed price
                          // only through acceptBid.
                          'offeredFare', 'recommendedFare', 'agreedFare',
-                         'vehicleType']);
+                         'vehicleType',
+                         // The courier's bank account, copied on by acceptBid.
+                         'courierBank']);
+      }
+
+      // ── Paying the courier directly ──────────────────────────────────
+      // There is no wallet or card: the customer pays the courier cash, or
+      // transfers to the courier's account. paymentStatus moves
+      //   pending → sent  (customer, transfer only, once the courier has
+      //                    the package)
+      //   pending/sent → paid  (courier, once delivered)
+      // and nobody else moves it.
+      function customerPaymentOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return !affects(['paidAt']) &&
+          (!affects(['paymentMethod']) ||
+           (after.paymentMethod in ['cash', 'transfer'] &&
+            before.get('paymentStatus', 'pending') == 'pending')) &&
+          (!affects(['paymentStatus']) ||
+           (after.paymentStatus == 'sent' &&
+            before.get('paymentStatus', 'pending') == 'pending' &&
+            after.get('paymentMethod', 'cash') == 'transfer' &&
+            before.get('driverId', null) != null &&
+            before.status in ['picked_up', 'pickedUp', 'in_transit',
+                              'inTransit', 'delivered']));
+      }
+
+      function courierPaymentOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return !affects(['paymentMethod']) &&
+          (!affects(['paymentStatus', 'paidAt']) ||
+           (after.paymentStatus == 'paid' &&
+            before.get('paymentStatus', 'pending') in ['pending', 'sent'] &&
+            after.status == 'delivered'));
       }
 
       allow get: if isAuthenticated() && (
@@ -190,6 +241,9 @@ service cloud.firestore {
         request.resource.data.status == 'pending' &&
         request.resource.data.driverId == null &&
         request.resource.data.get('paymentStatus', 'pending') == 'pending' &&
+        request.resource.data.get('paymentMethod', 'cash') in ['cash', 'transfer'] &&
+        !('courierBank' in request.resource.data) &&
+        request.resource.data.get('paidAt', null) == null &&
         request.resource.data.get('driverEarnings', 0) == 0 &&
         request.resource.data.get('platformCommission', 0) == 0 &&
         request.resource.data.get('rating', null) == null &&
@@ -209,6 +263,7 @@ service cloud.firestore {
         // their own delivery complete.
         (resource.data.userId == request.auth.uid &&
          financialsFrozen() &&
+         customerPaymentOk() &&
          !affects(['driverId', 'proofOfDeliveryUrl', 'arrivedAt',
                    'pickedUpAt', 'deliveredAt', 'autoAccept',
                    'lastCourierCancel']) &&
@@ -236,6 +291,7 @@ service cloud.firestore {
         // driver claim any pending job outright, at whatever price was on it.
         (isDriver() &&
          financialsFrozen() &&
+         courierPaymentOk() &&
          !affects(['rating', 'ratingComment', 'ratingTags', 'driverId',
                    'autoAccept', 'cancelReason', 'cancelledBy',
                    'lastCourierCancel']) &&
@@ -396,39 +452,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ==================== TRANSACTIONS ====================
-
-    match /transactions/{transactionId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid || isAdmin()
-      );
-      // Ledger entries are authored server-side only.
-      allow create, update, delete: if isAdmin();
-    }
-
-    // Idempotency ledger for Paystack references and driver payouts. Written
-    // exclusively by Cloud Functions through the Admin SDK, never by clients.
-    match /processed_payments/{reference} {
-      allow read, write: if false;
-    }
-
-    match /payouts/{payoutId} {
-      allow read: if isAuthenticated() && (
-        resource.data.get('driverId', '') == request.auth.uid || isAdmin()
-      );
-      allow write: if false;
-    }
-
-    match /withdrawal_requests/{requestId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid || isAdmin()
-      );
-      allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.status == 'pending' &&
-        isNonNegativeNumber(request.resource.data.get('amount', 0));
-      allow update, delete: if isAdmin();
-    }
+    // There is no wallet: transactions, payouts, processed_payments and
+    // withdrawal_requests are no longer written by anything, and fall
+    // through to the deny-all rule at the bottom.
 
     // ==================== INVESTOR ====================
 

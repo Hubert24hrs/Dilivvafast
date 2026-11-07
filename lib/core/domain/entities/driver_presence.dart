@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 ///
 /// This is everything a customer is allowed to know about a courier they have
 /// not been matched with: where they are and whether they can take a job.
-/// Name, phone, email, wallet balance and FCM token stay on the `users`
+/// Name, phone, email, bank details and FCM token stay on the `users`
 /// document, which customers cannot read.
 class DriverPresence {
   const DriverPresence({

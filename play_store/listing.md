@@ -28,13 +28,13 @@ TRACK EVERY STEP
 Follow your courier live on the map from pickup to drop-off, chat or call them in the app, and get a notification at every step: accepted, picked up, on the way, delivered.
 
 PAY YOUR WAY
-Pay with your Dilivvafast wallet (topped up securely through Paystack), by card or in cash. Promo codes and referral rewards bring the cost down further.
+Pay your courier directly once your package is delivered: cash at the door, or a bank transfer to the courier's own account, shown right in the app. No wallet to top up, no card needed.
 
 SAFE AND SUPPORTED
 Verified couriers, an in-app SOS button, ratings after every delivery, and a support team you can message from the Help Centre.
 
 EARN AS A COURIER
-Have a motorbike or car? Apply in the app, upload your documents, and once approved start accepting delivery requests near you. Send counter-offers, and get your earnings paid into your wallet every night.
+Have a motorbike or car? Apply in the app, upload your documents, and once approved start accepting delivery requests near you. Send counter-offers, and get paid by the customer directly after each delivery — cash or straight into your bank account.
 
 Your privacy matters: you can delete your account at any time from Settings.
 

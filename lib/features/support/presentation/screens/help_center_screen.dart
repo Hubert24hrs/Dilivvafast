@@ -20,9 +20,9 @@ class HelpCenterScreen extends StatelessWidget {
           'Fares are calculated using a base fare plus distance-based and weight-based rates. Any active surge pricing or promotion discounts are automatically factored in.',
     },
     {
-      'question': 'How do I fund my wallet?',
+      'question': 'How do I pay for a delivery?',
       'answer':
-          'Go to the Wallet screen or tap "Top Up" on your home screen. Enter your desired amount and complete payment via Paystack using card, bank transfer, or USSD.',
+          "You pay your courier directly once the package is delivered — in cash, or by bank transfer to the courier's own account, which is shown on your delivery screen. Tap \"I've sent\" after transferring, and your courier confirms when the money arrives. Dilivvafast never holds your money.",
     },
     {
       'question': 'What items are prohibited for delivery?',

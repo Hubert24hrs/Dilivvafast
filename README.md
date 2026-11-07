@@ -4,8 +4,9 @@ Nigerian on-demand logistics and delivery platform.
 
 - **App**: Flutter (Riverpod, GoRouter, Freezed)
 - **Backend**: Firebase — Auth, Firestore, Cloud Functions, Storage, FCM
-- **Maps**: Mapbox
-- **Payments**: Paystack (server-verified)
+- **Maps**: Google Maps (Maps SDK for Android); addresses from the device geocoder
+- **Payments**: none in-app — customers pay couriers directly, in cash or by
+  bank transfer to the courier's account (shown on the order). No wallet.
 
 See [SECURITY.md](SECURITY.md) for the trust model and [PLAY_STORE.md](PLAY_STORE.md)
 for release steps.
@@ -33,16 +34,16 @@ flutterfire configure
 cp .env.example .env
 ```
 
-Fill in the two public values. **`.env` is bundled into the shipped binary**,
-so only publishable keys go there:
+**`.env` is bundled into the shipped binary**, so only publishable values go
+there (`APP_ENV`, `API_BASE_URL`).
 
-| Variable | Notes |
-|---|---|
-| `MAPBOX_ACCESS_TOKEN` | Public token (`pk.*`). Needs `downloads:read` for the mobile SDK. |
-| `PAYSTACK_PUBLIC_KEY` | Public key (`pk_test_*` / `pk_live_*`) only. |
+The Google Maps key goes in `android/local.properties` (git-ignored) as
+`MAPS_API_KEY=...`, or in the `MAPS_API_KEY` environment variable in CI. It is
+an Android key restricted to the app's package names and signing SHA-1s and to
+the Maps SDK for Android. Without it the map is blank.
 
-The Paystack **secret** key and the Anthropic key are never configured here —
-they live in Cloud Secret Manager and are read only by Cloud Functions.
+The Anthropic key is never configured here — it lives in Cloud Secret Manager
+and is read only by Cloud Functions.
 
 ### 3. Run
 
@@ -51,7 +52,7 @@ flutter pub get
 flutter run
 ```
 
-Mapbox, geolocation, FCM and Paystack checkout need a **physical device**;
+Google Maps, geolocation and FCM need a **physical device** (or emulator);
 they do not work on web or Windows desktop targets.
 
 ### 4. Code generation
@@ -69,7 +70,6 @@ dart run build_runner build --delete-conflicting-outputs
 ### Secrets
 
 ```bash
-firebase functions:secrets:set PAYSTACK_SECRET_KEY
 firebase functions:secrets:set ANTHROPIC_API_KEY
 ```
 
@@ -84,17 +84,6 @@ firebase deploy --only firestore:rules,firestore:indexes,storage,functions
 `firebase.json` declares firestore rules, indexes, storage rules and functions.
 It previously declared **only** firestore rules, which meant the Cloud
 Functions and storage rules had never been deployed.
-
-### Paystack webhook
-
-Register in the Paystack dashboard:
-
-```
-https://<region>-<project-id>.cloudfunctions.net/paystackWebhook
-```
-
-The handler verifies the HMAC-SHA512 signature, so an unregistered or forged
-POST is rejected.
 
 ### First administrator
 

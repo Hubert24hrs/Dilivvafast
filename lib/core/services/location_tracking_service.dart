@@ -11,7 +11,7 @@ import 'package:dilivvafast/core/constants/firestore_constants.dart';
 /// Position is published to `driver_locations/{driverId}`, NOT onto the
 /// driver's `users` document. Customers need to see where their courier is,
 /// and the rule that allowed that previously exposed the whole user record —
-/// email, phone, wallet balance, FCM token — to every signed-in customer.
+/// email, phone, bank details, FCM token — to every signed-in customer.
 /// `driver_locations` carries only presence and coordinates, and firestore.rules
 /// rejects any write to it containing an identifying field.
 class LocationTrackingService {

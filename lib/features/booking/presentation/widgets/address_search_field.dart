@@ -7,7 +7,7 @@ import 'package:dilivvafast/core/services/location_helper.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Reusable address search field with autocomplete suggestions.
-/// Uses Mapbox forward geocoding with fallback to hardcoded locations.
+/// Uses the device geocoder, with well-known places as a fallback.
 class AddressSearchField extends StatefulWidget {
   const AddressSearchField({
     super.key,

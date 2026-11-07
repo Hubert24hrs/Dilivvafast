@@ -26,7 +26,7 @@ class CourierBookingState {
     this.recipientPhone = '',
     this.notes = '',
     this.proposedPrice = 0.0,
-    this.paymentMethod = PaymentMethod.wallet,
+    this.paymentMethod = PaymentMethod.cash,
     this.fareBreakdown,
     this.isLoadingLocation = false,
     this.isSubmitting = false,

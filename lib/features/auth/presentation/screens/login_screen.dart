@@ -60,7 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text('Welcome back', style: context.text.headlineMedium),
                     const SizedBox(height: 6),
                     Text(
-                      'Sign in to track deliveries and manage your wallet.',
+                      'Sign in to send packages and track your deliveries.',
                       style: context.text.bodyMedium,
                     ),
                     const SizedBox(height: 28),

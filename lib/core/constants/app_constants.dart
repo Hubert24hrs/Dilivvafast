@@ -22,9 +22,9 @@ class AppConstants {
   static const String instagramUrl = '';
 
   /// Investor mode (funding bikes for a share of their earnings) is switched
-  /// off for the first Play release. The Play Console financial-features
-  /// declaration covers only the wallet and referral rewards; an investment
-  /// product may need licensing paperwork first. While false, nobody can
+  /// off for the first Play release. The app holds no money (customers pay
+  /// couriers directly), and an investment product may need licensing
+  /// paperwork first. While false, nobody can
   /// enter or enrol in investor mode, whatever their stored status.
   static const bool investorModeEnabled = false;
 

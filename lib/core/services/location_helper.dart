@@ -1,36 +1,23 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 
 /// Robust location helper with GPS, geocoding, and error handling.
 ///
-/// Wraps Geolocator and Mapbox Geocoding APIs with graceful fallbacks
-/// for offline use or missing API keys.
+/// Addresses come from the phone's own geocoder (Google's, on Android) — it
+/// needs no API key. When it is unavailable (offline, no Play services, or
+/// under test) a short list of well-known Nigerian locations is used instead.
 class LocationHelper {
   LocationHelper();
 
   static const double lagosLat = 6.5244;
   static const double lagosLng = 3.3792;
 
-  String? get _mapboxToken {
-    try {
-      final token = dotenv.env['MAPBOX_ACCESS_TOKEN'];
-      if (token != null &&
-          token.isNotEmpty &&
-          token != 'your_mapbox_token_here') {
-        return token;
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
-  }
+  static final _geocoder = geo.Geocoding();
 
   // ==================== GPS LOCATION ====================
 
@@ -100,76 +87,94 @@ class LocationHelper {
   // ==================== REVERSE GEOCODING ====================
 
   /// Convert coordinates to a human-readable address.
-  /// Falls back to coordinate string if Mapbox unavailable.
+  /// Falls back to the nearest well-known place, then to the coordinates.
   Future<String> reverseGeocode(double lat, double lng) async {
-    final token = _mapboxToken;
-    if (token != null) {
-      try {
-        final url =
-            'https://api.mapbox.com/geocoding/v5/mapbox.places/$lng,$lat.json'
-            '?access_token=$token&limit=1&language=en';
-        final response = await http
-            .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 8));
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final features = data['features'] as List?;
-          if (features != null && features.isNotEmpty) {
-            return features[0]['place_name'] as String? ??
-                '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
-          }
-        }
-      } catch (e) {
-        debugPrint('LocationHelper.reverseGeocode error: $e');
+    try {
+      final marks = await _geocoder
+          .placemarkFromCoordinates(lat, lng)
+          .timeout(const Duration(seconds: 8));
+      if (marks.isNotEmpty) {
+        final label = describePlacemark(marks.first);
+        if (label.isNotEmpty) return label;
       }
+    } catch (e) {
+      debugPrint('LocationHelper.reverseGeocode error: $e');
     }
-    // Fallback: try to match to known locations
     return _matchNearestKnownLocation(lat, lng) ??
         '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
   }
 
-  // ==================== FORWARD GEOCODING (SEARCH) ====================
-
-  /// Search for addresses matching [query].
-  /// Uses Mapbox geocoding with fallback to hardcoded Nigerian locations.
-  Future<List<GeocodedAddress>> searchAddresses(String query) async {
-    if (query.trim().isEmpty) return _defaultLocations;
-
-    final token = _mapboxToken;
-    if (token != null) {
-      try {
-        final encoded = Uri.encodeComponent(query);
-        final url =
-            'https://api.mapbox.com/geocoding/v5/mapbox.places/$encoded.json'
-            '?access_token=$token&limit=8&language=en'
-            '&country=NG&types=address,poi,place,locality,neighborhood';
-        final response = await http
-            .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 8));
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final features = data['features'] as List?;
-          if (features != null && features.isNotEmpty) {
-            return features.map((f) {
-              final center = f['center'] as List;
-              return GeocodedAddress(
-                address: f['place_name'] as String? ?? query,
-                lat: (center[1] as num).toDouble(),
-                lng: (center[0] as num).toDouble(),
-              );
-            }).toList();
-          }
-        }
-      } catch (e) {
-        debugPrint('LocationHelper.searchAddresses error: $e');
-      }
+  /// "12 Admiralty Way, Lekki Phase 1, Lagos" from a placemark's parts,
+  /// skipping blanks and repeats (geocoders often echo the street as the name).
+  @visibleForTesting
+  static String describePlacemark(geo.Placemark p) {
+    final parts = <String>[];
+    void add(String? v) {
+      final t = v?.trim() ?? '';
+      if (t.isEmpty) return;
+      if (parts.any((e) => e.toLowerCase() == t.toLowerCase())) return;
+      // A bare plus-code ("6CV7+2M") reads as noise to a customer.
+      if (RegExp(r'^[0-9A-Z]{4}\+[0-9A-Z]{2,3}$').hasMatch(t)) return;
+      parts.add(t);
     }
 
-    // Fallback: filter hardcoded locations
-    final lower = query.toLowerCase();
-    return _defaultLocations
+    add(p.name != p.street ? p.name : null);
+    add(p.street);
+    add(p.subLocality);
+    add(p.locality ?? p.subAdministrativeArea);
+    add(p.administrativeArea);
+    return parts.take(4).join(', ');
+  }
+
+  // ==================== FORWARD GEOCODING (SEARCH) ====================
+
+  /// Search for addresses matching [query], within Nigeria.
+  Future<List<GeocodedAddress>> searchAddresses(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return _defaultLocations;
+
+    final lower = q.toLowerCase();
+    final known = _defaultLocations
         .where((loc) => loc.address.toLowerCase().contains(lower))
         .toList();
+
+    final found = <GeocodedAddress>[];
+    try {
+      final hits = await _geocoder
+          .locationFromAddress(lower.contains('nigeria') ? q : '$q, Nigeria')
+          .timeout(const Duration(seconds: 8));
+      for (final hit in hits.take(5)) {
+        String label = q;
+        try {
+          final marks = await _geocoder
+              .placemarkFromCoordinates(hit.latitude, hit.longitude)
+              .timeout(const Duration(seconds: 5));
+          if (marks.isNotEmpty) {
+            final described = describePlacemark(marks.first);
+            if (described.isNotEmpty) label = described;
+          }
+        } catch (_) {
+          // Keep what the customer typed as the label.
+        }
+        found.add(
+          GeocodedAddress(
+            address: label,
+            lat: hit.latitude,
+            lng: hit.longitude,
+          ),
+        );
+      }
+    } catch (e) {
+      // NoResultFoundException is the normal "nothing matched" answer.
+      debugPrint('LocationHelper.searchAddresses: $e');
+    }
+
+    // Geocoder hits first, then any well-known place that matches by name.
+    final seen = <String>{};
+    return [
+      for (final a in [...found, ...known])
+        if (seen.add(a.address.toLowerCase())) a,
+    ];
   }
 
   // ==================== FALLBACK DATA ====================

@@ -14,26 +14,38 @@ class DriverVehicleScreen extends ConsumerStatefulWidget {
 
 class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
   final _plateCtrl = TextEditingController();
-  String _selectedVehicle = 'Motorcycle (Box)';
+  String _selectedVehicle = 'motorcycle';
   bool _isSaving = false;
 
-  final List<String> _vehicleTypes = [
-    'Motorcycle (Box)',
-    'Motorcycle (Standard)',
-    'Bicycle',
-    'Mini Van / Car',
-    '3-Wheeler (Keke)',
-  ];
+  /// Stored values are the ones dispatch and firestore.rules match on (and
+  /// the driver application writes): a bike job goes to `motorcycle` and
+  /// `bicycle`, a car job to `car` and `van`. This screen used to save
+  /// display labels such as "Motorcycle (Box)", which matched neither — a
+  /// courier who tapped Save stopped receiving and could not offer on jobs.
+  static const _vehicleTypes = {
+    'motorcycle': 'Motorcycle',
+    'bicycle': 'Bicycle',
+    'car': 'Car',
+    'van': 'Van',
+  };
+
+  /// Reads both the stored values and the labels older builds saved.
+  static String? canonicalVehicle(String? value) {
+    final v = (value ?? '').toLowerCase();
+    if (_vehicleTypes.containsKey(v)) return v;
+    if (v.contains('motorcycle') || v.contains('keke')) return 'motorcycle';
+    if (v.contains('bicycle')) return 'bicycle';
+    if (v.contains('van')) return 'van';
+    if (v.contains('car')) return 'car';
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
     final user = ref.read(currentUserProvider).value;
     if (user != null) {
-      if (user.vehicleType != null &&
-          _vehicleTypes.contains(user.vehicleType)) {
-        _selectedVehicle = user.vehicleType!;
-      }
+      _selectedVehicle = canonicalVehicle(user.vehicleType) ?? 'motorcycle';
       _plateCtrl.text = user.vehiclePlate ?? '';
     }
   }
@@ -133,11 +145,10 @@ class _DriverVehicleScreenState extends ConsumerState<DriverVehicleScreen> {
                       initialValue: _selectedVehicle,
                       dropdownColor: context.palette.surfaceRaised,
                       style: TextStyle(color: context.palette.textPrimary),
-                      items: _vehicleTypes
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
+                      items: [
+                        for (final v in _vehicleTypes.entries)
+                          DropdownMenuItem(value: v.key, child: Text(v.value)),
+                      ],
                       onChanged: (val) {
                         if (val != null) {
                           setState(() => _selectedVehicle = val);

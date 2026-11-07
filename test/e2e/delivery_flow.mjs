@@ -1,11 +1,15 @@
 /**
  * End-to-end delivery lifecycle against the DEPLOYED staging backend.
  *
- *   booking → courier offer → raise → accept → arrived → pickup
- *     → in transit → delivered → rating → driver paid (and not paid twice)
+ *   booking → courier offer → raise → accept (courier's bank details reach
+ *     the customer) → arrived → pickup → in transit → delivered
+ *     → customer transfers and marks it sent → courier confirms → rating
  *
- * plus the paths around it: a referral paid on the customer's first
- * delivery, a support message reaching the inbox, saved notification
+ * There is no wallet: customers pay couriers directly, in cash or by bank
+ * transfer to the courier's own account.
+ *
+ * Plus the paths around it: a referral completed on the customer's first
+ * delivery (no cash bonus), a support message reaching the inbox, saved notification
  * preferences, inDrive's auto-accept, a courier dropping a job (it goes back
  * to other couriers), the customer cancelling with a reason, and both
  * accounts deleting themselves (a Play requirement).
@@ -14,19 +18,14 @@
  * real driver, so every firestore.rules check and every Cloud Function runs
  * exactly as it does for the app. Each run creates fresh accounts.
  *
- * Two steps need project-owner access, which the app gets from an admin:
- *   - approving the driver (admin action in the app), and
- *   - backdating deliveredAt to yesterday, because processDriverPayout pays
- *     yesterday's deliveries and we cannot wait until tomorrow.
- * Both go through the Firestore REST API with a gcloud access token, and the
- * payout job is triggered through Cloud Scheduler — the same path it takes
- * every night at 01:00 Lagos time.
+ * Approving the driver needs project-owner access, which the app gets from an
+ * admin; it goes through the Firestore REST API with a gcloud access token,
+ * as do the checks that deleted data is really gone.
  *
  * Usage (from this directory):
- *   GCLOUD_TOKEN=$(gcloud auth print-access-token) GCLOUD_BIN=gcloud npm run staging
+ *   GCLOUD_TOKEN=$(gcloud auth print-access-token) npm run staging
  */
 
-import { execSync } from "node:child_process";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -61,7 +60,6 @@ const CONFIG = {
   appId: "1:54402955686:android:eb8098262392b19875b767",
 };
 const GCLOUD_TOKEN = process.env.GCLOUD_TOKEN;
-const GCLOUD_BIN = process.env.GCLOUD_BIN || "gcloud";
 if (!GCLOUD_TOKEN) {
   console.error("GCLOUD_TOKEN is required (gcloud auth print-access-token).");
   process.exit(2);
@@ -114,6 +112,13 @@ async function adminExists(path) {
   if (!res.ok) throw new Error(`admin GET ${path}: ${res.status} ${await res.text()}`);
   return true;
 }
+async function adminGet(path) {
+  const res = await fetch(`${REST}/${path}`, {
+    headers: { Authorization: `Bearer ${GCLOUD_TOKEN}` },
+  });
+  if (!res.ok) throw new Error(`admin GET ${path}: ${res.status} ${await res.text()}`);
+  return (await res.json()).fields ?? {};
+}
 async function adminPatch(path, fields) {
   const mask = Object.keys(fields).map((k) => `updateMask.fieldPaths=${k}`).join("&");
   const body = { fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toValue(v)])) };
@@ -142,7 +147,7 @@ let customerUid, driverUid, orderId;
 // The rest of what CourierOrderModel.toFirestore writes on a new request.
 const ORDER_DEFAULTS = {
   autoAccept: false, paymentMethod: "cash", paymentStatus: "pending",
-  paystackReference: null, promoCode: null, discountAmount: 0, notes: null,
+  promoCode: null, discountAmount: 0, notes: null,
   cancelReason: null, cancelledBy: null, proofOfDeliveryUrl: null,
   rating: null, ratingComment: null, ratingTags: [], driverEarnings: 0,
   platformCommission: 0, arrivedAt: null, pickedUpAt: null, deliveredAt: null,
@@ -161,7 +166,7 @@ async function main() {
     await setDoc(doc(customer.db, "users", customerUid), {
       uid: customerUid, fullName: "E2E Customer", email: cred.user.email,
       phone: "+2348000000001", role: "customer", isVerified: false,
-      isOnline: false, walletBalance: 0, referralCode: `E2EC${run % 100000}`,
+      isOnline: false, referralCode: `E2EC${run % 100000}`,
       rating: 0, totalDeliveries: 0, driverStatus: "none", investorStatus: "none",
       createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
     });
@@ -175,7 +180,7 @@ async function main() {
     await setDoc(doc(driver.db, "users", driverUid), {
       uid: driverUid, fullName: "Emeka Driver", email: cred.user.email,
       phone: "+2348000000002", role: "customer", isVerified: false,
-      isOnline: false, walletBalance: 0, referralCode: `E2ED${run % 100000}`,
+      isOnline: false, referralCode: `E2ED${run % 100000}`,
       rating: 0, totalDeliveries: 0, driverStatus: "none", investorStatus: "none",
       createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
     });
@@ -183,6 +188,21 @@ async function main() {
       driverStatus: "approved", vehicleType: "motorcycle", vehiclePlate: "LAG-E2E-01",
     });
     return driverUid;
+  });
+
+  const BANK = { bankName: "GTBank", accountNumber: "0123456789", accountName: "Emeka Driver" };
+
+  await step("driver saves the bank account customers pay them into", async () => {
+    // What DriverBankAccountScreen writes.
+    await updateDoc(doc(driver.db, "users", driverUid), {
+      payoutAccount: BANK, updatedAt: serverTimestamp(),
+    });
+    // A malformed account (not a 10-digit NUBAN) is refused by the rules.
+    const bad = await updateDoc(doc(driver.db, "users", driverUid), {
+      payoutAccount: { ...BANK, accountNumber: "123" },
+    }).then(() => "accepted", (e) => e.code);
+    assert(bad === "permission-denied", `malformed account was ${bad}`);
+    return `${BANK.bankName} ${BANK.accountNumber}`;
   });
 
   await step("customer's sign-up referral code resolves to the driver", async () => {
@@ -228,7 +248,7 @@ async function main() {
       recipientName: "Ada Recipient", recipientPhone: "+2348000000003",
       estimatedDistanceKm: 8, estimatedDurationMin: 32, baseFare: 500, surgeMultiplier: 1,
       totalFare: 1200, vehicleType: "bike", offeredFare: 1200, recommendedFare: 0,
-      ...ORDER_DEFAULTS,
+      ...ORDER_DEFAULTS, paymentMethod: "transfer",
       trackingCode: `DLVE2E${run % 1000000}`,
       createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
     });
@@ -286,7 +306,11 @@ async function main() {
     assert(o.status === "accepted" && o.driverId === driverUid, `status ${o.status}, driver ${o.driverId}`);
     assert(o.platformCommission === 280 && o.driverEarnings === 1120,
       `split ${o.platformCommission}/${o.driverEarnings}, expected 280/1120`);
-    return "assigned, ₦280 commission / ₦1120 driver";
+    // The customer will pay this courier by transfer: their account is on
+    // the order, copied server-side from the courier's own profile.
+    assert(JSON.stringify(o.courierBank) === JSON.stringify(BANK),
+      `courierBank ${JSON.stringify(o.courierBank)}`);
+    return `assigned; pay ${o.courierBank.bankName} ${o.courierBank.accountNumber}`;
   });
 
   await step("a second accept is refused", async () => {
@@ -319,6 +343,34 @@ async function main() {
     });
   }
 
+  // ── paying the courier directly ──────────────────────────────────────────
+  await step("the customer cannot mark the order paid themselves", async () => {
+    const r = await updateDoc(doc(customer.db, "couriers", orderId), {
+      paymentStatus: "paid",
+    }).then(() => "accepted", (e) => e.code);
+    assert(r === "permission-denied", `customer marking paid was ${r}`);
+  });
+
+  await step("customer transfers ₦1400 and marks it sent", async () => {
+    // What FirebaseCourierRepository.markPaymentSent writes.
+    await updateDoc(doc(customer.db, "couriers", orderId), {
+      paymentMethod: "transfer", paymentStatus: "sent", updatedAt: serverTimestamp(),
+    });
+    const o = (await getDoc(doc(driver.db, "couriers", orderId))).data();
+    assert(o.paymentStatus === "sent", `paymentStatus ${o.paymentStatus}`);
+    return `₦${o.totalFare} to ${o.courierBank.bankName}`;
+  });
+
+  await step("courier confirms the money arrived", async () => {
+    // What FirebaseCourierRepository.confirmPaymentReceived writes.
+    await updateDoc(doc(driver.db, "couriers", orderId), {
+      paymentStatus: "paid", paidAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    const o = (await getDoc(doc(customer.db, "couriers", orderId))).data();
+    assert(o.paymentStatus === "paid" && o.paidAt, `paymentStatus ${o.paymentStatus}`);
+    return "paid";
+  });
+
   await step("customer rates the courier 5★ with compliments", async () => {
     // What FirebaseCourierRepository.rateOrder writes.
     const tags = ["fast_delivery", "careful_with_package"];
@@ -339,17 +391,17 @@ async function main() {
     return `driver rating ${me.rating}`;
   });
 
-  await step("the first delivery pays both referral bonuses (₦500 each)", async () => {
+  await step("the first delivery completes the referral — no wallet credit", async () => {
     const r = await poll(async () => {
       const d = (await getDoc(doc(customer.db, "referrals", customerUid))).data();
-      return d?.bonusPaid ? d : null;
-    }, { what: "the referral to complete and pay" });
-    assert(r.status === "completed", `referral status ${r.status}`);
+      return d?.status === "completed" ? d : null;
+    }, { what: "the referral to complete" });
+    assert(r.bonusPaid !== true, "a bonus was marked paid");
     const mine = (await getDoc(doc(customer.db, "users", customerUid))).data().walletBalance;
     const theirs = (await getDoc(doc(driver.db, "users", driverUid))).data().walletBalance;
-    assert(mine === 500, `customer wallet ${mine}, expected 500`);
-    assert(theirs === 500, `referrer wallet ${theirs}, expected 500`);
-    return "customer ₦500, referrer ₦500";
+    assert(mine === undefined && theirs === undefined,
+      `wallet balances appeared: ${mine} / ${theirs}`);
+    return "completed, nobody credited";
   });
 
   await step("a support message reaches the admin inbox", async () => {
@@ -435,59 +487,6 @@ async function main() {
       `status ${o.status}`);
   });
 
-  // ── payout ───────────────────────────────────────────────────────────────
-  const yesterday = new Date();
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  yesterday.setUTCHours(12, 0, 0, 0);
-  const periodKey = yesterday.toISOString().slice(0, 10);
-  const payoutId = `${driverUid}_${periodKey}`;
-
-  await step("delivery backdated into yesterday's payout window (admin)", async () => {
-    await adminPatch(`couriers/${orderId}`, { deliveredAt: yesterday });
-    return periodKey;
-  });
-
-  const runPayout = () =>
-    execSync(
-      `"${GCLOUD_BIN}" scheduler jobs run firebase-schedule-processDriverPayout-us-central1 --location us-central1 --project ${PROJECT}`,
-      { stdio: "pipe" },
-    );
-
-  // The driver's wallet already holds the ₦500 referral bonus.
-  let walletBefore = 0;
-
-  await step("nightly payout pays the driver ₦1120", async () => {
-    walletBefore = (await getDoc(doc(driver.db, "users", driverUid))).data().walletBalance;
-    runPayout();
-    // The rules deny reading a payout that does not exist yet (there is no
-    // driverId to check), so "permission-denied" here means "not written yet".
-    const payout = await poll(async () => {
-      try {
-        const d = await getDoc(doc(driver.db, "payouts", payoutId));
-        return d.exists() ? d.data() : null;
-      } catch (e) {
-        if (e.code === "permission-denied") return null;
-        throw e;
-      }
-    }, { timeoutMs: 120000, everyMs: 3000, what: `payouts/${payoutId}` });
-    assert(payout.amount === 1120, `payout amount ${payout.amount}`);
-    const wallet = (await getDoc(doc(driver.db, "users", driverUid))).data().walletBalance;
-    assert(wallet === walletBefore + 1120, `driver wallet ${wallet}, expected ${walletBefore + 1120}`);
-    return `payout ₦${payout.amount}, wallet ₦${walletBefore} → ₦${wallet}`;
-  });
-
-  await step("running the payout again does NOT pay twice", async () => {
-    runPayout();
-    await new Promise((r) => setTimeout(r, 45000));
-    const wallet = (await getDoc(doc(driver.db, "users", driverUid))).data().walletBalance;
-    assert(wallet === walletBefore + 1120, `driver wallet ${wallet} after second run — DOUBLE PAID`);
-    const tx = await getDocs(query(collection(driver.db, "transactions"),
-      where("userId", "==", driverUid)));
-    const earnings = tx.docs.filter((d) => d.data().type === "delivery_earning");
-    assert(earnings.length === 1, `${earnings.length} earning transactions, expected 1`);
-    return `wallet still ₦${wallet}, 1 earning record`;
-  });
-
   // ── account deletion (Google Play requirement) ───────────────────────────
   for (const [who, c, uid] of [["customer", customer, customerUid], ["driver", driver, driverUid]]) {
     await step(`${who} deletes their account`, async () => {
@@ -499,6 +498,11 @@ async function main() {
         assert(!(await adminExists(`referrals/${uid}`)), "referral still exists");
       }
       assert(await adminExists(`couriers/${orderId}`), "the delivery record must be kept");
+      if (who === "driver") {
+        // A deleted courier's bank details do not stay on their deliveries.
+        const kept = await adminGet(`couriers/${orderId}`);
+        assert(!("courierBank" in kept), "courierBank still on the order");
+      }
       // The sign-in is gone too: refreshing the session fails.
       const refreshed = await c.auth.currentUser.getIdToken(true).then(() => true, () => false);
       assert(!refreshed, "sign-in still valid after deletion");
@@ -513,7 +517,7 @@ try {
   // reported by step()
 } finally {
   // A failed run can stop before the deletion steps; remove any sign-in it
-  // left behind. The order and payout documents stay on staging as a record.
+  // left behind. The order documents stay on staging as a record.
   for (const c of [customer, driver]) {
     if (c.auth.currentUser) await deleteUser(c.auth.currentUser).catch(() => undefined);
   }

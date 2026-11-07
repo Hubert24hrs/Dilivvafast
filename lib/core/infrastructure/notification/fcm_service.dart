@@ -29,7 +29,11 @@ String? notificationRouteFor(Map<String, dynamic> data) {
     'courier_cancelled' when hasOrder => '/matching/$orderId',
     'job_cancelled' => '/driver/home',
     'order_update' when hasOrder => '/customer/track/$orderId',
-    'referral_bonus' => '/customer/wallet',
+    // Direct payment: the customer says the transfer is on its way…
+    'payment_sent' when hasOrder => '/driver/active/$orderId',
+    // …and the courier confirms the money arrived.
+    'payment_received' when hasOrder => '/customer/track/$orderId',
+    'referral_completed' => '/customer/refer',
     'weekly_report' => '/driver/earnings',
     'sos_alert' => '/admin/dashboard',
     'support_reply' => '/support-chat',

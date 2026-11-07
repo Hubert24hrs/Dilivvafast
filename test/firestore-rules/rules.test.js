@@ -154,6 +154,31 @@ describe("users", () => {
     );
   });
 
+  test("a courier saves a well-formed bank account on their profile", async () => {
+    const ref = doc(asDriver(), "users", DRIVER);
+    const good = { bankName: "GTBank", accountNumber: "0123456789", accountName: "Musa Bello" };
+    await assertSucceeds(updateDoc(ref, { payoutAccount: good }));
+    // Not ten digits, missing name, or extra fields are refused.
+    await assertFails(updateDoc(ref, { payoutAccount: { ...good, accountNumber: "12345" } }));
+    await assertFails(updateDoc(ref, { payoutAccount: { ...good, accountName: "" } }));
+    await assertFails(updateDoc(ref, { payoutAccount: { ...good, balance: 1000 } }));
+  });
+
+  test("a bank account cannot be set on registration, or on someone else", async () => {
+    const db = testEnv.authenticatedContext("new_user").firestore();
+    await assertFails(
+      setDoc(doc(db, "users", "new_user"), {
+        role: "customer",
+        payoutAccount: { bankName: "GTBank", accountNumber: "0123456789", accountName: "X Y" },
+      })
+    );
+    await assertFails(
+      updateDoc(doc(asCustomer(), "users", DRIVER), {
+        payoutAccount: { bankName: "GTBank", accountNumber: "0123456789", accountName: "X Y" },
+      })
+    );
+  });
+
   test("an admin may update any user", async () => {
     await assertSucceeds(
       updateDoc(doc(asAdmin(), "users", CUSTOMER), { walletBalance: 10 })
@@ -409,6 +434,85 @@ describe("orders (couriers)", () => {
     await assertFails(
       setDoc(doc(asCustomer(), "couriers", "c2"), { ...baseOrder, arrivedAt: new Date() })
     );
+  });
+
+  // ── Paying the courier directly (no wallet) ─────────────────────────────
+
+  test("an order is booked to be paid in cash or by transfer, nothing else", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "couriers", "pay_1"), { ...baseOrder, paymentMethod: "transfer" })
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "pay_2"), { ...baseOrder, paymentMethod: "wallet" })
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "pay_3"), {
+        ...baseOrder,
+        courierBank: { bankName: "X", accountNumber: "0000000000", accountName: "Me" },
+      })
+    );
+  });
+
+  test("the courier's bank details on an order are server-written only", async () => {
+    await seedOrder({ status: "accepted", driverId: DRIVER });
+    const fake = { bankName: "Scam Bank", accountNumber: "9999999999", accountName: "Not The Courier" };
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), { courierBank: fake })
+    );
+    await assertFails(
+      updateDoc(doc(asDriver(), "couriers", "order_1"), { courierBank: fake })
+    );
+  });
+
+  test("the customer switches cash ↔ transfer until they have paid", async () => {
+    await seedOrder({ status: "in_transit", driverId: DRIVER, paymentMethod: "cash" });
+    const ref = doc(asCustomer(), "couriers", "order_1");
+    await assertSucceeds(updateDoc(ref, { paymentMethod: "transfer" }));
+    await assertFails(updateDoc(ref, { paymentMethod: "card" }));
+    // The courier does not choose how they are paid.
+    await assertFails(
+      updateDoc(doc(asDriver(), "couriers", "order_1"), { paymentMethod: "cash" })
+    );
+  });
+
+  test("the customer marks a transfer sent once the courier has the package", async () => {
+    await seedOrder({ status: "accepted", driverId: DRIVER, paymentMethod: "transfer" });
+    const ref = doc(asCustomer(), "couriers", "order_1");
+    await assertFails(updateDoc(ref, { paymentStatus: "sent" }));
+
+    await seedOrder({ status: "delivered", driverId: DRIVER, paymentMethod: "transfer" });
+    // …but cannot declare the order paid themselves.
+    await assertFails(updateDoc(ref, { paymentStatus: "paid" }));
+    await assertSucceeds(updateDoc(ref, { paymentStatus: "sent" }));
+    // Once sent, the method is locked.
+    await assertFails(updateDoc(ref, { paymentMethod: "cash" }));
+  });
+
+  test("'sent' is only for transfers", async () => {
+    await seedOrder({ status: "delivered", driverId: DRIVER, paymentMethod: "cash" });
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), { paymentStatus: "sent" })
+    );
+    // Switching to transfer and marking it sent together is fine.
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+        paymentMethod: "transfer",
+        paymentStatus: "sent",
+      })
+    );
+  });
+
+  test("only the assigned courier confirms payment, and only once delivered", async () => {
+    await seedOrder({ status: "in_transit", driverId: DRIVER });
+    const ref = doc(asDriver(), "couriers", "order_1");
+    await assertFails(updateDoc(ref, { paymentStatus: "paid" }));
+
+    await seedOrder({ status: "delivered", driverId: DRIVER, paymentStatus: "sent" });
+    await assertFails(updateDoc(ref, { paymentStatus: "refunded" }));
+    await assertFails(
+      updateDoc(doc(asCarDriver(), "couriers", "order_1"), { paymentStatus: "paid" })
+    );
+    await assertSucceeds(updateDoc(ref, { paymentStatus: "paid", paidAt: new Date() }));
   });
 
   test("compliments only on a delivered order, at most five", async () => {
@@ -721,40 +825,23 @@ describe("notifications", () => {
 });
 
 describe("financial ledgers", () => {
-  test("clients cannot write transactions", async () => {
-    await assertFails(
-      setDoc(doc(asCustomer(), "transactions", "t1"), {
-        userId: CUSTOMER,
-        amount: 100000,
-      })
-    );
-  });
-
-  test("the payment idempotency ledger is invisible to clients", async () => {
+  test("wallet-era ledgers are closed to clients", async () => {
     await seed(async (db) => {
+      await setDoc(doc(db, "transactions", "t1"), { userId: CUSTOMER, amount: 100 });
+      await setDoc(doc(db, "payouts", `${DRIVER}_2026-01-01`), { driverId: DRIVER });
       await setDoc(doc(db, "processed_payments", "ref_1"), { uid: CUSTOMER });
     });
+    await assertFails(getDoc(doc(asCustomer(), "transactions", "t1")));
+    await assertFails(
+      setDoc(doc(asCustomer(), "transactions", "t2"), { userId: CUSTOMER, amount: 100000 })
+    );
+    await assertFails(getDoc(doc(asDriver(), "payouts", `${DRIVER}_2026-01-01`)));
     await assertFails(getDoc(doc(asCustomer(), "processed_payments", "ref_1")));
-    await assertFails(getDoc(doc(asAdmin(), "processed_payments", "ref_1")));
-  });
-
-  test("payout records are read-only, and only by their driver", async () => {
-    await seed(async (db) => {
-      await setDoc(doc(db, "payouts", `${DRIVER}_2026-01-01`), {
-        driverId: DRIVER,
+    await assertFails(
+      setDoc(doc(asCustomer(), "withdrawal_requests", "w1"), {
+        userId: CUSTOMER,
+        status: "pending",
         amount: 5000,
-      });
-    });
-    await assertSucceeds(
-      getDoc(doc(asDriver(), "payouts", `${DRIVER}_2026-01-01`))
-    );
-    await assertFails(
-      getDoc(doc(asCustomer(), "payouts", `${DRIVER}_2026-01-01`))
-    );
-    await assertFails(
-      setDoc(doc(asDriver(), "payouts", `${DRIVER}_2026-01-02`), {
-        driverId: DRIVER,
-        amount: 999999,
       })
     );
   });
@@ -803,13 +890,11 @@ describe("legitimate access still works", () => {
     );
   });
 
-  test("a customer reads their own order and transactions", async () => {
+  test("a customer reads their own order", async () => {
     await seed(async (db) => {
       await setDoc(doc(db, "couriers", "mine"), { userId: CUSTOMER, status: "pending" });
-      await setDoc(doc(db, "transactions", "t_mine"), { userId: CUSTOMER, amount: 100 });
     });
     await assertSucceeds(getDoc(doc(asCustomer(), "couriers", "mine")));
-    await assertSucceeds(getDoc(doc(asCustomer(), "transactions", "t_mine")));
   });
 
   test("a customer lists their own orders", async () => {
@@ -956,18 +1041,11 @@ describe("legitimate access still works", () => {
     );
   });
 
-  test("a user submits a driver application and a withdrawal request", async () => {
+  test("a user submits a driver application", async () => {
     await assertSucceeds(
       setDoc(doc(asCustomer(), "driver_applications", "app1"), {
         userId: CUSTOMER,
         status: "submitted",
-      })
-    );
-    await assertSucceeds(
-      setDoc(doc(asCustomer(), "withdrawal_requests", "w1"), {
-        userId: CUSTOMER,
-        status: "pending",
-        amount: 5000,
       })
     );
   });

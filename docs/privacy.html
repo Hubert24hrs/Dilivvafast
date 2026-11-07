@@ -62,11 +62,14 @@
       <li><strong>Location:</strong> precise location while you use the app — for customers to set
         pickup and drop-off points, and for couriers while they are online, so customers can follow
         an active delivery. We do not collect location when the app is closed.</li>
-      <li><strong>Courier onboarding:</strong> driver's licence, government ID, vehicle photo and bank
-        details for payouts. These are visible only to you and our review team.</li>
-      <li><strong>Deliveries and payments:</strong> addresses, package details, fares, wallet
-        transactions and ratings. Card payments are handled by Paystack; we never see or store card
-        numbers.</li>
+      <li><strong>Courier onboarding:</strong> driver's licence, government ID and vehicle photo,
+        visible only to you and our review team. Couriers also add a bank account so customers can pay
+        them by transfer; its bank name, account number and account name are shown only to the customer
+        of a delivery the courier is doing.</li>
+      <li><strong>Deliveries and payments:</strong> addresses, package details, fares, how you chose to
+        pay (cash or bank transfer), whether the courier confirmed payment, and ratings. Customers pay
+        couriers directly: we do not process payments or hold money, and never see your bank login or
+        card details.</li>
       <li><strong>Messages:</strong> chats with your courier or customer, chats with our support team,
         and questions you ask our in-app assistant, Maya.</li>
       <li><strong>Device and diagnostics:</strong> device model, OS version, push-notification token,
@@ -76,22 +79,21 @@
 
     <h2>2. How we use it</h2>
     <p>
-      To run your account, match deliveries with couriers, show live tracking, process payments and
-      payouts, send notifications you have not switched off, provide support, prevent fraud, and fix
-      and improve the app.
+      To run your account, match deliveries with couriers, show live tracking, show customers how to
+      pay their courier, send notifications you have not switched off, provide support, prevent fraud,
+      and fix and improve the app.
     </p>
 
     <h2>3. Who we share it with</h2>
     <ul>
       <li><strong>The other side of a delivery:</strong> your courier sees your name, phone number and
-        addresses; customers see their courier's first name, rating, vehicle and live location during
-        the delivery.</li>
+        addresses; customers see their courier's first name, rating, vehicle, live location and — to pay
+        by transfer — the courier's bank account details, during the delivery.</li>
       <li><strong>Service providers:</strong>
         <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google Firebase</a>
         (hosting, sign-in, database, notifications, analytics),
-        <a href="https://paystack.com/privacy" target="_blank" rel="noopener">Paystack</a> (payments),
-        <a href="https://www.mapbox.com/legal/privacy" target="_blank" rel="noopener">Mapbox</a> (maps and
-        address search) and
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Maps</a> (maps
+        and address search) and
         <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">Anthropic</a>
         (messages you send to Maya, used only to generate her replies — please don't share passwords or
         card details with her).</li>
@@ -103,7 +105,8 @@
     <p>
       You can delete your account at any time in <strong>Settings → Delete Account</strong>. This
       permanently deletes your profile, saved addresses, notifications, support chats, uploaded courier
-      documents and bank details, and signs you out everywhere. Any wallet balance is forfeited.
+      documents and bank details, and signs you out everywhere. A courier's bank details are also
+      removed from their past deliveries.
     </p>
     <p>
       Delivery and payment records are kept for up to 7 years for accounting, tax and dispute handling.
@@ -116,7 +119,7 @@
     <h2>5. Security</h2>
     <p>
       Data is stored on Google Firebase, encrypted in transit and at rest. Access rules limit each user
-      to their own data, and payment and payout logic runs only on our servers.
+      to their own data, and pricing and courier assignment run only on our servers.
     </p>
 
     <h2>6. Your rights</h2>

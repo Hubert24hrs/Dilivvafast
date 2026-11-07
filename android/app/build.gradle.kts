@@ -17,6 +17,21 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Google Maps key for the Maps SDK for Android. It ships inside the APK like
+// any Android Maps key, so it is protected by its restrictions (package name +
+// signing SHA-1, Maps SDK for Android only), not by secrecy. It is still kept
+// out of git: set MAPS_API_KEY in android/local.properties (git-ignored), or
+// as an environment variable in CI. Without it the map renders empty.
+val localProperties = Properties()
+rootProject.file("local.properties").let {
+    if (it.exists()) localProperties.load(FileInputStream(it))
+}
+val mapsApiKey: String =
+    (localProperties.getProperty("MAPS_API_KEY") ?: System.getenv("MAPS_API_KEY") ?: "").trim()
+if (mapsApiKey.isEmpty()) {
+    logger.warn("WARNING: MAPS_API_KEY is not set (android/local.properties) — maps will be blank.")
+}
+
 android {
     namespace = "com.dilivvafast.app"
     // Hardcoded to 36: Google Play requires targetSdk >= 36 for new submissions
@@ -44,6 +59,8 @@ android {
 
         // Multidex support for large apps
         multiDexEnabled = true
+
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
 
     // Two builds of the same app, pointed at two Firebase projects.

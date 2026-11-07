@@ -5,28 +5,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Anything in `.env` is compiled into the shipped bundle as an asset, so this
 /// class deliberately exposes only publishable values:
 ///
-///  * `MAPBOX_ACCESS_TOKEN` — a public token, scoped and restricted in the
-///    Mapbox dashboard.
-///  * `PAYSTACK_PUBLIC_KEY` — public by design; it can start a transaction but
-///    cannot move or read money.
+///  * `APP_ENV`, `API_BASE_URL` — non-secret build settings.
 ///
-/// Secret-tier credentials — the Paystack **secret** key, the Anthropic API
-/// key, SMTP passwords — are NOT here and must never be added. They live in
-/// Cloud Secret Manager and are read only by Cloud Functions
-/// (`firebase functions:secrets:set <NAME>`). Getters for all three used to
-/// exist on this class; `anthropicApiKey` was actually being sent from the
-/// handset, which put the key in every installed APK.
+/// The Google Maps key is not read here: Android takes it from the manifest
+/// at build time (MAPS_API_KEY, see android/app/build.gradle.kts).
+///
+/// Secret-tier credentials — the Anthropic API key, SMTP passwords — are NOT
+/// here and must never be added. They live in Cloud Secret Manager and are
+/// read only by Cloud Functions (`firebase functions:secrets:set <NAME>`).
+/// `anthropicApiKey` used to exist on this class and was actually being sent
+/// from the handset, which put the key in every installed APK.
 ///
 /// See SECURITY.md, "Secret management".
 class AppConfig {
   AppConfig._();
   static final AppConfig instance = AppConfig._();
-
-  // ==================== MAPBOX ====================
-  String get mapboxAccessToken => dotenv.env['MAPBOX_ACCESS_TOKEN'] ?? '';
-
-  // ==================== PAYSTACK (public key only) ====================
-  String get paystackPublicKey => dotenv.env['PAYSTACK_PUBLIC_KEY'] ?? '';
 
   // ==================== APP CONFIG ====================
   String get appEnv => dotenv.env['APP_ENV'] ?? 'development';
@@ -36,8 +29,4 @@ class AppConfig {
 
   bool get isDevelopment => appEnv == 'development';
   bool get isProduction => appEnv == 'production';
-
-  /// Check if client-side keys are configured.
-  bool get isMapboxConfigured => mapboxAccessToken.isNotEmpty;
-  bool get isPaystackConfigured => paystackPublicKey.isNotEmpty;
 }

@@ -22,8 +22,8 @@ Dilivvafast ("we", "us") runs the Dilivvafast courier app. This policy explains 
 
 - **Account:** name, email address, phone number and profile photo.
 - **Location:** precise location while you use the app — for customers to set pickup and drop-off points, and for couriers while they are online, so customers can follow an active delivery. We do not collect location when the app is closed.
-- **Courier onboarding:** driver's licence, government ID, vehicle photo and bank details for payouts. These are visible only to you and our review team.
-- **Deliveries and payments:** addresses, package details, fares, wallet transactions and ratings. Card payments are handled by Paystack; we never see or store card numbers.
+- **Courier onboarding:** driver's licence, government ID and vehicle photo, visible only to you and our review team. Couriers also add a bank account so customers can pay them by transfer; its bank name, account number and account name are shown only to the customer of a delivery the courier is doing.
+- **Deliveries and payments:** addresses, package details, fares, how you chose to pay (cash or bank transfer), whether the courier confirmed payment, and ratings. Customers pay couriers directly; we do not process payments or hold money, and never see your bank login or card details.
 - **Messages:** chats with your courier or customer, chats with our support team, and questions you ask our in-app assistant, Maya.
 - **Device and diagnostics:** device model, OS version, push-notification token, app usage events and crash reports (Firebase Analytics and Crashlytics).
 
@@ -31,19 +31,19 @@ We do not show ads and do not use your device's advertising ID.
 
 ## 2. How we use it
 
-To run your account, match deliveries with couriers, show live tracking, process payments and payouts, send notifications you have not switched off, provide support, prevent fraud, and fix and improve the app.
+To run your account, match deliveries with couriers, show live tracking, show customers how to pay their courier, send notifications you have not switched off, provide support, prevent fraud, and fix and improve the app.
 
 ## 3. Who we share it with
 
-- **The other side of a delivery:** your courier sees your name, phone number and addresses; customers see their courier's first name, rating, vehicle and live location during the delivery.
-- **Service providers:** Google Firebase (hosting, sign-in, database, notifications, analytics), Paystack (payments), Mapbox (maps and address search) and Anthropic (messages you send to Maya, used only to generate her replies — please don't share passwords or card details with her).
+- **The other side of a delivery:** your courier sees your name, phone number and addresses; customers see their courier's first name, rating, vehicle, live location and — to pay by transfer — the courier's bank account details, during the delivery.
+- **Service providers:** Google Firebase (hosting, sign-in, database, notifications, analytics), Google Maps (maps and address search) and Anthropic (messages you send to Maya, used only to generate her replies — please don't share passwords or card details with her).
 - **Legal requirements:** when required by law or to protect someone's safety.
 
 We do not sell your personal data.
 
 ## 4. Retention and deletion
 
-You can delete your account at any time in **Settings → Delete Account**. This permanently deletes your profile, saved addresses, notifications, support chats, uploaded courier documents and bank details, and signs you out everywhere. Any wallet balance is forfeited.
+You can delete your account at any time in **Settings → Delete Account**. This permanently deletes your profile, saved addresses, notifications, support chats, uploaded courier documents and bank details, and signs you out everywhere.
 
 Delivery and payment records are kept for up to 7 years for accounting, tax and dispute handling. They are no longer linked to your name.
 

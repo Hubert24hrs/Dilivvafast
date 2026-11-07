@@ -10,6 +10,17 @@ Last reviewed: 2026-09-07.
 
 ---
 
+> **1.3.0 — the wallet and Paystack are gone.** Customers now pay couriers
+> directly (cash, or a bank transfer to the courier's account, which the server
+> copies onto the order in `acceptBid`). `initializePaystackPayment`,
+> `verifyPaystackPayment`, `paystackWebhook` and `processDriverPayout` were
+> deleted, and the `transactions`, `payouts`, `processed_payments` and
+> `withdrawal_requests` collections fall to the deny-all rule. The sections
+> below on Paystack, the wallet and payouts are kept as history. Payment state
+> on an order (`pending → sent → paid`) is enforced in firestore.rules:
+> only the customer may mark a transfer `sent`, only the assigned courier may
+> mark it `paid`, and nobody else can write `courierBank`.
+
 ## Reporting a vulnerability
 
 Email **dilivvafastsupport@gmail.com**. Please do not open a public GitHub issue.

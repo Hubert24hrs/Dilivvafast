@@ -718,24 +718,35 @@ class _PaymentPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = {
-      PaymentMethod.wallet: ('Wallet', Icons.account_balance_wallet_outlined),
-      PaymentMethod.cash: ('Cash', Icons.payments_outlined),
-      PaymentMethod.card: ('Card', Icons.credit_card_outlined),
+    const icons = {
+      PaymentMethod.cash: Icons.payments_outlined,
+      PaymentMethod.transfer: Icons.account_balance_outlined,
     };
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final entry in labels.entries) ...[
-          Expanded(
-            child: ChoiceChip(
-              avatar: Icon(entry.value.$2, size: 18),
-              label: Text(entry.value.$1),
-              selected: selected == entry.key,
-              onSelected: (_) => onChanged(entry.key),
-            ),
+        Row(
+          children: [
+            for (final method in PaymentMethod.values) ...[
+              Expanded(
+                child: ChoiceChip(
+                  avatar: Icon(icons[method], size: 18),
+                  label: Text(method.label),
+                  selected: selected == method,
+                  onSelected: (_) => onChanged(method),
+                ),
+              ),
+              if (method != PaymentMethod.values.last) const SizedBox(width: 8),
+            ],
+          ],
+        ),
+        const Padding(
+          padding: EdgeInsets.only(top: 6, left: 4),
+          child: Text(
+            'You pay your courier directly once the package is delivered.',
+            style: TextStyle(color: Color(0xFF6B7280), fontSize: 12.5),
           ),
-          if (entry.key != labels.keys.last) const SizedBox(width: 8),
-        ],
+        ),
       ],
     );
   }

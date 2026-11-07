@@ -444,6 +444,52 @@ class FirebaseCourierRepository implements ICourierRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> setPaymentMethod(
+    String orderId,
+    PaymentMethod method,
+  ) => _paymentUpdate(orderId, {
+    'paymentMethod': method.name,
+  }, 'Could not change how you pay. Please try again.');
+
+  @override
+  Future<Either<Failure, Unit>> markPaymentSent(String orderId) =>
+      _paymentUpdate(orderId, {
+        'paymentMethod': PaymentMethod.transfer.name,
+        'paymentStatus': PaymentStatus.sent.name,
+      }, 'Could not update the payment. Please try again.');
+
+  @override
+  Future<Either<Failure, Unit>> confirmPaymentReceived(String orderId) =>
+      _paymentUpdate(orderId, {
+        'paymentStatus': PaymentStatus.paid.name,
+        'paidAt': FieldValue.serverTimestamp(),
+      }, 'Could not confirm the payment. Please try again.');
+
+  Future<Either<Failure, Unit>> _paymentUpdate(
+    String orderId,
+    Map<String, Object?> fields,
+    String deniedMessage,
+  ) async {
+    try {
+      await _couriersRef.doc(orderId).update({
+        ...fields,
+        FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
+      });
+      return const Right(unit);
+    } on FirebaseException catch (e) {
+      return Left(
+        FirestoreFailure(
+          e.code == 'permission-denied'
+              ? deniedMessage
+              : (e.message ?? deniedMessage),
+        ),
+      );
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(
     String trackingCode,
   ) async {

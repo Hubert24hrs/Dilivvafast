@@ -21,7 +21,7 @@ void main() {
       expect(user.email, 'test@example.com');
       expect(user.role, UserRole.customer);
       expect(user.isVerified, false);
-      expect(user.walletBalance, 0.0);
+      expect(user.payoutAccount, isNull);
     });
 
     test('should support copyWith', () {

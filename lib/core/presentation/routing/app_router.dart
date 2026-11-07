@@ -14,8 +14,8 @@ import 'package:dilivvafast/features/booking/presentation/screens/courier_bookin
 import 'package:dilivvafast/features/courier/presentation/screens/tracking_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/orders_screen.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/chat_screen.dart';
-import 'package:dilivvafast/features/payment/presentation/screens/wallet_screen.dart';
 import 'package:dilivvafast/features/driver/presentation/screens/driver_home_screen.dart';
+import 'package:dilivvafast/features/driver/presentation/screens/driver_bank_account_screen.dart';
 import 'package:dilivvafast/features/driver/presentation/screens/driver_active_delivery_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'package:dilivvafast/features/admin/presentation/screens/admin_screens.dart';
@@ -35,7 +35,6 @@ import 'package:dilivvafast/features/admin/presentation/screens/admin_zones_scre
 import 'package:dilivvafast/features/admin/presentation/screens/admin_support_screen.dart';
 
 // Phase 4 screens
-import 'package:dilivvafast/features/payment/presentation/screens/top_up_screen.dart';
 import 'package:dilivvafast/features/investor/presentation/screens/investor_bike_detail_screen.dart';
 import 'package:dilivvafast/features/investor/presentation/screens/investor_join_screen.dart';
 
@@ -56,7 +55,6 @@ import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/features/profile/presentation/screens/saved_addresses_screen.dart';
 import 'package:dilivvafast/features/payment/presentation/screens/promotions_screen.dart';
 import 'package:dilivvafast/features/referral/presentation/screens/refer_earn_screen.dart';
-import 'package:dilivvafast/features/payment/presentation/screens/payment_methods_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/help_center_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/safety_screen.dart';
 import 'package:dilivvafast/features/support/presentation/screens/support_chat_screen.dart';
@@ -172,12 +170,6 @@ const _customerDestinations = [
     Icons.receipt_long_rounded,
     'Orders',
     '/customer/orders',
-  ),
-  _Destination(
-    Icons.account_balance_wallet_outlined,
-    Icons.account_balance_wallet_rounded,
-    'Wallet',
-    '/customer/wallet',
   ),
   _Destination(
     Icons.person_outline_rounded,
@@ -382,11 +374,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const OrdersScreen(),
           ),
           GoRoute(
-            path: '/customer/wallet',
-            name: 'customerWallet',
-            builder: (context, state) => const WalletScreen(),
-          ),
-          GoRoute(
             path: '/customer/profile',
             name: 'customerProfile',
             builder: (context, state) => const ProfileScreen(),
@@ -564,12 +551,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           bikeId: state.pathParameters['bikeId'] ?? '',
         ),
       ),
-      // Wallet top-up
-      GoRoute(
-        path: '/wallet/top-up',
-        name: 'walletTopUp',
-        builder: (context, state) => const TopUpScreen(),
-      ),
       // Settings
       GoRoute(
         path: '/settings',
@@ -619,11 +600,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ReferEarnScreen(),
       ),
       GoRoute(
-        path: '/payment-methods',
-        name: 'paymentMethods',
-        builder: (context, state) => const PaymentMethodsScreen(),
-      ),
-      GoRoute(
         path: '/help',
         name: 'helpCenter',
         builder: (context, state) => const HelpCenterScreen(),
@@ -657,6 +633,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings/delete-account',
         name: 'deleteAccount',
         builder: (context, state) => const DeleteAccountScreen(),
+      ),
+      GoRoute(
+        path: '/driver/bank-account',
+        name: 'driverBankAccount',
+        builder: (context, state) => const DriverBankAccountScreen(),
       ),
       GoRoute(
         path: '/driver/documents',

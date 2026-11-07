@@ -16,21 +16,18 @@ import 'package:dilivvafast/core/infrastructure/notification/fcm_service.dart';
 import 'package:dilivvafast/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:dilivvafast/features/auth/domain/repositories/i_user_repository.dart';
 import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
-import 'package:dilivvafast/features/payment/domain/repositories/i_payment_repository.dart';
 import 'package:dilivvafast/features/investor/domain/repositories/i_investor_repository.dart';
 
 // Firebase implementations
 import 'package:dilivvafast/features/auth/data/repositories/firebase_auth_repository.dart';
 import 'package:dilivvafast/features/auth/data/repositories/firebase_user_repository.dart';
 import 'package:dilivvafast/features/courier/data/repositories/firebase_courier_repository.dart';
-import 'package:dilivvafast/features/payment/data/repositories/firebase_payment_repository.dart';
 import 'package:dilivvafast/features/investor/data/repositories/firebase_investor_repository.dart';
 
 // Models
 import 'package:dilivvafast/features/auth/domain/entities/user_model.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
-import 'package:dilivvafast/features/payment/domain/entities/transaction_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/bike_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/investor_model.dart';
 import 'package:dilivvafast/features/investor/domain/entities/hp_agreement_model.dart';
@@ -81,13 +78,6 @@ final userRepositoryProvider = Provider<IUserRepository>((ref) {
 
 final courierRepositoryProvider = Provider<ICourierRepository>((ref) {
   return FirebaseCourierRepository(
-    firestore: ref.watch(firestoreProvider),
-    functions: ref.watch(firebaseFunctionsProvider),
-  );
-});
-
-final paymentRepositoryProvider = Provider<IPaymentRepository>((ref) {
-  return FirebasePaymentRepository(
     firestore: ref.watch(firestoreProvider),
     functions: ref.watch(firebaseFunctionsProvider),
   );
@@ -146,13 +136,6 @@ final currentUserProvider = StreamProvider<UserModel?>((ref) {
 /// Current user role
 final currentUserRoleProvider = Provider<UserRole?>((ref) {
   return ref.watch(currentUserProvider).value?.role;
-});
-
-/// Wallet balance stream
-final walletBalanceProvider = StreamProvider<double>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return Stream.value(0.0);
-  return ref.watch(userRepositoryProvider).watchWalletBalance(userId);
 });
 
 /// Full online-driver records. ADMIN SCREENS ONLY — customers cannot read the
@@ -241,15 +224,6 @@ final orderStreamProvider = StreamProvider.family<CourierOrderModel?, String>((
   orderId,
 ) {
   return ref.watch(courierRepositoryProvider).watchOrder(orderId);
-});
-
-// ==================== PAYMENT PROVIDERS ====================
-
-/// Transaction history for current user
-final transactionsProvider = StreamProvider<List<TransactionModel>>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return Stream.value([]);
-  return ref.watch(paymentRepositoryProvider).watchTransactions(userId);
 });
 
 // ==================== INVESTOR PROVIDERS ====================
@@ -407,7 +381,7 @@ final fcmServiceProvider = Provider<FCMService>((ref) {
 /// Stream one courier's live position, for the tracking map.
 ///
 /// Reads `driver_locations`, not `users` — a customer tracking their delivery
-/// needs coordinates, not the courier's email, phone and wallet balance.
+/// needs coordinates, not the courier's email, phone and bank details.
 final driverLocationProvider = StreamProvider.family<GeoPoint?, String>((
   ref,
   driverId,

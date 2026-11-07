@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:dilivvafast/core/constants/app_constants.dart';
+import 'package:dilivvafast/core/domain/entities/bank_account.dart';
 import 'package:dilivvafast/features/auth/domain/entities/app_mode.dart';
 
 part 'user_model.freezed.dart';
@@ -80,7 +81,6 @@ abstract class UserModel with _$UserModel {
     @Default(UserRole.customer) UserRole role,
     @Default(false) bool isVerified,
     @Default(false) bool isOnline,
-    @Default(0.0) double walletBalance,
     required String referralCode,
     String? referredBy,
     String? fcmToken,
@@ -95,6 +95,9 @@ abstract class UserModel with _$UserModel {
     String? vehiclePlate,
     String? licenseUrl,
     @Default(true) bool isAvailable,
+
+    /// Where customers send bank transfers for this courier's deliveries.
+    @BankAccountConverter() BankAccount? payoutAccount,
     // Mode entitlements — everyone registers as a customer and unlocks the
     // driver/investor surfaces afterwards. Only the backend may set these to
     // ModeAccess.approved.
@@ -156,7 +159,6 @@ extension UserModelX on UserModel {
       'role': role.name,
       'isVerified': isVerified,
       'isOnline': isOnline,
-      'walletBalance': walletBalance,
       'referralCode': referralCode,
       'referredBy': referredBy,
       'fcmToken': fcmToken,

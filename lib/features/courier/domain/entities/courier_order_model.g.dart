@@ -42,12 +42,20 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   autoAccept: json['autoAccept'] as bool? ?? false,
   recommendedFare: (json['recommendedFare'] as num?)?.toDouble() ?? 0.0,
   paymentMethod:
-      $enumDecodeNullable(_$PaymentMethodEnumMap, json['paymentMethod']) ??
-      PaymentMethod.wallet,
+      $enumDecodeNullable(
+        _$PaymentMethodEnumMap,
+        json['paymentMethod'],
+        unknownValue: PaymentMethod.cash,
+      ) ??
+      PaymentMethod.cash,
   paymentStatus:
-      $enumDecodeNullable(_$PaymentStatusEnumMap, json['paymentStatus']) ??
+      $enumDecodeNullable(
+        _$PaymentStatusEnumMap,
+        json['paymentStatus'],
+        unknownValue: PaymentStatus.pending,
+      ) ??
       PaymentStatus.pending,
-  paystackReference: json['paystackReference'] as String?,
+  courierBank: const BankAccountConverter().fromJson(json['courierBank']),
   promoCode: json['promoCode'] as String?,
   discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
   trackingCode: json['trackingCode'] as String,
@@ -78,6 +86,9 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   ),
   deliveredAt: const NullableTimestampConverter().fromJson(
     json['deliveredAt'] as Timestamp?,
+  ),
+  paidAt: const NullableTimestampConverter().fromJson(
+    json['paidAt'] as Timestamp?,
   ),
   estimatedDeliveryTime: const NullableTimestampConverter().fromJson(
     json['estimatedDeliveryTime'] as Timestamp?,
@@ -114,7 +125,7 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'recommendedFare': instance.recommendedFare,
   'paymentMethod': _$PaymentMethodEnumMap[instance.paymentMethod]!,
   'paymentStatus': _$PaymentStatusEnumMap[instance.paymentStatus]!,
-  'paystackReference': instance.paystackReference,
+  'courierBank': const BankAccountConverter().toJson(instance.courierBank),
   'promoCode': instance.promoCode,
   'discountAmount': instance.discountAmount,
   'trackingCode': instance.trackingCode,
@@ -134,6 +145,7 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'deliveredAt': const NullableTimestampConverter().toJson(
     instance.deliveredAt,
   ),
+  'paidAt': const NullableTimestampConverter().toJson(instance.paidAt),
   'estimatedDeliveryTime': const NullableTimestampConverter().toJson(
     instance.estimatedDeliveryTime,
   ),
@@ -168,13 +180,13 @@ const _$CourierVehicleEnumMap = {
 };
 
 const _$PaymentMethodEnumMap = {
-  PaymentMethod.wallet: 'wallet',
-  PaymentMethod.card: 'card',
   PaymentMethod.cash: 'cash',
+  PaymentMethod.transfer: 'transfer',
 };
 
 const _$PaymentStatusEnumMap = {
   PaymentStatus.pending: 'pending',
+  PaymentStatus.sent: 'sent',
   PaymentStatus.paid: 'paid',
   PaymentStatus.refunded: 'refunded',
 };

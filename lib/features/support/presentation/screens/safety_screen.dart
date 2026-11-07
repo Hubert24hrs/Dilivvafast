@@ -90,10 +90,11 @@ class SafetyScreen extends StatelessWidget {
           ),
           const _Point(
             icon: Icons.lock_outline_rounded,
-            title: 'Payments stay protected',
+            title: 'Pay only for a finished job',
             body:
-                'Card payments are handled by Paystack. We never see or store '
-                'your card details.',
+                'You pay your courier directly once your package is '
+                "delivered — cash, or a transfer to the account in your "
+                "courier's own name. Never share a PIN, OTP or password.",
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(

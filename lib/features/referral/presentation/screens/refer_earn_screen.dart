@@ -8,6 +8,10 @@ import 'package:dilivvafast/core/constants/app_constants.dart';
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 
+/// Invite friends with your code, and see who joined.
+///
+/// There is no cash reward: referral bonuses used to be paid into the in-app
+/// wallet, which no longer exists — customers pay couriers directly.
 class ReferEarnScreen extends ConsumerWidget {
   const ReferEarnScreen({super.key});
 
@@ -20,7 +24,7 @@ class ReferEarnScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.palette.surfaceBase,
       appBar: AppBar(
-        title: const Text('Refer & Earn'),
+        title: const Text('Invite friends'),
         backgroundColor: context.palette.surfaceRaised,
       ),
       body: SingleChildScrollView(
@@ -30,7 +34,7 @@ class ReferEarnScreen extends ConsumerWidget {
             Icon(Icons.card_giftcard, size: 80, color: context.palette.brand),
             const SizedBox(height: 16),
             Text(
-              'Earn ₦500 per Friend!',
+              'Invite your friends',
               style: TextStyle(
                 color: context.palette.textPrimary,
                 fontSize: 24,
@@ -40,7 +44,7 @@ class ReferEarnScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Invite your friends to Dilivvafast. When they sign up and complete their first delivery, you both get ₦500 added to your wallet!',
+              'Share Dilivvafast with friends who send packages. They can enter your code when they sign up, and you will see them here once they join.',
               style: TextStyle(
                 color: context.palette.textSecondary,
                 fontSize: 14,
@@ -113,12 +117,10 @@ class ReferEarnScreen extends ConsumerWidget {
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // The referee's reward is a wallet bonus paid after their
-                  // first delivery (onReferralCompleted), not a discount.
                   final text =
-                      'Join Dilivvafast with my referral code $referralCode '
-                      'and get a ₦500 wallet bonus after your first delivery! '
-                      '${AppConstants.playStoreUrl}';
+                      'Send packages across town with Dilivvafast — name your '
+                      'price and pick your courier. Sign up with my code '
+                      '$referralCode: ${AppConstants.playStoreUrl}';
                   // ignore: deprecated_member_use
                   Share.share(text);
                 },
@@ -178,7 +180,7 @@ class ReferEarnScreen extends ConsumerWidget {
                       padding: EdgeInsets.all(20),
                       child: Center(
                         child: Text(
-                          'No referrals yet. Start sharing to earn rewards!',
+                          'No one has joined with your code yet.',
                           style: TextStyle(
                             color: context.palette.textSecondary,
                           ),
@@ -192,7 +194,7 @@ class ReferEarnScreen extends ConsumerWidget {
                   children: docs.map((d) {
                     final data = d.data() as Map<String, dynamic>;
                     final status = data['status'] ?? 'pending';
-                    final bonusPaid = data['bonusPaid'] == true;
+                    final done = status == 'completed';
 
                     return Card(
                       color: context.palette.surfaceRaised,
@@ -210,18 +212,11 @@ class ReferEarnScreen extends ConsumerWidget {
                           style: TextStyle(color: context.palette.textPrimary),
                         ),
                         subtitle: Text(
-                          'Status: $status',
+                          done
+                              ? 'Joined and made a delivery'
+                              : 'Joined — no delivery yet',
                           style: TextStyle(
                             color: context.palette.textSecondary,
-                          ),
-                        ),
-                        trailing: Text(
-                          bonusPaid ? '+₦500' : 'Pending',
-                          style: TextStyle(
-                            color: bonusPaid
-                                ? context.palette.success
-                                : context.palette.warning,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),

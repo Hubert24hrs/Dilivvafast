@@ -159,15 +159,13 @@ class AppDrawer extends ConsumerWidget {
           '/customer/book',
           tab: true,
         ),
-        _Item(
-          Icons.account_balance_wallet_outlined,
-          'Wallet',
-          '/customer/wallet',
-          tab: true,
-        ),
         _Item(Icons.place_outlined, 'Saved addresses', '/customer/addresses'),
         _Item(Icons.local_offer_outlined, 'Promotions', '/customer/promotions'),
-        _Item(Icons.card_giftcard_outlined, 'Refer & earn', '/customer/refer'),
+        _Item(
+          Icons.card_giftcard_outlined,
+          'Invite friends',
+          '/customer/refer',
+        ),
         ...shared,
       ],
       AppMode.driver => const [
@@ -188,6 +186,11 @@ class AppDrawer extends ConsumerWidget {
           'Earnings',
           '/driver/earnings',
           tab: true,
+        ),
+        _Item(
+          Icons.account_balance_outlined,
+          'Bank account',
+          '/driver/bank-account',
         ),
         _Item(Icons.folder_outlined, 'Documents', '/driver/documents'),
         _Item(Icons.badge_outlined, 'Vehicle', '/driver/vehicle'),

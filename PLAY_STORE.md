@@ -122,17 +122,15 @@ everything. Production needs the **Blaze** plan before functions can deploy.
 
 ```bash
 firebase deploy --only firestore:rules,firestore:indexes,storage,functions --project fast-delivery-d8d5c
-firebase functions:secrets:set PAYSTACK_SECRET_KEY --project fast-delivery-d8d5c   # LIVE key
 firebase functions:secrets:set ANTHROPIC_API_KEY --project fast-delivery-d8d5c
 ```
 
 Then:
 
-1. Paystack dashboard → Settings → API Keys & Webhooks → webhook URL
-   `https://us-central1-fast-delivery-d8d5c.cloudfunctions.net/paystackWebhook`.
-2. Make the first admin (see SECURITY.md, "Bootstrapping the first admin").
-3. **Rotate the Paystack key that was once committed to git history**, if not
-   done yet.
+1. Make the first admin (see SECURITY.md, "Bootstrapping the first admin").
+2. Since 1.3.0 there is no Paystack integration (customers pay couriers
+   directly), so no webhook is needed. Still **rotate the Paystack key that was
+   once committed to git history**, or delete it in the Paystack dashboard.
 
 ---
 
@@ -214,7 +212,7 @@ in the app and at
 `https://hubert24hrs.github.io/Dilivvafast/delete-account.html`.
 
 "Shared" in Play's sense means passed to a third party for its own use.
-Service providers acting for us (Firebase, Paystack, Mapbox, Anthropic) and
+Service providers acting for us (Firebase, Google Maps, Anthropic) and
 data the user knowingly sends to the other side of a delivery do not count,
 so nothing is declared as shared.
 
@@ -227,9 +225,9 @@ so nothing is declared as shared.
 | Personal info | Address (pickup / drop-off) | Yes | Required | App functionality |
 | Personal info | User IDs | Yes | Required | Account management |
 | Personal info | Other info (driver's licence, government ID) | Yes | Optional (couriers only) | Fraud prevention, security |
-| Financial info | Purchase history (fares, wallet) | Yes | Required | App functionality |
-| Financial info | Other financial info (courier bank details) | Yes | Optional (couriers only) | App functionality |
-| Financial info | User payment info (cards) | **No** — Paystack only | — | — |
+| Financial info | Purchase history (fares, how each delivery was paid) | Yes | Required | App functionality |
+| Financial info | Other financial info (courier bank name, account number, account name — shown to that courier's customers so they can pay by transfer) | Yes | Optional (couriers only) | App functionality |
+| Financial info | User payment info (cards) | **No** — the app takes no card payments | — | — |
 | Messages | Other in-app messages (chat, support, Maya) | Yes | Optional | App functionality, Customer support |
 | Photos and videos | Photos (profile, documents, vehicle) | Yes | Optional | App functionality |
 | App activity | App interactions | Yes | Required | Analytics |
@@ -238,9 +236,11 @@ so nothing is declared as shared.
 | Device or other IDs | Device or other IDs (push token) | Yes | Required | App functionality |
 
 ### Financial features
-The app holds a wallet balance used only to pay for deliveries on Dilivvafast,
-and pays couriers their earnings. It is not a bank, loan, money-transfer or
-crypto app. Answer the declaration accordingly.
+Since 1.3.0 the app holds **no money**: there is no wallet and no in-app
+payment. Customers pay couriers directly (cash, or a bank transfer the customer
+makes in their own banking app to the account the courier shows). It is not a
+bank, loan, money-transfer or crypto app. Answer the declaration: the app does
+not provide financial features.
 
 ### Government / health / news
 Not applicable.

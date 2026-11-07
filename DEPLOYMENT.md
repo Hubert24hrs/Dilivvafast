@@ -5,8 +5,27 @@ full end-to-end delivery test below. Production (`fast-delivery-d8d5c`) was
 deployed from the same commit on 26 October 2026: Firestore rules and
 indexes, Storage rules (bucket `fast-delivery-d8d5c.firebasestorage.app`,
 us-east1) and all 21 functions on Node.js 22, on the Blaze plan with a
-$10/month budget alert. Live Paystack key set; Anthropic key is a
-placeholder.
+$10/month budget alert. Anthropic key is a placeholder.
+
+**1.3.0 (8 November 2026): no wallet, no Paystack.** Customers pay couriers
+directly — cash, or a bank transfer to the courier's account, which the server
+copies onto the order when their offer is accepted. The Paystack functions and
+the nightly wallet payout were deleted (18 functions remain). Staging runs
+1.3.0. **Production still runs 1.2.x** and its billing account is currently
+unlinked (Cloud Billing → *Link a billing account* on `fast-delivery-d8d5c`),
+which blocks the 1.3.0 deploy:
+
+```bash
+GOOGLE_CLOUD_QUOTA_PROJECT=fast-delivery-d8d5c FUNCTIONS_DISCOVERY_TIMEOUT=120 \
+  firebase deploy --only firestore:rules,functions --project fast-delivery-d8d5c --non-interactive --force
+```
+
+Maps: Google Maps SDK for Android. The key ("Dilivvafast Android Maps", in
+`dilivvafast-staging`, restricted to both package names, the upload and debug
+SHA-1s and the Maps SDK for Android) goes in `android/local.properties` as
+`MAPS_API_KEY`. After the first Play upload, add Play's **app signing** SHA-1
+(Play Console → Test and release → App integrity) to that key, or the map is
+blank in the Play-installed app.
 
 ---
 
@@ -23,7 +42,7 @@ placeholder.
 | Storage bucket (us-east1) + storage rules | ✅ |
 | Auth — Email/Password + Google | ✅ |
 | Cloud Functions | ✅ all 21 live on **Node.js 22**, callables answer (unauthenticated calls are refused) |
-| `PAYSTACK_SECRET_KEY`, `ANTHROPIC_API_KEY` | ⚠️ **random placeholders** — wallet top-up fails and Maya falls back to built-in answers until real values are set |
+| `ANTHROPIC_API_KEY` | ⚠️ **random placeholder** — Maya falls back to built-in answers until a real value is set (`PAYSTACK_SECRET_KEY` is no longer used) |
 | `serviceAccountTokenCreator` for document signing | ❌ not granted — admins cannot open driver documents yet |
 | Staging Android app `com.dilivvafast.app.staging` | ✅ registered, debug SHA-1 added; build with `--flavor staging` |
 
@@ -156,10 +175,8 @@ This is the acceptance gate. The emulator suites cannot cover any of it.
 On a **physical Android device** against staging:
 
 - [ ] Register; confirm the verification email arrives.
-- [ ] Fund the wallet. Paystack checkout opens in the browser, payment
-      completes with a test card, wallet is credited **exactly once**.
-- [ ] Tap "I have paid" a second time — the balance must not move again
-      (idempotency; this is the single most important check here).
+- [ ] The home screen shows a Google map with your position.
+- [ ] As a courier, add a bank account (menu → Bank account).
 - [ ] Book a delivery. Confirm the fare charged matches the estimate, and that
       it comes from the backend, not the client.
 - [ ] Apply a promo code; confirm the discount. Try it again on a second
@@ -171,22 +188,18 @@ On a **physical Android device** against staging:
       push at each step.
 - [ ] Confirm the driver's live position appears on the customer map, and that
       no personal data leaks with it.
+- [ ] After pickup the customer sees "Pay your courier" with the courier's
+      bank details; switch to bank transfer, tap "I've sent". The courier
+      gets a push, taps "I've received" and the customer sees "Paid".
 - [ ] Rate the delivery; confirm the driver's average updates.
 - [ ] Raise an SOS; confirm admins are alerted.
 - [ ] Approve a driver application from the admin screen; confirm an
       `admin_audit_log` entry is written.
 
-Then wait for the 01:00 Africa/Lagos payout, or invoke `processDriverPayout`
-manually from the console, and confirm:
-
-- [ ] The driver's wallet is credited once.
-- [ ] A `payouts/{driverId}_{YYYY-MM-DD}` document exists.
-- [ ] Running it a second time credits **nothing further**.
-
 The automated staging run (`test/e2e/delivery_flow.mjs`, see
-"Automated staging end-to-end test" below) already
-proves the payout is paid once and not again on a re-run; this manual pass is
-for what only a phone can show — pushes, maps and Paystack checkout.
+"Automated staging end-to-end test" below) already proves the payment rules
+(only the customer marks a transfer sent, only the courier marks it paid);
+this manual pass is for what only a phone can show — pushes and maps.
 
 ---
 
@@ -200,20 +213,23 @@ accounts and ends by deleting them through `deleteMyAccount`.
 ```bash
 cd test/e2e
 npm install
-GCLOUD_TOKEN=$(gcloud auth print-access-token) GCLOUD_BIN=gcloud node delivery_flow.mjs
+GCLOUD_TOKEN=$(gcloud auth print-access-token) node delivery_flow.mjs
 ```
 
-It covers: sign-up with a referral code → booking at the customer's price →
-server pricing → driver counter-offer → customer raises → accept (and a
-second accept refused) → live position → courier arrives → picked up → in
-transit → delivered → 5★ rating with compliments → both referral bonuses →
-support message reaches the inbox → a second request auto-accepted at the
-customer's price → that courier drops it before pickup (back to pending, no
-re-offer) → the customer cancels it with a reason → nightly payout pays the
-driver → a re-run pays nothing more → both accounts delete themselves,
-keeping the delivery record.
+It covers: sign-up with a referral code → the courier saves a bank account
+(a malformed one is refused) → booking at the customer's price, to be paid by
+transfer → server pricing → driver counter-offer → customer raises → accept
+(the courier's bank details are copied onto the order; a second accept is
+refused) → live position → courier arrives → picked up → in transit →
+delivered → the customer cannot mark it paid → the customer marks the
+transfer sent → the courier confirms it → 5★ rating with compliments → the
+referral completes with no wallet credit → support message reaches the inbox
+→ a second request auto-accepted at the customer's price → that courier drops
+it before pickup (back to pending, no re-offer) → the customer cancels it
+with a reason → both accounts delete themselves, keeping the delivery record
+and stripping the courier's bank details from it.
 
-Last run: **29/29 passed**, 7 November 2026, functions on Node.js 22.
+Last run: **30/30 passed**, 8 November 2026 (1.3.0), functions on Node.js 22.
 
 ---
 
@@ -224,17 +240,14 @@ Only after Part 3 passes cleanly.
 ```bash
 firebase use prod
 firebase deploy --only firestore:rules,firestore:indexes,storage,functions
-firebase functions:secrets:set PAYSTACK_SECRET_KEY   # LIVE key this time
 firebase functions:secrets:set ANTHROPIC_API_KEY
 ```
 
 Then, in order:
 
-1. Register the webhook in the Paystack dashboard:
-   `https://us-central1-fast-delivery-d8d5c.cloudfunctions.net/paystackWebhook`
-2. Bootstrap the first admin — see SECURITY.md.
-3. Restore the production `google-services.json` and rebuild.
-4. Watch App Check metrics in **monitoring mode**. Do not enforce until
+1. Bootstrap the first admin — see SECURITY.md.
+2. Restore the production `google-services.json` and rebuild.
+3. Watch App Check metrics in **monitoring mode**. Do not enforce until
    essentially all traffic shows as verified; enforcing early locks out every
    client that has not yet shipped with the App Check build.
 

@@ -1,18 +1,20 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Size;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import 'package:dilivvafast/core/config/app_config.dart';
-
-/// A real street map, inDrive-style: light streets, a pulsing "you are here"
-/// puck, and optional pickup / drop-off markers joined by a line.
+/// A real street map (Google Maps), inDrive-style: the blue "you are here"
+/// dot, and optional pickup / drop-off markers joined by a line, plus the
+/// courier's live position while a delivery is under way.
 ///
-/// Mapbox only runs on Android and iOS, and only with a token. Everywhere
-/// else — widget tests, desktop, web, or a build missing MAPBOX_ACCESS_TOKEN
-/// — this renders [_MapPlaceholder] instead of crashing, so screens that use
-/// it stay testable on the host.
+/// Google Maps only runs on Android and iOS. Everywhere else — widget tests,
+/// desktop, web — this renders [_MapPlaceholder] instead of crashing, so the
+/// screens that use it stay testable on the host.
+///
+/// The Android key comes from MAPS_API_KEY at build time (see
+/// android/app/build.gradle.kts).
 class LiveMap extends StatefulWidget {
   const LiveMap({
     super.key,
@@ -53,14 +55,8 @@ class LiveMap extends StatefulWidget {
   static bool get isSupported {
     if (kIsWeb) return false;
     try {
-      if (!(Platform.isAndroid || Platform.isIOS)) return false;
+      return Platform.isAndroid || Platform.isIOS;
     } catch (_) {
-      return false;
-    }
-    try {
-      return AppConfig.instance.isMapboxConfigured;
-    } catch (_) {
-      // dotenv not loaded — e.g. under test.
       return false;
     }
   }
@@ -70,39 +66,35 @@ class LiveMap extends StatefulWidget {
 }
 
 class _LiveMapState extends State<LiveMap> {
-  MapboxMap? _map;
-  CircleAnnotationManager? _circles;
-  PolylineAnnotationManager? _lines;
+  GoogleMapController? _map;
 
   bool get _hasPickup => widget.pickupLat != null && widget.pickupLng != null;
   bool get _hasDropoff =>
       widget.dropoffLat != null && widget.dropoffLng != null;
   bool get _hasDriver => widget.driverLat != null && widget.driverLng != null;
+  bool get _hasRoute => _hasPickup && _hasDropoff;
 
-  Point _point(double lat, double lng) =>
-      Point(coordinates: Position(lng, lat));
-
-  Point get _center {
+  LatLng get _center {
     if (widget.centerLat != null && widget.centerLng != null) {
-      return _point(widget.centerLat!, widget.centerLng!);
+      return LatLng(widget.centerLat!, widget.centerLng!);
     }
-    if (_hasPickup && _hasDropoff) {
-      return _point(
+    if (_hasRoute) {
+      return LatLng(
         (widget.pickupLat! + widget.dropoffLat!) / 2,
         (widget.pickupLng! + widget.dropoffLng!) / 2,
       );
     }
-    if (_hasPickup) return _point(widget.pickupLat!, widget.pickupLng!);
-    return _point(LiveMap.defaultLat, LiveMap.defaultLng);
+    if (_hasPickup) return LatLng(widget.pickupLat!, widget.pickupLng!);
+    return const LatLng(LiveMap.defaultLat, LiveMap.defaultLng);
   }
 
   /// Zoom out far enough to fit both markers once a route exists.
   double get _zoom {
-    if (!(_hasPickup && _hasDropoff)) return widget.zoom;
+    if (!_hasRoute) return widget.zoom;
     final span = [
       (widget.pickupLat! - widget.dropoffLat!).abs(),
       (widget.pickupLng! - widget.dropoffLng!).abs(),
-    ].reduce((a, b) => a > b ? a : b);
+    ].reduce(math.max);
     if (span > 0.5) return 9;
     if (span > 0.2) return 10.5;
     if (span > 0.08) return 11.5;
@@ -110,25 +102,77 @@ class _LiveMapState extends State<LiveMap> {
     return 13.5;
   }
 
-  Future<void> _onMapCreated(MapboxMap map) async {
-    _map = map;
-    try {
-      await map.location.updateSettings(
-        LocationComponentSettings(
-          enabled: widget.showUserLocation,
-          pulsingEnabled: true,
-          pulsingColor: const Color(0xFF2E7DF6).toARGB32(),
-        ),
-      );
-      // The compass and scale bar clash with the floating controls.
-      await map.compass.updateSettings(CompassSettings(enabled: false));
-      await map.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
-      _circles = await map.annotations.createCircleAnnotationManager();
-      _lines = await map.annotations.createPolylineAnnotationManager();
-      await _drawRoute();
-    } catch (e) {
-      debugPrint('LiveMap: map setup failed: $e');
+  Set<Marker> get _markers => {
+    if (_hasPickup)
+      Marker(
+        markerId: const MarkerId('pickup'),
+        position: LatLng(widget.pickupLat!, widget.pickupLng!),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: const InfoWindow(title: 'Pickup'),
+      ),
+    if (_hasDropoff)
+      Marker(
+        markerId: const MarkerId('dropoff'),
+        position: LatLng(widget.dropoffLat!, widget.dropoffLng!),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        infoWindow: const InfoWindow(title: 'Drop-off'),
+      ),
+    if (_hasDriver)
+      Marker(
+        markerId: const MarkerId('courier'),
+        position: LatLng(widget.driverLat!, widget.driverLng!),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: const InfoWindow(title: 'Your courier'),
+        zIndexInt: 2,
+      ),
+  };
+
+  Set<Polyline> get _lines => {
+    if (_hasRoute)
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: [
+          LatLng(widget.pickupLat!, widget.pickupLng!),
+          LatLng(widget.dropoffLat!, widget.dropoffLng!),
+        ],
+        color: const Color(0xCC1F2937),
+        width: 4,
+      ),
+  };
+
+  CameraUpdate get _cameraUpdate {
+    if (_hasRoute) {
+      final south = math.min(widget.pickupLat!, widget.dropoffLat!);
+      final north = math.max(widget.pickupLat!, widget.dropoffLat!);
+      final west = math.min(widget.pickupLng!, widget.dropoffLng!);
+      final east = math.max(widget.pickupLng!, widget.dropoffLng!);
+      // Identical points make a zero-size box, which the SDK rejects.
+      if (north - south > 1e-5 || east - west > 1e-5) {
+        return CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(south, west),
+            northeast: LatLng(north, east),
+          ),
+          64,
+        );
+      }
     }
+    return CameraUpdate.newLatLngZoom(_center, _zoom);
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _map = controller;
+    if (_hasRoute) _moveCamera();
+  }
+
+  void _moveCamera() {
+    final map = _map;
+    if (map == null) return;
+    map
+        .animateCamera(_cameraUpdate)
+        .catchError(
+          (Object e) => debugPrint('LiveMap: camera move failed: $e'),
+        );
   }
 
   @override
@@ -141,120 +185,45 @@ class _LiveMapState extends State<LiveMap> {
         old.dropoffLat != widget.dropoffLat ||
         old.pickupLng != widget.pickupLng ||
         old.dropoffLng != widget.dropoffLng;
-    final driverMoved =
-        old.driverLat != widget.driverLat || old.driverLng != widget.driverLng;
-    if (_map == null) return;
-    if (!moved) {
-      // The courier moving should redraw the marker, not yank the camera
-      // away from wherever the customer has panned to.
-      if (driverMoved) _drawRoute();
-      return;
-    }
-    _map!
-        .easeTo(
-          CameraOptions(
-            center: _center,
-            zoom: _zoom,
-            padding: MbxEdgeInsets(
-              top: 0,
-              left: 0,
-              bottom: widget.bottomPadding,
-              right: 0,
-            ),
-          ),
-          MapAnimationOptions(duration: 600),
-        )
-        .catchError((Object e) => debugPrint('LiveMap: easeTo failed: $e'));
-    _drawRoute();
+    // The courier moving only redraws their marker (markers are rebuilt from
+    // the widget on every build); it must not yank the camera away from
+    // wherever the customer has panned to.
+    if (moved) _moveCamera();
   }
 
-  Future<void> _drawRoute() async {
-    final circles = _circles;
-    final lines = _lines;
-    if (circles == null || lines == null) return;
-    try {
-      await circles.deleteAll();
-      await lines.deleteAll();
-      if (_hasPickup) {
-        await circles.create(
-          CircleAnnotationOptions(
-            geometry: _point(widget.pickupLat!, widget.pickupLng!),
-            circleRadius: 8,
-            circleColor: const Color(0xFF12805C).toARGB32(),
-            circleStrokeWidth: 3,
-            circleStrokeColor: Colors.white.toARGB32(),
-          ),
-        );
-      }
-      if (_hasDropoff) {
-        await circles.create(
-          CircleAnnotationOptions(
-            geometry: _point(widget.dropoffLat!, widget.dropoffLng!),
-            circleRadius: 8,
-            circleColor: const Color(0xFFFF6B00).toARGB32(),
-            circleStrokeWidth: 3,
-            circleStrokeColor: Colors.white.toARGB32(),
-          ),
-        );
-      }
-      if (_hasDriver) {
-        await circles.create(
-          CircleAnnotationOptions(
-            geometry: _point(widget.driverLat!, widget.driverLng!),
-            circleRadius: 10,
-            circleColor: const Color(0xFF2E7DF6).toARGB32(),
-            circleStrokeWidth: 4,
-            circleStrokeColor: Colors.white.toARGB32(),
-          ),
-        );
-      }
-      if (_hasPickup && _hasDropoff) {
-        await lines.create(
-          PolylineAnnotationOptions(
-            geometry: LineString(
-              coordinates: [
-                Position(widget.pickupLng!, widget.pickupLat!),
-                Position(widget.dropoffLng!, widget.dropoffLat!),
-              ],
-            ),
-            lineColor: const Color(0xFF1F2937).toARGB32(),
-            lineWidth: 4,
-            lineOpacity: 0.8,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('LiveMap: drawing route failed: $e');
-    }
+  @override
+  void dispose() {
+    _map?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!LiveMap.isSupported) {
       return _MapPlaceholder(
-        hasRoute: _hasPickup && _hasDropoff,
+        hasRoute: _hasRoute,
         bottomPadding: widget.bottomPadding,
       );
     }
-    return MapWidget(
+    return GoogleMap(
       key: const ValueKey('live-map'),
-      styleUri: MapboxStyles.MAPBOX_STREETS,
-      cameraOptions: CameraOptions(
-        center: _center,
-        zoom: _zoom,
-        padding: MbxEdgeInsets(
-          top: 0,
-          left: 0,
-          bottom: widget.bottomPadding,
-          right: 0,
-        ),
-      ),
+      initialCameraPosition: CameraPosition(target: _center, zoom: _zoom),
       onMapCreated: _onMapCreated,
+      markers: _markers,
+      polylines: _lines,
+      myLocationEnabled: widget.showUserLocation,
+      // The screens draw their own locate-me button over the map.
+      myLocationButtonEnabled: false,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
+      compassEnabled: false,
+      buildingsEnabled: true,
+      padding: EdgeInsets.only(bottom: widget.bottomPadding),
     );
   }
 }
 
-/// Stand-in used where Mapbox cannot run. Light, street-like, and honest
+/// Stand-in used where Google Maps cannot run. Light, street-like, and honest
 /// about being a placeholder rather than imitating a real location.
 class _MapPlaceholder extends StatelessWidget {
   const _MapPlaceholder({required this.hasRoute, required this.bottomPadding});
