@@ -30,6 +30,7 @@ class DriverHomeScreen extends ConsumerWidget {
         .where(
           (o) =>
               o.status == OrderStatus.accepted ||
+              o.status == OrderStatus.arrived ||
               o.status == OrderStatus.pickedUp ||
               o.status == OrderStatus.inTransit,
         )
@@ -770,6 +771,7 @@ class _ActiveJobBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final step = switch (order.status) {
       OrderStatus.accepted => 'Go to pickup',
+      OrderStatus.arrived => 'At pickup',
       OrderStatus.pickedUp => 'Package collected',
       _ => 'On the way to drop-off',
     };
@@ -800,7 +802,8 @@ class _ActiveJobBanner extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      order.status == OrderStatus.accepted
+                      order.status == OrderStatus.accepted ||
+                              order.status == OrderStatus.arrived
                           ? order.pickupAddress
                           : order.dropoffAddress,
                       maxLines: 1,

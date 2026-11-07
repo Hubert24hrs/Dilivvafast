@@ -12,7 +12,11 @@ enum BidStatus {
   declined,
 
   /// The driver withdrew it before the customer answered.
-  withdrawn;
+  withdrawn,
+
+  /// The driver was assigned, then dropped the job before pickup
+  /// (courierCancelJob). They cannot offer on the same request again.
+  cancelled;
 
   static BidStatus fromWire(String? value) => BidStatus.values.firstWhere(
     (s) => s.name == value,

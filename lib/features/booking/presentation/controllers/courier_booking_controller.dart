@@ -36,6 +36,7 @@ class CourierBookingState {
     this.createdOrderId,
     this.packageDetailsExpanded = false,
     this.promoCode = '',
+    this.autoAccept = false,
   });
 
   final CourierVehicle vehicleType;
@@ -66,6 +67,10 @@ class CourierBookingState {
   /// `onCourierCreated`; an unknown or used code simply gives no discount.
   final String promoCode;
 
+  /// inDrive's auto-accept: assign the first courier who takes the offered
+  /// price, without waiting for the customer to tap Accept.
+  final bool autoAccept;
+
   CourierBookingState copyWith({
     CourierVehicle? vehicleType,
     String? pickupAddress,
@@ -91,6 +96,7 @@ class CourierBookingState {
     String? createdOrderId,
     bool? packageDetailsExpanded,
     String? promoCode,
+    bool? autoAccept,
   }) {
     return CourierBookingState(
       vehicleType: vehicleType ?? this.vehicleType,
@@ -118,6 +124,7 @@ class CourierBookingState {
       packageDetailsExpanded:
           packageDetailsExpanded ?? this.packageDetailsExpanded,
       promoCode: promoCode ?? this.promoCode,
+      autoAccept: autoAccept ?? this.autoAccept,
     );
   }
 
@@ -269,6 +276,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
   void setNotes(String n) => state = state.copyWith(notes: n);
 
   void setProposedPrice(double p) => state = state.copyWith(proposedPrice: p);
+  void setAutoAccept(bool value) => state = state.copyWith(autoAccept: value);
   void setPromoCode(String code) =>
       state = state.copyWith(promoCode: code.trim().toUpperCase());
 
@@ -370,6 +378,7 @@ class CourierBookingController extends Notifier<CourierBookingState> {
         surgeMultiplier: state.fareBreakdown?.surgeMultiplier ?? 1.0,
         totalFare: offer,
         offeredFare: offer,
+        autoAccept: state.autoAccept,
         vehicleType: state.vehicleType,
         paymentMethod: state.paymentMethod,
         trackingCode: trackingCode,

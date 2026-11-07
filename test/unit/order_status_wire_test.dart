@@ -101,11 +101,20 @@ void main() {
       ]);
     });
 
-    test('accepted may only be picked up or cancelled', () {
+    test('accepted may arrive, be picked up, or be cancelled', () {
       expectAllowed(OrderStatus.accepted, [
+        OrderStatus.arrived,
         OrderStatus.pickedUp,
         OrderStatus.cancelled,
       ]);
+    });
+
+    test('arrived may only be picked up or cancelled', () {
+      expectAllowed(OrderStatus.arrived, [
+        OrderStatus.pickedUp,
+        OrderStatus.cancelled,
+      ]);
+      expect(OrderStatus.arrived.wireValue, 'arrived');
     });
 
     test('picked up may only move to in transit', () {

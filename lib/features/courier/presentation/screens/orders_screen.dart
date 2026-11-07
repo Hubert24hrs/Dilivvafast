@@ -188,6 +188,7 @@ class OrdersScreen extends ConsumerWidget {
     final (color, label) = switch (status) {
       OrderStatus.pending => (const Color(0xFFFF9800), 'Pending'),
       OrderStatus.accepted => (const Color(0xFF2196F3), 'Accepted'),
+      OrderStatus.arrived => (const Color(0xFF3F51B5), 'Courier arrived'),
       OrderStatus.pickedUp => (const Color(0xFF9C27B0), 'Picked Up'),
       OrderStatus.inTransit => (const Color(0xFF00BCD4), 'In Transit'),
       OrderStatus.delivered => (const Color(0xFF4CAF50), 'Delivered'),

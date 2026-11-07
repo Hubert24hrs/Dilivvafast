@@ -73,7 +73,13 @@ class FirebaseCourierRepository implements ICourierRepository {
         .where(FirestoreConstants.fieldUserId, isEqualTo: userId)
         .where(
           FirestoreConstants.fieldStatus,
-          whereIn: ['pending', 'accepted', 'picked_up', 'in_transit'],
+          whereIn: [
+            'pending',
+            'accepted',
+            'arrived',
+            'picked_up',
+            'in_transit',
+          ],
         )
         .limit(1)
         .snapshots()
@@ -161,7 +167,9 @@ class FirebaseCourierRepository implements ICourierRepository {
         FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
       };
 
-      if (newStatus == OrderStatus.pickedUp) {
+      if (newStatus == OrderStatus.arrived) {
+        updateData['arrivedAt'] = FieldValue.serverTimestamp();
+      } else if (newStatus == OrderStatus.pickedUp) {
         updateData['pickedUpAt'] = FieldValue.serverTimestamp();
       } else if (newStatus == OrderStatus.delivered) {
         updateData['deliveredAt'] = FieldValue.serverTimestamp();
@@ -326,8 +334,9 @@ class FirebaseCourierRepository implements ICourierRepository {
   Future<Either<Failure, Unit>> rateOrder(
     String orderId,
     int rating,
-    String? comment,
-  ) async {
+    String? comment, {
+    List<String> tags = const [],
+  }) async {
     if (rating < 1 || rating > 5) {
       return const Left(FirestoreFailure('Choose between 1 and 5 stars.'));
     }
@@ -349,6 +358,7 @@ class FirebaseCourierRepository implements ICourierRepository {
       batch.update(orderRef, {
         'rating': rating,
         'ratingComment': comment,
+        'ratingTags': tags,
         FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
       });
       batch
@@ -358,6 +368,7 @@ class FirebaseCourierRepository implements ICourierRepository {
             'driverId': driverId,
             'rating': rating,
             'comment': comment,
+            'tags': tags,
             FirestoreConstants.fieldCreatedAt: FieldValue.serverTimestamp(),
           });
       await batch.commit();
@@ -376,8 +387,60 @@ class FirebaseCourierRepository implements ICourierRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> cancelOrder(String orderId) async {
-    return updateOrderStatus(orderId, OrderStatus.cancelled);
+  Future<Either<Failure, Unit>> cancelOrder(
+    String orderId, {
+    String? reason,
+  }) async {
+    try {
+      final doc = await _couriersRef.doc(orderId).get();
+      if (!doc.exists) {
+        return const Left(FirestoreFailure('That request no longer exists.'));
+      }
+      final order = CourierOrderModel.fromFirestore(doc);
+      if (!order.canTransitionTo(OrderStatus.cancelled)) {
+        return const Left(
+          ValidationFailure(
+            'The courier already has your package, so it can no longer be '
+            'cancelled. Contact support if something is wrong.',
+          ),
+        );
+      }
+      await _couriersRef.doc(orderId).update({
+        FirestoreConstants.fieldStatus: OrderStatus.cancelled.wireValue,
+        'cancelReason': ?reason,
+        'cancelledBy': 'customer',
+        'cancelledAt': FieldValue.serverTimestamp(),
+        FirestoreConstants.fieldUpdatedAt: FieldValue.serverTimestamp(),
+      });
+      return const Right(unit);
+    } on FirebaseException catch (e) {
+      return Left(
+        FirestoreFailure(
+          e.code == 'permission-denied'
+              ? 'This delivery can no longer be cancelled.'
+              : 'Could not cancel. Please try again.',
+        ),
+      );
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> courierCancelJob(
+    String orderId,
+    String reason,
+  ) async {
+    try {
+      await _functions
+          .httpsCallable('courierCancelJob')
+          .call<Map<String, dynamic>>({'orderId': orderId, 'reason': reason});
+      return const Right(unit);
+    } on FirebaseFunctionsException catch (e) {
+      return Left(FirestoreFailure(e.message ?? 'Could not cancel this job.'));
+    } catch (e) {
+      return Left(FirestoreFailure(e.toString()));
+    }
   }
 
   @override

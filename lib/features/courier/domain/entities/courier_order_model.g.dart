@@ -39,6 +39,7 @@ _CourierOrderModel _$CourierOrderModelFromJson(
       ) ??
       CourierVehicle.bike,
   offeredFare: (json['offeredFare'] as num?)?.toDouble() ?? 0.0,
+  autoAccept: json['autoAccept'] as bool? ?? false,
   recommendedFare: (json['recommendedFare'] as num?)?.toDouble() ?? 0.0,
   paymentMethod:
       $enumDecodeNullable(_$PaymentMethodEnumMap, json['paymentMethod']) ??
@@ -51,9 +52,16 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
   trackingCode: json['trackingCode'] as String,
   notes: json['notes'] as String?,
+  cancelReason: json['cancelReason'] as String?,
+  cancelledBy: json['cancelledBy'] as String?,
   proofOfDeliveryUrl: json['proofOfDeliveryUrl'] as String?,
   rating: (json['rating'] as num?)?.toInt(),
   ratingComment: json['ratingComment'] as String?,
+  ratingTags:
+      (json['ratingTags'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
   driverEarnings: (json['driverEarnings'] as num?)?.toDouble() ?? 0.0,
   platformCommission: (json['platformCommission'] as num?)?.toDouble() ?? 0.0,
   createdAt: const TimestampConverter().fromJson(
@@ -61,6 +69,9 @@ _CourierOrderModel _$CourierOrderModelFromJson(
   ),
   updatedAt: const TimestampConverter().fromJson(
     json['updatedAt'] as Timestamp,
+  ),
+  arrivedAt: const NullableTimestampConverter().fromJson(
+    json['arrivedAt'] as Timestamp?,
   ),
   pickedUpAt: const NullableTimestampConverter().fromJson(
     json['pickedUpAt'] as Timestamp?,
@@ -99,6 +110,7 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'totalFare': instance.totalFare,
   'vehicleType': _$CourierVehicleEnumMap[instance.vehicleType]!,
   'offeredFare': instance.offeredFare,
+  'autoAccept': instance.autoAccept,
   'recommendedFare': instance.recommendedFare,
   'paymentMethod': _$PaymentMethodEnumMap[instance.paymentMethod]!,
   'paymentStatus': _$PaymentStatusEnumMap[instance.paymentStatus]!,
@@ -107,13 +119,17 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'discountAmount': instance.discountAmount,
   'trackingCode': instance.trackingCode,
   'notes': instance.notes,
+  'cancelReason': instance.cancelReason,
+  'cancelledBy': instance.cancelledBy,
   'proofOfDeliveryUrl': instance.proofOfDeliveryUrl,
   'rating': instance.rating,
   'ratingComment': instance.ratingComment,
+  'ratingTags': instance.ratingTags,
   'driverEarnings': instance.driverEarnings,
   'platformCommission': instance.platformCommission,
   'createdAt': const TimestampConverter().toJson(instance.createdAt),
   'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
+  'arrivedAt': const NullableTimestampConverter().toJson(instance.arrivedAt),
   'pickedUpAt': const NullableTimestampConverter().toJson(instance.pickedUpAt),
   'deliveredAt': const NullableTimestampConverter().toJson(
     instance.deliveredAt,
@@ -129,6 +145,7 @@ Map<String, dynamic> _$CourierOrderModelToJson(
 const _$OrderStatusEnumMap = {
   OrderStatus.pending: 'pending',
   OrderStatus.accepted: 'accepted',
+  OrderStatus.arrived: 'arrived',
   OrderStatus.pickedUp: 'picked_up',
   OrderStatus.inTransit: 'in_transit',
   OrderStatus.delivered: 'delivered',

@@ -14,6 +14,7 @@ import 'package:dilivvafast/features/courier/domain/entities/courier_order_model
 import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
 import 'package:dilivvafast/features/courier/presentation/screens/tracking_screen.dart';
 import 'package:dilivvafast/features/driver/presentation/screens/driver_active_delivery_screen.dart';
+import 'package:dilivvafast/features/rating/presentation/screens/rating_screen.dart';
 
 /// The screens on the pickup → delivered → rated path.
 ///
@@ -51,6 +52,18 @@ CourierOrderModel _order(
 /// Records status updates; each takes a moment, like a network call.
 class _FakeRepo implements ICourierRepository {
   final updates = <OrderStatus>[];
+  final ratings = <(int, List<String>)>[];
+
+  @override
+  Future<Either<Failure, Unit>> rateOrder(
+    String orderId,
+    int rating,
+    String? comment, {
+    List<String> tags = const [],
+  }) async {
+    ratings.add((rating, tags));
+    return const Right(unit);
+  }
 
   @override
   Future<Either<Failure, Unit>> updateOrderStatus(
@@ -88,7 +101,8 @@ Future<void> _phone(WidgetTester tester) async {
 void main() {
   group('Driver active delivery', () {
     final cases = {
-      OrderStatus.accepted: 'I have picked up the package',
+      OrderStatus.accepted: "I've arrived",
+      OrderStatus.arrived: 'I have picked up the package',
       OrderStatus.pickedUp: 'Start delivery',
       OrderStatus.inTransit: 'Mark as delivered',
     };
@@ -122,14 +136,45 @@ void main() {
       );
       await tester.pump();
 
-      final button = find.text('I have picked up the package');
+      final button = find.text("I've arrived");
       await tester.tap(button);
       await tester.pump(const Duration(milliseconds: 50));
       // The button is now busy; a second tap must not send another update.
       await tester.tap(find.byType(FilledButton).last, warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(repo.updates, [OrderStatus.pickedUp]);
+      expect(repo.updates, [OrderStatus.arrived]);
+    });
+
+    testWidgets('a courier can drop the job only before pickup', (
+      tester,
+    ) async {
+      await _phone(tester);
+      for (final (status, offered) in [
+        (OrderStatus.accepted, true),
+        (OrderStatus.arrived, true),
+        (OrderStatus.pickedUp, false),
+        (OrderStatus.inTransit, false),
+      ]) {
+        // A fresh scope per status: re-pumping one ProviderScope keeps the
+        // first order's stream.
+        await tester.pumpWidget(
+          KeyedSubtree(
+            key: ValueKey(status),
+            child: _wrap(
+              const DriverActiveDeliveryScreen(orderId: 'o1'),
+              _order(status),
+              _FakeRepo(),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(
+          find.text('Cancel job'),
+          offered ? findsOneWidget : findsNothing,
+          reason: status.name,
+        );
+      }
     });
 
     testWidgets('marking delivered asks for confirmation first', (
@@ -195,6 +240,58 @@ void main() {
   });
 
   group('Customer tracking', () {
+    testWidgets('leads with what is happening now', (tester) async {
+      await _phone(tester);
+      await tester.pumpWidget(
+        _wrap(
+          const TrackingScreen(orderId: 'o1'),
+          _order(OrderStatus.arrived),
+          _FakeRepo(),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Your courier has arrived'), findsOneWidget);
+    });
+
+    testWidgets('can be cancelled until the courier has the package', (
+      tester,
+    ) async {
+      await _phone(tester);
+      for (final (status, offered) in [
+        (OrderStatus.accepted, true),
+        (OrderStatus.arrived, true),
+        (OrderStatus.pickedUp, false),
+        (OrderStatus.delivered, false),
+      ]) {
+        await tester.pumpWidget(
+          KeyedSubtree(
+            key: ValueKey(status),
+            child: _wrap(
+              const TrackingScreen(orderId: 'o1'),
+              _order(status),
+              _FakeRepo(),
+            ),
+          ),
+        );
+        await tester.pump();
+        // The sheet builds lazily; scroll to its end before looking.
+        await tester.drag(find.byType(ListView), const Offset(0, -3000));
+        await tester.pump();
+        final cancel = find.text('Cancel delivery');
+        expect(
+          cancel,
+          offered ? findsOneWidget : findsNothing,
+          reason: status.name,
+        );
+      }
+    });
+
+    test('share text says where the delivery is up to', () {
+      final text = shareTextFor(_order(OrderStatus.arrived));
+      expect(text, contains('Your courier has arrived'));
+      expect(text, contains('DF-1'));
+    });
+
     testWidgets('offers a rating once delivered', (tester) async {
       await _phone(tester);
       await tester.pumpWidget(
@@ -234,6 +331,49 @@ void main() {
     });
   });
 
+  group('Rating', () {
+    testWidgets('compliments appear for a good rating and are sent', (
+      tester,
+    ) async {
+      await _phone(tester);
+      final repo = _FakeRepo();
+      await tester.pumpWidget(
+        _wrap(
+          const RatingScreen(orderId: 'o1'),
+          _order(OrderStatus.delivered),
+          repo,
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Fast delivery'), findsNothing);
+
+      await tester.tap(find.byTooltip('5 stars'));
+      await tester.pump();
+      await tester.tap(find.text('Fast delivery'));
+      await tester.pump();
+      await tester.tap(find.text('Submit rating'));
+      await tester.pump();
+
+      expect(repo.ratings.single.$1, 5);
+      expect(repo.ratings.single.$2, ['fast_delivery']);
+    });
+
+    testWidgets('no compliments for a poor rating', (tester) async {
+      await _phone(tester);
+      await tester.pumpWidget(
+        _wrap(
+          const RatingScreen(orderId: 'o1'),
+          _order(OrderStatus.delivered),
+          _FakeRepo(),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.byTooltip('2 stars'));
+      await tester.pump();
+      expect(find.text('Fast delivery'), findsNothing);
+    });
+  });
+
   group('Notification taps', () {
     test('open the screen each notification is about', () {
       expect(notificationRouteFor({'type': 'new_order'}), '/driver/home');
@@ -258,6 +398,11 @@ void main() {
         '/driver/earnings',
       );
       expect(notificationRouteFor({'type': 'sos_alert'}), '/admin/dashboard');
+      expect(
+        notificationRouteFor({'type': 'courier_cancelled', 'orderId': 'o1'}),
+        '/matching/o1',
+      );
+      expect(notificationRouteFor({'type': 'job_cancelled'}), '/driver/home');
       expect(notificationRouteFor({'type': 'support_reply'}), '/support-chat');
       expect(
         notificationRouteFor({'type': 'support_message', 'userId': 'u1'}),

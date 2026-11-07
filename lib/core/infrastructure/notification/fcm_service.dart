@@ -25,6 +25,9 @@ String? notificationRouteFor(Map<String, dynamic> data) {
     'new_order' => '/driver/home',
     'new_bid' when hasOrder => '/matching/$orderId',
     'bid_accepted' when hasOrder => '/driver/active/$orderId',
+    // The courier dropped the job: back to the offers screen.
+    'courier_cancelled' when hasOrder => '/matching/$orderId',
+    'job_cancelled' => '/driver/home',
     'order_update' when hasOrder => '/customer/track/$orderId',
     'referral_bonus' => '/customer/wallet',
     'weekly_report' => '/driver/earnings',

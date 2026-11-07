@@ -10,6 +10,10 @@ enum OrderStatus {
   pending,
   @JsonValue('accepted')
   accepted,
+
+  /// The courier is at the pickup point (inDrive's "I've arrived").
+  @JsonValue('arrived')
+  arrived,
   @JsonValue('picked_up')
   pickedUp,
   @JsonValue('in_transit')
@@ -190,6 +194,11 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     /// [recommendedFare], and only `raiseOffer` may change it afterwards.
     @Default(0.0) double offeredFare,
 
+    /// Assign the first courier who offers exactly [offeredFare], without the
+    /// customer having to tap Accept (inDrive's auto-accept). Done
+    /// server-side by onBidWritten.
+    @Default(false) bool autoAccept,
+
     /// The fare the server computed from distance, weight and zone pricing.
     /// Shown to the customer as guidance and used to bound offers.
     @Default(0.0) double recommendedFare,
@@ -200,13 +209,25 @@ abstract class CourierOrderModel with _$CourierOrderModel {
     @Default(0.0) double discountAmount,
     required String trackingCode,
     String? notes,
+
+    /// Why the customer cancelled, from the reasons offered in the app.
+    String? cancelReason,
+
+    /// Who cancelled: `customer` (written by the app, enforced by the
+    /// rules). A courier cancelling does not end the order — it goes back to
+    /// pending through `courierCancelJob`.
+    String? cancelledBy,
     String? proofOfDeliveryUrl,
     int? rating,
     String? ratingComment,
+
+    /// Compliments chosen with the rating ("Fast delivery", …).
+    @Default(<String>[]) List<String> ratingTags,
     @Default(0.0) double driverEarnings,
     @Default(0.0) double platformCommission,
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
+    @NullableTimestampConverter() DateTime? arrivedAt,
     @NullableTimestampConverter() DateTime? pickedUpAt,
     @NullableTimestampConverter() DateTime? deliveredAt,
     @NullableTimestampConverter() DateTime? estimatedDeliveryTime,
@@ -280,6 +301,7 @@ extension CourierOrderModelX on CourierOrderModel {
       'totalFare': totalFare,
       'vehicleType': vehicleType.wireValue,
       'offeredFare': offeredFare,
+      'autoAccept': autoAccept,
       'recommendedFare': recommendedFare,
       'paymentMethod': paymentMethod.name,
       'paymentStatus': paymentStatus.name,
@@ -288,13 +310,17 @@ extension CourierOrderModelX on CourierOrderModel {
       'discountAmount': discountAmount,
       'trackingCode': trackingCode,
       'notes': notes,
+      'cancelReason': cancelReason,
+      'cancelledBy': cancelledBy,
       'proofOfDeliveryUrl': proofOfDeliveryUrl,
       'rating': rating,
       'ratingComment': ratingComment,
+      'ratingTags': ratingTags,
       'driverEarnings': driverEarnings,
       'platformCommission': platformCommission,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'arrivedAt': arrivedAt != null ? Timestamp.fromDate(arrivedAt!) : null,
       'pickedUpAt': pickedUpAt != null ? Timestamp.fromDate(pickedUpAt!) : null,
       'deliveredAt': deliveredAt != null
           ? Timestamp.fromDate(deliveredAt!)
@@ -312,7 +338,14 @@ extension CourierOrderModelX on CourierOrderModel {
   bool canTransitionTo(OrderStatus newStatus) {
     const allowedTransitions = {
       OrderStatus.pending: [OrderStatus.accepted, OrderStatus.cancelled],
-      OrderStatus.accepted: [OrderStatus.pickedUp, OrderStatus.cancelled],
+      // Arriving is optional, so a courier who goes straight to pickup is
+      // not blocked; both paths end at picked up.
+      OrderStatus.accepted: [
+        OrderStatus.arrived,
+        OrderStatus.pickedUp,
+        OrderStatus.cancelled,
+      ],
+      OrderStatus.arrived: [OrderStatus.pickedUp, OrderStatus.cancelled],
       OrderStatus.pickedUp: [OrderStatus.inTransit],
       OrderStatus.inTransit: [OrderStatus.delivered, OrderStatus.failed],
       OrderStatus.delivered: <OrderStatus>[],

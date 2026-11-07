@@ -202,6 +202,11 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                     onAdd: () => context.push('/customer/promotions'),
                     onRemove: () => controller.setPromoCode(''),
                   ),
+                  _AutoAcceptRow(
+                    value: state.autoAccept,
+                    offer: state.effectiveOffer,
+                    onChanged: controller.setAutoAccept,
+                  ),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 58,
@@ -780,6 +785,40 @@ class _PromoRow extends StatelessWidget {
             onPressed: onRemove,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// inDrive's "automatically accept the first courier at your price".
+class _AutoAcceptRow extends StatelessWidget {
+  const _AutoAcceptRow({
+    required this.value,
+    required this.offer,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final double offer;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile.adaptive(
+      value: value,
+      onChanged: onChanged,
+      contentPadding: EdgeInsets.zero,
+      activeTrackColor: _lime,
+      title: const Text(
+        'Auto-accept',
+        style: TextStyle(fontWeight: FontWeight.w600, color: _ink),
+      ),
+      subtitle: Text(
+        offer > 0
+            ? 'Give the job to the first courier who offers '
+                  '₦${offer.toStringAsFixed(0)}'
+            : 'Give the job to the first courier who takes your price',
+        style: const TextStyle(color: _muted, fontSize: 13),
       ),
     );
   }

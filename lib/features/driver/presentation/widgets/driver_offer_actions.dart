@@ -218,6 +218,11 @@ class _OfferStatus extends StatelessWidget {
         palette.danger,
         'The customer chose another offer',
       ),
+      BidStatus.cancelled => (
+        Icons.block_rounded,
+        palette.textSecondary,
+        "You cancelled this job, so you can't offer on it again",
+      ),
       _ => (
         Icons.hourglass_top_rounded,
         palette.warning,

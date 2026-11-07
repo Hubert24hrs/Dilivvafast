@@ -78,15 +78,21 @@ abstract class ICourierRepository {
     String imageUrl,
   );
 
-  /// Rate an order
+  /// Rate an order, with optional compliments ([tags]).
   Future<Either<Failure, Unit>> rateOrder(
     String orderId,
     int rating,
-    String? comment,
-  );
+    String? comment, {
+    List<String> tags = const [],
+  });
 
-  /// Cancel an order
-  Future<Either<Failure, Unit>> cancelOrder(String orderId);
+  /// The customer cancels — while waiting for offers, or before the courier
+  /// has collected the package. [reason] is one of the reasons offered.
+  Future<Either<Failure, Unit>> cancelOrder(String orderId, {String? reason});
+
+  /// The assigned courier drops the job before pickup. The request goes back
+  /// to other couriers instead of ending (`courierCancelJob`).
+  Future<Either<Failure, Unit>> courierCancelJob(String orderId, String reason);
 
   /// Get order by tracking code
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(

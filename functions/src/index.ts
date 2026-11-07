@@ -800,6 +800,12 @@ export const onBidWritten = onDocumentWritten(
         return;
       }
 
+      // A courier who dropped this job does not get to offer on it again.
+      if (order.lastCourierCancel?.driverId === driverId) {
+        await after.ref.delete();
+        return;
+      }
+
       const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
       const amount = Number(bid.amount);
       if (!Number.isFinite(amount) || amount < Number(order.offeredFare) || amount > bounds.ceiling) {
@@ -816,6 +822,19 @@ export const onBidWritten = onDocumentWritten(
         vehiclePlate: driver.vehiclePlate ?? null,
         updatedAt: FieldValue.serverTimestamp(),
       });
+
+      // inDrive's auto-accept: the customer asked for the first courier who
+      // takes their price. Offers above it still wait for a decision.
+      if (order.autoAccept === true && amount <= Number(order.offeredFare)) {
+        try {
+          await assignOffer(orderId, driverId, String(order.userId));
+          return; // onCourierStatusChanged tells the customer.
+        } catch (error) {
+          // Lost a race with another offer or a manual accept: fine, fall
+          // through and show this offer like any other.
+          logger.info("auto-accept skipped", { orderId, driverId, ...errorInfo(error) });
+        }
+      }
 
       await sendToUser(
         order.userId,
@@ -841,16 +860,20 @@ export const onBidWritten = onDocumentWritten(
  * accept — a double tap, or a race between two offers — finds the order
  * already assigned and fails cleanly. Every other open offer is closed.
  */
-export const acceptBid = onCall(async (request) => {
-  const uid = requireAuth(request);
-  await enforceRateLimit(uid, "accept_bid", 20, 60 * 10);
-
-  const orderId = String(request.data?.orderId ?? "").trim();
-  const driverId = String(request.data?.driverId ?? "").trim();
-  if (!orderId || !driverId) {
-    throw new HttpsError("invalid-argument", "An order and an offer are required.");
-  }
-
+/**
+ * Assign [driverId] to [orderId] at that driver's offered price.
+ *
+ * Shared by acceptBid (the customer taps Accept) and auto-accept (the
+ * customer asked for the first courier at their price). [customerUid] must
+ * own the order; the check happens inside the transaction, together with
+ * "still pending, still unassigned, offer still open", so a double tap or two
+ * offers racing can assign at most one courier.
+ */
+async function assignOffer(
+  orderId: string,
+  driverId: string,
+  customerUid: string
+): Promise<number> {
   const orderRef = db.collection("couriers").doc(orderId);
   const bidRef = orderRef.collection("bids").doc(driverId);
 
@@ -863,46 +886,46 @@ export const acceptBid = onCall(async (request) => {
   let agreed: number;
   try {
     agreed = await db.runTransaction(async (tx) => {
-    const [orderSnap, bidSnap] = await Promise.all([tx.get(orderRef), tx.get(bidRef)]);
-    const order = orderSnap.data();
-    const bid = bidSnap.data();
+      const [orderSnap, bidSnap] = await Promise.all([tx.get(orderRef), tx.get(bidRef)]);
+      const order = orderSnap.data();
+      const bid = bidSnap.data();
 
-    if (!order) throw new HttpsError("not-found", "That request no longer exists.");
-    if (order.userId !== uid) {
-      throw new HttpsError("permission-denied", "That is not your request.");
-    }
-    if (order.status !== "pending" || order.driverId) {
-      throw new HttpsError("failed-precondition", "This request already has a courier.");
-    }
-    if (!bid || bid.status !== "open") {
-      throw new HttpsError("failed-precondition", "That offer is no longer available.");
-    }
+      if (!order) throw new HttpsError("not-found", "That request no longer exists.");
+      if (order.userId !== customerUid) {
+        throw new HttpsError("permission-denied", "That is not your request.");
+      }
+      if (order.status !== "pending" || order.driverId) {
+        throw new HttpsError("failed-precondition", "This request already has a courier.");
+      }
+      if (!bid || bid.status !== "open") {
+        throw new HttpsError("failed-precondition", "That offer is no longer available.");
+      }
 
-    const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
-    const agreedFare = clampToBounds(Number(bid.amount), bounds);
-    const split = fareSplit(agreedFare, Number(order.discountAmount) || 0);
+      const bounds = negotiationBounds(Number(order.recommendedFare) || MINIMUM_FARE);
+      const agreedFare = clampToBounds(Number(bid.amount), bounds);
+      const split = fareSplit(agreedFare, Number(order.discountAmount) || 0);
 
-    tx.update(orderRef, {
-      driverId,
-      status: "accepted",
-      agreedFare,
-      totalFare: split.totalFare,
-      platformCommission: split.platformCommission,
-      driverEarnings: split.driverEarnings,
-      acceptedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    tx.update(bidRef, { status: "accepted", decidedAt: FieldValue.serverTimestamp() });
+      tx.update(orderRef, {
+        driverId,
+        status: "accepted",
+        agreedFare,
+        totalFare: split.totalFare,
+        platformCommission: split.platformCommission,
+        driverEarnings: split.driverEarnings,
+        acceptedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      tx.update(bidRef, { status: "accepted", decidedAt: FieldValue.serverTimestamp() });
 
-    return agreedFare;
-  }, { maxAttempts: 10 });
+      return agreedFare;
+    }, { maxAttempts: 10 });
   } catch (error) {
     if (error instanceof HttpsError) throw error;
     const code = (error as { code?: unknown })?.code;
     if (code === 10 || code === "aborted" || code === "ABORTED") {
       throw new HttpsError("aborted", "Busy right now — please try again.");
     }
-    logger.error("acceptBid failed", { orderId, driverId, ...errorInfo(error) });
+    logger.error("assignOffer failed", { orderId, driverId, ...errorInfo(error) });
     throw new HttpsError("internal", "Could not accept that offer.");
   }
 
@@ -934,6 +957,23 @@ export const acceptBid = onCall(async (request) => {
     "order"
   );
 
+  return agreed;
+}
+
+/**
+ * Customer accepts one driver's offer. See assignOffer for the guarantees.
+ */
+export const acceptBid = onCall(async (request) => {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "accept_bid", 20, 60 * 10);
+
+  const orderId = String(request.data?.orderId ?? "").trim();
+  const driverId = String(request.data?.driverId ?? "").trim();
+  if (!orderId || !driverId) {
+    throw new HttpsError("invalid-argument", "An order and an offer are required.");
+  }
+
+  const agreed = await assignOffer(orderId, driverId, uid);
   return { success: true, agreedFare: agreed };
 });
 
@@ -1013,6 +1053,7 @@ export const onCourierStatusChanged = onDocumentUpdated(
     // which used the Dart enum `.name` instead.
     const statusMessages: Record<string, string> = {
       accepted: "A driver has accepted your delivery! 🎉",
+      arrived: "Your courier has arrived at the pickup point 📍",
       picked_up: "Your package has been picked up 📦",
       pickedUp: "Your package has been picked up 📦",
       in_transit: "Your package is on its way! 🚀",
@@ -1021,6 +1062,33 @@ export const onCourierStatusChanged = onDocumentUpdated(
       cancelled: "Your order has been cancelled ❌",
       failed: "Your delivery could not be completed.",
     };
+
+    // A customer who cancels does not need telling; their courier does.
+    if (after.status === "cancelled" && after.cancelledBy === "customer") {
+      try {
+        if (after.driverId) {
+          await sendToUser(
+            String(after.driverId),
+            {
+              title: "Delivery cancelled",
+              body: after.cancelReason
+                ? `The customer cancelled: ${String(after.cancelReason).slice(0, 80)}`
+                : "The customer cancelled this delivery.",
+            },
+            { type: "job_cancelled", orderId },
+            "order"
+          );
+          await db
+            .collection("driver_locations")
+            .doc(String(after.driverId))
+            .set({ isAvailable: true }, { merge: true })
+            .catch(() => undefined);
+        }
+      } catch (error) {
+        logger.error("cancel notification failed", { orderId, ...errorInfo(error) });
+      }
+      return;
+    }
 
     const statusMsg = statusMessages[after.status];
     if (!statusMsg) return;
@@ -1063,6 +1131,85 @@ export const onCourierStatusChanged = onDocumentUpdated(
     }
   }
 );
+
+// ==================== COURIER CANCELS A JOB ====================
+
+/**
+ * The assigned courier drops a job before collecting the package.
+ *
+ * As in inDrive, the request is not lost: it goes back to pending at the
+ * customer's last offer, other couriers can answer again, and the customer is
+ * told. The courier who dropped it cannot offer on it again (onBidWritten),
+ * and the cancellation is counted on their profile. After pickup a courier
+ * cannot drop the job; that goes through support.
+ */
+export const courierCancelJob = onCall(async (request) => {
+  const uid = requireAuth(request);
+  await enforceRateLimit(uid, "courier_cancel", 10, 60 * 10);
+
+  const orderId = String(request.data?.orderId ?? "").trim();
+  const reason = String(request.data?.reason ?? "").trim().slice(0, 120);
+  if (!orderId) throw new HttpsError("invalid-argument", "An order is required.");
+
+  const orderRef = db.collection("couriers").doc(orderId);
+  const customerId = await db.runTransaction(async (tx) => {
+    const order = (await tx.get(orderRef)).data();
+    if (!order) throw new HttpsError("not-found", "That job no longer exists.");
+    if (order.driverId !== uid) {
+      throw new HttpsError("permission-denied", "This is not your job.");
+    }
+    if (!["accepted", "arrived"].includes(order.status)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "You already have the package. Contact support to hand the job back."
+      );
+    }
+
+    tx.update(orderRef, {
+      status: "pending",
+      driverId: null,
+      agreedFare: FieldValue.delete(),
+      totalFare: Number(order.offeredFare) || 0,
+      platformCommission: 0,
+      driverEarnings: 0,
+      acceptedAt: FieldValue.delete(),
+      arrivedAt: null,
+      lastCourierCancel: {
+        driverId: uid,
+        reason: reason || null,
+        at: FieldValue.serverTimestamp(),
+      },
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    tx.set(
+      orderRef.collection("bids").doc(uid),
+      { status: "cancelled", decidedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+    tx.update(db.collection("users").doc(uid), {
+      cancelledJobs: FieldValue.increment(1),
+    });
+    return String(order.userId);
+  });
+
+  await db
+    .collection("driver_locations")
+    .doc(uid)
+    .set({ isAvailable: true }, { merge: true })
+    .catch(() => undefined);
+
+  await sendToUser(
+    customerId,
+    {
+      title: "Your courier cancelled",
+      body: "We've sent your request back out — new offers will appear shortly.",
+    },
+    { type: "courier_cancelled", orderId },
+    "order"
+  );
+
+  return { success: true };
+});
 
 // ==================== SCHEDULED: DRIVER PAYOUT ====================
 
@@ -1183,6 +1330,15 @@ export const processDriverPayout = onSchedule(
  * `averageRating`, a field UserModel does not read, so ratings never surfaced
  * anywhere in the app.
  */
+/** Compliments a customer can give with a rating. Mirrors RatingScreen. */
+const RATING_TAGS = [
+  "fast_delivery",
+  "careful_with_package",
+  "polite",
+  "good_communication",
+  "on_time_pickup",
+];
+
 export const onRatingCreated = onDocumentCreated(
   "ratings/{ratingId}",
   async (event) => {
@@ -1207,9 +1363,20 @@ export const onRatingCreated = onDocumentCreated(
 
       const average = count > 0 ? total / count : 0;
 
+      // Compliments ("Fast delivery", …) counted per courier, shown on their
+      // profile. Only known tags, so a client cannot write arbitrary keys.
+      const tagUpdates: Record<string, FieldValue> = {};
+      const tags: unknown[] = Array.isArray(rating.tags) ? rating.tags : [];
+      for (const tag of tags) {
+        if (typeof tag === "string" && RATING_TAGS.includes(tag)) {
+          tagUpdates[`ratingTagCounts.${tag}`] = FieldValue.increment(1);
+        }
+      }
+
       await db.collection("users").doc(rating.driverId).update({
         rating: Math.round(average * 10) / 10,
         totalRatings: count,
+        ...tagUpdates,
       });
     } catch (error) {
       logger.error("onRatingCreated error", errorInfo(error));
@@ -1769,6 +1936,7 @@ export const onSupportMessageCreated = onDocumentCreated(
 const ACTIVE_ORDER_STATES = [
   "pending",
   "accepted",
+  "arrived",
   "picked_up",
   "in_transit",
   "pickedUp",

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/presentation/widgets/live_map.dart';
+import 'package:dilivvafast/core/presentation/widgets/reason_sheet.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 
@@ -14,8 +15,10 @@ const _field = Color(0xFFF3F4F6);
 const _lime = Color(0xFFC1F11D);
 
 /// The driver's view of a job they have won: where to go next, who to call,
-/// and one button that moves the job along accepted → picked up → in transit
-/// → delivered.
+/// and one button that moves the job along accepted → arrived (inDrive's
+/// "I've arrived", which tells the customer) → picked up → in transit →
+/// delivered. Before pickup the courier can drop the job with a reason; it
+/// goes back to other couriers rather than being lost (courierCancelJob).
 ///
 /// Reached from the "active job" banner on driver home, the "Open job" button
 /// on an accepted offer, or the "offer accepted" push notification.
@@ -38,6 +41,43 @@ class DriverActiveDeliveryScreen extends ConsumerStatefulWidget {
 class _DriverActiveDeliveryScreenState
     extends ConsumerState<DriverActiveDeliveryScreen> {
   bool _updating = false;
+
+  Future<void> _dropJob(CourierOrderModel order) async {
+    final reason = await showReasonSheet(
+      context,
+      title: 'Why are you cancelling?',
+      message:
+          'The request goes back to other couriers. Cancelling often '
+          'lowers your standing with customers.',
+      reasons: courierCancelReasons,
+      confirmLabel: 'Cancel job',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _updating = true);
+    final result = await ref
+        .read(courierRepositoryProvider)
+        .courierCancelJob(order.id, reason);
+    if (!mounted) return;
+    setState(() => _updating = false);
+    result.fold(
+      (f) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(f.message),
+          backgroundColor: context.palette.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      ),
+      (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Job cancelled. It has gone back to other couriers.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/driver/home');
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +142,10 @@ class _DriverActiveDeliveryScreenState
     double? myLat,
     double? myLng,
   ) {
-    final headingToPickup = order.status == OrderStatus.accepted;
+    final headingToPickup =
+        order.status == OrderStatus.accepted ||
+        order.status == OrderStatus.arrived;
+    final canDrop = headingToPickup;
     final finished =
         order.status == OrderStatus.delivered ||
         order.status == OrderStatus.cancelled ||
@@ -130,7 +173,11 @@ class _DriverActiveDeliveryScreenState
                   right: 16,
                   top: 12,
                   child: _NextStopCard(
-                    label: headingToPickup ? 'Go to pickup' : 'Go to drop-off',
+                    label: order.status == OrderStatus.arrived
+                        ? 'At pickup — collect the package'
+                        : headingToPickup
+                        ? 'Go to pickup'
+                        : 'Go to drop-off',
                     address: headingToPickup
                         ? order.pickupAddress
                         : order.dropoffAddress,
@@ -258,6 +305,15 @@ class _DriverActiveDeliveryScreenState
                         : Text(_actionLabel(order.status)),
                   ),
                 ),
+              if (canDrop)
+                TextButton(
+                  onPressed: _updating ? null : () => _dropJob(order),
+                  style: TextButton.styleFrom(
+                    foregroundColor: context.palette.danger,
+                    padding: const EdgeInsets.only(top: 10),
+                  ),
+                  child: const Text('Cancel job'),
+                ),
             ],
           ),
         ),
@@ -266,14 +322,16 @@ class _DriverActiveDeliveryScreenState
   }
 
   static String _actionLabel(OrderStatus status) => switch (status) {
-    OrderStatus.accepted => 'I have picked up the package',
+    OrderStatus.accepted => "I've arrived",
+    OrderStatus.arrived => 'I have picked up the package',
     OrderStatus.pickedUp => 'Start delivery',
     OrderStatus.inTransit => 'Mark as delivered',
     _ => 'Update',
   };
 
   static OrderStatus? _next(OrderStatus status) => switch (status) {
-    OrderStatus.accepted => OrderStatus.pickedUp,
+    OrderStatus.accepted => OrderStatus.arrived,
+    OrderStatus.arrived => OrderStatus.pickedUp,
     OrderStatus.pickedUp => OrderStatus.inTransit,
     OrderStatus.inTransit => OrderStatus.delivered,
     _ => null,
@@ -461,7 +519,7 @@ class _RoundAction extends StatelessWidget {
   }
 }
 
-/// Accepted → Picked up → On the way → Delivered, with the current step lit.
+/// Accepted → Arrived → Picked up → On the way → Delivered, current step lit.
 class _StatusSteps extends StatelessWidget {
   const _StatusSteps({required this.status});
 
@@ -469,6 +527,7 @@ class _StatusSteps extends StatelessWidget {
 
   static const _steps = [
     (OrderStatus.accepted, 'Accepted'),
+    (OrderStatus.arrived, 'Arrived'),
     (OrderStatus.pickedUp, 'Picked up'),
     (OrderStatus.inTransit, 'On the way'),
     (OrderStatus.delivered, 'Delivered'),
@@ -536,7 +595,10 @@ class _FinishedPanel extends StatelessWidget {
             delivered
                 ? 'Delivered. You earn ₦${order.driverEarnings.toStringAsFixed(0)} '
                       'on this job, paid into your wallet in the daily payout.'
-                : 'This job was ${order.status.name}.',
+                : order.status == OrderStatus.cancelled
+                ? 'The customer cancelled this delivery'
+                      '${order.cancelReason != null ? ': ${order.cancelReason}' : '.'}'
+                : 'This delivery could not be completed.',
             style: const TextStyle(color: _ink, fontWeight: FontWeight.w600),
           ),
         ),

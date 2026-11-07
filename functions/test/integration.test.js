@@ -466,6 +466,109 @@ describe("price negotiation", () => {
     const res = await call("raiseOffer", CUSTOMER, { orderId: order.id, amount: 1000 });
     assert.equal(res.error?.status, "INVALID_ARGUMENT");
   });
+
+  // ── inDrive auto-accept ────────────────────────────────────────────────
+
+  test("auto-accept assigns the first courier at the customer's price", async () => {
+    const ref = db.collection("couriers").doc();
+    await ref.set(baseOrder({ autoAccept: true }));
+    await waitFor(ref, (d) => d.fareAuthoritative === true);
+
+    await placeBid(ref, DRIVER_A, 1500);
+    const o = await waitFor(ref, (d) => d.status === "accepted");
+    assert.equal(o.driverId, DRIVER_A);
+    assert.equal(o.agreedFare, 1500);
+  });
+
+  test("auto-accept leaves counter-offers for the customer to decide", async () => {
+    const ref = db.collection("couriers").doc();
+    await ref.set(baseOrder({ autoAccept: true }));
+    await waitFor(ref, (d) => d.fareAuthoritative === true);
+
+    const bid = await placeBid(ref, DRIVER_A, 1900);
+    await waitFor(bid, (d) => !!d.driverName);
+    await new Promise((r) => setTimeout(r, 2000));
+    const o = (await ref.get()).data();
+    assert.equal(o.status, "pending");
+    assert.equal(o.driverId, null);
+  });
+
+  // ── A courier drops the job before pickup ──────────────────────────────
+
+  async function assignedTo(driverId) {
+    const order = await pricedRequest();
+    await placeBid(order, driverId, 1500);
+    await waitFor(order.collection("bids").doc(driverId), (d) => !!d.driverName);
+    const res = await call("acceptBid", CUSTOMER, { orderId: order.id, driverId });
+    assert.ok(res.result, JSON.stringify(res));
+    return order;
+  }
+
+  test("a courier dropping a job sends it back to other couriers", async () => {
+    await db.collection("users").doc(DRIVER_A).update({ cancelledJobs: 0 });
+    const order = await assignedTo(DRIVER_A);
+
+    const res = await call("courierCancelJob", DRIVER_A, {
+      orderId: order.id,
+      reason: "Problem with my vehicle",
+    });
+    assert.ok(res.result?.success, JSON.stringify(res));
+
+    const o = (await order.get()).data();
+    assert.equal(o.status, "pending");
+    assert.equal(o.driverId, null);
+    assert.equal(o.agreedFare, undefined);
+    assert.equal(o.driverEarnings, 0);
+    assert.equal(o.lastCourierCancel.driverId, DRIVER_A);
+    assert.equal((await order.collection("bids").doc(DRIVER_A).get()).data().status, "cancelled");
+    assert.equal((await db.collection("users").doc(DRIVER_A).get()).data().cancelledJobs, 1);
+
+    // The same courier cannot offer on it again; another one can.
+    const again = await placeBid(order, DRIVER_A, 1500);
+    const deadline = Date.now() + 15000;
+    while (Date.now() < deadline && (await again.get()).exists) {
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    assert.equal((await again.get()).exists, false, "re-offer must be removed");
+
+    const other = await placeBid(order, DRIVER_B, 1500);
+    const enriched = await waitFor(other, (d) => !!d.driverName);
+    assert.equal(enriched.status, "open");
+  });
+
+  test("a courier cannot drop a job after pickup, or someone else's", async () => {
+    const order = await assignedTo(DRIVER_A);
+    const stranger = await call("courierCancelJob", DRIVER_B, { orderId: order.id });
+    assert.equal(stranger.error?.status, "PERMISSION_DENIED");
+
+    await order.update({ status: "picked_up" });
+    const late = await call("courierCancelJob", DRIVER_A, { orderId: order.id });
+    assert.equal(late.error?.status, "FAILED_PRECONDITION");
+    assert.equal((await order.get()).data().driverId, DRIVER_A);
+  });
+});
+
+// ── Rating compliments ───────────────────────────────────────────────────────
+
+describe("rating compliments", () => {
+  test("known compliments are counted on the courier's profile", async () => {
+    const DRIVER = "itest_rated_driver";
+    await db.collection("users").doc(DRIVER).set({ role: "driver", rating: 0 });
+    await db.collection("ratings").doc("rated_order").set({
+      orderId: "rated_order",
+      userId: CUSTOMER,
+      driverId: DRIVER,
+      rating: 5,
+      tags: ["fast_delivery", "polite", "made_up_tag"],
+    });
+    const user = await waitFor(
+      db.collection("users").doc(DRIVER),
+      (d) => d.ratingTagCounts?.fast_delivery === 1
+    );
+    assert.equal(user.rating, 5);
+    assert.equal(user.ratingTagCounts.polite, 1);
+    assert.equal(user.ratingTagCounts.made_up_tag, undefined);
+  });
 });
 
 // ── Referrals ────────────────────────────────────────────────────────────────

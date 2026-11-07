@@ -233,6 +233,7 @@ class AdminDashboardScreen extends ConsumerWidget {
     return switch (status) {
       'pending' => const Color(0xFFFF9800),
       'accepted' => const Color(0xFF2196F3),
+      'arrived' => const Color(0xFF3F51B5),
       'inTransit' => const Color(0xFF00BCD4),
       'delivered' => const Color(0xFF4CAF50),
       'cancelled' => const Color(0xFFE91E63),

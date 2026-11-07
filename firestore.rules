@@ -136,7 +136,9 @@ service cloud.firestore {
       // side only, so an order already stuck in one can still be progressed.
       function validTransition(from, to) {
         return (from == 'pending' && to in ['accepted', 'cancelled']) ||
-               (from == 'accepted' && to in ['picked_up', 'cancelled']) ||
+               (from == 'accepted' &&
+                to in ['arrived', 'picked_up', 'cancelled']) ||
+               (from == 'arrived' && to in ['picked_up', 'cancelled']) ||
                (from in ['picked_up', 'pickedUp'] && to == 'in_transit') ||
                (from in ['in_transit', 'inTransit'] &&
                 to in ['delivered', 'failed']);
@@ -192,8 +194,12 @@ service cloud.firestore {
         request.resource.data.get('platformCommission', 0) == 0 &&
         request.resource.data.get('rating', null) == null &&
         request.resource.data.get('proofOfDeliveryUrl', null) == null &&
+        request.resource.data.get('arrivedAt', null) == null &&
         request.resource.data.get('pickedUpAt', null) == null &&
         request.resource.data.get('deliveredAt', null) == null &&
+        request.resource.data.get('autoAccept', false) is bool &&
+        request.resource.data.get('cancelledBy', null) == null &&
+        !('lastCourierCancel' in request.resource.data) &&
         isNonNegativeNumber(request.resource.data.get('totalFare', 0)) &&
         isNonNegativeNumber(request.resource.data.get('baseFare', 0)) &&
         isNonNegativeNumber(request.resource.data.get('discountAmount', 0));
@@ -203,13 +209,24 @@ service cloud.firestore {
         // their own delivery complete.
         (resource.data.userId == request.auth.uid &&
          financialsFrozen() &&
-         !affects(['driverId', 'proofOfDeliveryUrl', 'pickedUpAt',
-                   'deliveredAt']) &&
-         (!affects(['rating', 'ratingComment']) ||
+         !affects(['driverId', 'proofOfDeliveryUrl', 'arrivedAt',
+                   'pickedUpAt', 'deliveredAt', 'autoAccept',
+                   'lastCourierCancel']) &&
+         (!affects(['rating', 'ratingComment', 'ratingTags']) ||
           resource.data.status == 'delivered') &&
+         (!affects(['ratingTags']) ||
+          (request.resource.data.ratingTags is list &&
+           request.resource.data.ratingTags.size() <= 5)) &&
+         // Cancelling is allowed until the courier has the package, and is
+         // recorded as the customer's.
          (!affects(['status']) ||
           (request.resource.data.status == 'cancelled' &&
-           resource.data.status in ['pending', 'accepted']))) ||
+           resource.data.status in ['pending', 'accepted', 'arrived'])) &&
+         (!affects(['cancelledBy']) ||
+          request.resource.data.cancelledBy == 'customer') &&
+         (!affects(['cancelReason']) ||
+          (request.resource.data.cancelReason is string &&
+           request.resource.data.cancelReason.size() <= 120))) ||
         // A driver may progress a job that is already theirs, following the
         // same transition table the app enforces.
         //
@@ -219,8 +236,13 @@ service cloud.firestore {
         // driver claim any pending job outright, at whatever price was on it.
         (isDriver() &&
          financialsFrozen() &&
-         !affects(['rating', 'ratingComment', 'driverId']) &&
+         !affects(['rating', 'ratingComment', 'ratingTags', 'driverId',
+                   'autoAccept', 'cancelReason', 'cancelledBy',
+                   'lastCourierCancel']) &&
          statusUnchangedOrValid() &&
+         // A courier never ends an order. Dropping a job before pickup goes
+         // through courierCancelJob, which hands it back to other couriers.
+         request.resource.data.status != 'cancelled' &&
          resource.data.get('driverId', '') == request.auth.uid);
 
       allow delete: if isAdmin();
@@ -560,7 +582,9 @@ service cloud.firestore {
         request.resource.data.get('orderId', '') == orderId &&
         request.resource.data.rating is int &&
         request.resource.data.rating >= 1 &&
-        request.resource.data.rating <= 5;
+        request.resource.data.rating <= 5 &&
+        request.resource.data.get('tags', []) is list &&
+        request.resource.data.get('tags', []).size() <= 5;
       allow update, delete: if isAdmin();
     }
 

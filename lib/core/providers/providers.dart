@@ -212,6 +212,19 @@ final orderBidsProvider = StreamProvider.family<List<CourierBid>, String>((
   return ref.watch(courierRepositoryProvider).watchBids(orderId);
 });
 
+/// The courier assigned to a delivery, as shown on their accepted offer —
+/// name, photo, rating, vehicle and plate, all filled in server-side from the
+/// courier's own record (onBidWritten), so the customer can trust them.
+final assignedCourierProvider =
+    StreamProvider.family<CourierBid?, ({String orderId, String driverId})>((
+      ref,
+      key,
+    ) {
+      return ref
+          .watch(courierRepositoryProvider)
+          .watchMyBid(key.orderId, key.driverId);
+    });
+
 /// The signed-in driver's own offer on a request, if they have made one.
 final myBidProvider = StreamProvider.family<CourierBid?, String>((
   ref,

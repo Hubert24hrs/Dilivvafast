@@ -1,12 +1,14 @@
 /**
  * End-to-end delivery lifecycle against the DEPLOYED staging backend.
  *
- *   booking → courier offer → raise → accept → pickup → in transit
- *     → delivered → rating → driver paid (and not paid twice)
+ *   booking → courier offer → raise → accept → arrived → pickup
+ *     → in transit → delivered → rating → driver paid (and not paid twice)
  *
  * plus the paths around it: a referral paid on the customer's first
  * delivery, a support message reaching the inbox, saved notification
- * preferences, and both accounts deleting themselves (a Play requirement).
+ * preferences, inDrive's auto-accept, a courier dropping a job (it goes back
+ * to other couriers), the customer cancelling with a reason, and both
+ * accounts deleting themselves (a Play requirement).
  *
  * Runs with the Firebase *client* SDK, signed in as a real customer and a
  * real driver, so every firestore.rules check and every Cloud Function runs
@@ -137,6 +139,16 @@ const password = `E2e-${Math.random().toString(36).slice(2)}-${run}`;
 
 let customerUid, driverUid, orderId;
 
+// The rest of what CourierOrderModel.toFirestore writes on a new request.
+const ORDER_DEFAULTS = {
+  autoAccept: false, paymentMethod: "cash", paymentStatus: "pending",
+  paystackReference: null, promoCode: null, discountAmount: 0, notes: null,
+  cancelReason: null, cancelledBy: null, proofOfDeliveryUrl: null,
+  rating: null, ratingComment: null, ratingTags: [], driverEarnings: 0,
+  platformCommission: 0, arrivedAt: null, pickedUpAt: null, deliveredAt: null,
+  estimatedDeliveryTime: null, polylinePoints: [],
+};
+
 async function main() {
   console.log(`\nDilivvafast staging E2E — run ${run}\n`);
 
@@ -216,12 +228,9 @@ async function main() {
       recipientName: "Ada Recipient", recipientPhone: "+2348000000003",
       estimatedDistanceKm: 8, estimatedDurationMin: 32, baseFare: 500, surgeMultiplier: 1,
       totalFare: 1200, vehicleType: "bike", offeredFare: 1200, recommendedFare: 0,
-      paymentMethod: "cash", paymentStatus: "pending", paystackReference: null,
-      promoCode: null, discountAmount: 0, trackingCode: `DLVE2E${run % 1000000}`,
-      notes: null, proofOfDeliveryUrl: null, rating: null, ratingComment: null,
-      driverEarnings: 0, platformCommission: 0,
+      ...ORDER_DEFAULTS,
+      trackingCode: `DLVE2E${run % 1000000}`,
       createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
-      pickedUpAt: null, deliveredAt: null, estimatedDeliveryTime: null, polylinePoints: [],
     });
     orderId = ref.id;
     return orderId;
@@ -297,6 +306,7 @@ async function main() {
 
   // ── delivery ─────────────────────────────────────────────────────────────
   for (const [status, extra] of [
+    ["arrived", { arrivedAt: serverTimestamp() }],
     ["picked_up", { pickedUpAt: serverTimestamp() }],
     ["in_transit", {}],
     ["delivered", { deliveredAt: serverTimestamp() }],
@@ -309,19 +319,22 @@ async function main() {
     });
   }
 
-  await step("customer rates the courier 5★ and it reaches their profile", async () => {
+  await step("customer rates the courier 5★ with compliments", async () => {
+    // What FirebaseCourierRepository.rateOrder writes.
+    const tags = ["fast_delivery", "careful_with_package"];
     const batch = writeBatch(customer.db);
     batch.update(doc(customer.db, "couriers", orderId), {
-      rating: 5, ratingComment: "Fast and careful", updatedAt: serverTimestamp(),
+      rating: 5, ratingComment: "Fast and careful", ratingTags: tags,
+      updatedAt: serverTimestamp(),
     });
     batch.set(doc(customer.db, "ratings", orderId), {
       orderId, userId: customerUid, driverId: driverUid, rating: 5,
-      comment: "Fast and careful", createdAt: serverTimestamp(),
+      comment: "Fast and careful", tags, createdAt: serverTimestamp(),
     });
     await batch.commit();
     const me = await poll(async () => {
       const d = (await getDoc(doc(driver.db, "users", driverUid))).data();
-      return d?.rating === 5 ? d : null;
+      return d?.rating === 5 && d?.ratingTagCounts?.fast_delivery === 1 ? d : null;
     }, { what: "onRatingCreated to update the driver's rating" });
     return `driver rating ${me.rating}`;
   });
@@ -351,6 +364,75 @@ async function main() {
     }, { what: "onSupportMessageCreated to flag the thread" });
     assert(t.userName === "E2E Customer", `userName ${t.userName}`);
     return "thread flagged for a reply";
+  });
+
+  // ── inDrive extras: auto-accept, courier drops the job, customer cancels ─
+  let order2;
+
+  await step("a second request with auto-accept is assigned to the first courier at the price", async () => {
+    const ref = await addDoc(collection(customer.db, "couriers"), {
+      userId: customerUid, driverId: null, status: "pending",
+      pickupAddress: "3 Broad St, Lagos Island", pickupGeoPoint: new GeoPoint(6.4531, 3.3958),
+      dropoffAddress: "5 Admiralty Way, Lekki", dropoffGeoPoint: new GeoPoint(6.4474, 3.4740),
+      packageDescription: "Keys", packageWeight: 0, packageCategory: "other",
+      recipientName: "Tobi Recipient", recipientPhone: "+2348000000004",
+      estimatedDistanceKm: 9, estimatedDurationMin: 36, baseFare: 500, surgeMultiplier: 1,
+      totalFare: 1400, vehicleType: "bike", offeredFare: 1400, recommendedFare: 0,
+      ...ORDER_DEFAULTS, autoAccept: true,
+      trackingCode: `DLVE2F${run % 1000000}`,
+      createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
+    });
+    order2 = ref.id;
+    const priced = await poll(async () => {
+      const d = (await getDoc(doc(customer.db, "couriers", order2))).data();
+      return d?.fareAuthoritative ? d : null;
+    }, { what: "pricing of the second request" });
+
+    // The courier takes the customer's price: no Accept tap needed.
+    await setDoc(doc(driver.db, "couriers", order2, "bids", driverUid), {
+      driverId: driverUid, amount: priced.offeredFare, status: "open",
+      etaMinutes: 5, createdAt: serverTimestamp(),
+    });
+    const o = await poll(async () => {
+      const d = (await getDoc(doc(customer.db, "couriers", order2))).data();
+      return d?.status === "accepted" ? d : null;
+    }, { what: "auto-accept to assign the courier" });
+    assert(o.driverId === driverUid, `driverId ${o.driverId}`);
+    return `assigned at ₦${o.agreedFare}`;
+  });
+
+  await step("the courier drops the job before pickup — it goes back to other couriers", async () => {
+    const r = await httpsCallable(driver.fns, "courierCancelJob")({
+      orderId: order2, reason: "Problem with my vehicle",
+    });
+    assert(r.data.success === true, JSON.stringify(r.data));
+    const o = (await getDoc(doc(customer.db, "couriers", order2))).data();
+    assert(o.status === "pending" && o.driverId === null,
+      `status ${o.status}, driver ${o.driverId}`);
+    // …and that courier cannot offer on it again.
+    await setDoc(doc(driver.db, "couriers", order2, "bids", driverUid), {
+      driverId: driverUid, amount: o.offeredFare, status: "open",
+      createdAt: serverTimestamp(),
+    }).catch(() => undefined);
+    await poll(async () => {
+      const b = await getDoc(doc(driver.db, "couriers", order2, "bids", driverUid));
+      return !b.exists() || b.data().status === "cancelled";
+    }, { what: "the re-offer to be refused" });
+    const back = (await getDoc(doc(customer.db, "couriers", order2))).data();
+    assert(back.status === "pending", `re-offer reassigned it: ${back.status}`);
+    return "back to pending, re-offer refused";
+  });
+
+  await step("the customer cancels the request with a reason", async () => {
+    // What FirebaseCourierRepository.cancelOrder writes.
+    await updateDoc(doc(customer.db, "couriers", order2), {
+      status: "cancelled", cancelReason: "I changed my mind",
+      cancelledBy: "customer", cancelledAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    const o = (await getDoc(doc(customer.db, "couriers", order2))).data();
+    assert(o.status === "cancelled" && o.cancelReason === "I changed my mind",
+      `status ${o.status}`);
   });
 
   // ── payout ───────────────────────────────────────────────────────────────

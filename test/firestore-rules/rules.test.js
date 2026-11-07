@@ -336,6 +336,99 @@ describe("orders (couriers)", () => {
     await seedOrder();
     await assertFails(getDoc(doc(asOther(), "couriers", "order_1")));
   });
+
+  // ── inDrive courier features ─────────────────────────────────────────────
+
+  test("a courier marks arrival, then pickup", async () => {
+    await seedOrder({ driverId: DRIVER, status: "accepted" });
+    const ref = doc(asDriver(), "couriers", "order_1");
+    await assertSucceeds(updateDoc(ref, { status: "arrived", arrivedAt: new Date() }));
+    await assertFails(updateDoc(ref, { status: "delivered" }));
+    await assertSucceeds(updateDoc(ref, { status: "picked_up" }));
+  });
+
+  test("a courier cannot end an order — dropping a job goes through the server", async () => {
+    await seedOrder({ driverId: DRIVER, status: "accepted" });
+    await assertFails(
+      updateDoc(doc(asDriver(), "couriers", "order_1"), { status: "cancelled" })
+    );
+    await seedOrder({ driverId: DRIVER, status: "arrived" });
+    await assertFails(
+      updateDoc(doc(asDriver(), "couriers", "order_1"), { status: "cancelled" })
+    );
+  });
+
+  test("the customer can cancel with a reason until pickup", async () => {
+    for (const status of ["pending", "accepted", "arrived"]) {
+      await seedOrder({ status, driverId: status === "pending" ? null : DRIVER });
+      await assertSucceeds(
+        updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+          status: "cancelled",
+          cancelReason: "I changed my mind",
+          cancelledBy: "customer",
+        })
+      );
+    }
+    await seedOrder({ status: "picked_up", driverId: DRIVER });
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+        status: "cancelled",
+        cancelledBy: "customer",
+      })
+    );
+  });
+
+  test("a customer cannot blame the courier for their own cancellation", async () => {
+    await seedOrder({ status: "accepted", driverId: DRIVER });
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+        status: "cancelled",
+        cancelledBy: "courier",
+      })
+    );
+  });
+
+  test("auto-accept is set when booking, as a yes/no", async () => {
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "couriers", "auto_1"), { ...baseOrder, autoAccept: true })
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "auto_2"), { ...baseOrder, autoAccept: "yes" })
+    );
+    // …and not switched on later, behind couriers who already offered.
+    await seedOrder();
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), { autoAccept: true })
+    );
+  });
+
+  test("an order cannot be created already cancelled-by or arrived", async () => {
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "c1"), { ...baseOrder, cancelledBy: "customer" })
+    );
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "c2"), { ...baseOrder, arrivedAt: new Date() })
+    );
+  });
+
+  test("compliments only on a delivered order, at most five", async () => {
+    await seedOrder({ status: "in_transit", driverId: DRIVER });
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), { ratingTags: ["polite"] })
+    );
+    await seedOrder({ status: "delivered", driverId: DRIVER });
+    await assertSucceeds(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+        rating: 5,
+        ratingTags: ["polite", "fast_delivery"],
+      })
+    );
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), {
+        ratingTags: ["a", "b", "c", "d", "e", "f"],
+      })
+    );
+  });
 });
 
 describe("price negotiation (inDrive-style offers)", () => {
@@ -521,6 +614,20 @@ describe("ratings", () => {
     comment: "Great",
     createdAt: new Date(),
     ...data,
+  });
+
+  test("a rating can carry up to five compliments", async () => {
+    await seedOrder("tagged");
+    await assertSucceeds(
+      setDoc(doc(asCustomer(), "ratings", "tagged"), rating("tagged", { tags: ["polite"] }))
+    );
+    await seedOrder("too_many");
+    await assertFails(
+      setDoc(
+        doc(asCustomer(), "ratings", "too_many"),
+        rating("too_many", { tags: ["a", "b", "c", "d", "e", "f"] })
+      )
+    );
   });
 
   test("the customer rates their delivered order", async () => {

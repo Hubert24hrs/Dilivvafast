@@ -205,12 +205,15 @@ GCLOUD_TOKEN=$(gcloud auth print-access-token) GCLOUD_BIN=gcloud node delivery_f
 
 It covers: sign-up with a referral code → booking at the customer's price →
 server pricing → driver counter-offer → customer raises → accept (and a
-second accept refused) → live position → picked up → in transit → delivered →
-5★ rating → both referral bonuses → support message reaches the inbox →
-nightly payout pays the driver → a re-run pays nothing more → both accounts
-delete themselves, keeping the delivery record.
+second accept refused) → live position → courier arrives → picked up → in
+transit → delivered → 5★ rating with compliments → both referral bonuses →
+support message reaches the inbox → a second request auto-accepted at the
+customer's price → that courier drops it before pickup (back to pending, no
+re-offer) → the customer cancels it with a reason → nightly payout pays the
+driver → a re-run pays nothing more → both accounts delete themselves,
+keeping the delivery record.
 
-Last run: **25/25 passed**, 25 October 2026, functions on Node.js 22.
+Last run: **29/29 passed**, 7 November 2026, functions on Node.js 22.
 
 ---
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
+import 'package:dilivvafast/core/presentation/widgets/reason_sheet.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_bid.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
@@ -71,29 +72,18 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> {
   }
 
   Future<void> _cancel() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Cancel this request?'),
-        content: const Text('Couriers will stop seeing it.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep waiting'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: ctx.palette.danger),
-            child: const Text('Cancel request'),
-          ),
-        ],
-      ),
+    final reason = await showReasonSheet(
+      context,
+      title: 'Why do you want to cancel?',
+      message: 'Couriers will stop seeing your request.',
+      reasons: customerCancelReasons,
+      confirmLabel: 'Cancel request',
     );
-    if (confirmed != true || !mounted) return;
+    if (reason == null || !mounted) return;
     setState(() => _cancelling = true);
     final result = await ref
         .read(courierRepositoryProvider)
-        .cancelOrder(_orderId);
+        .cancelOrder(_orderId, reason: reason);
     if (!mounted) return;
     setState(() => _cancelling = false);
     result.fold(
@@ -264,6 +254,29 @@ class _YourOffer extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: _muted, fontSize: 13),
           ),
+          if (order.autoAccept) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF7C9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bolt_rounded, size: 18, color: _ink),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Auto-accept is on: the first courier at '
+                      '₦${order.offeredFare.toStringAsFixed(0)} gets the job.',
+                      style: const TextStyle(fontSize: 12.5, color: _ink),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           const Text(
             'Raise your offer to get couriers faster',
