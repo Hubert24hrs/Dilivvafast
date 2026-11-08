@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -268,7 +269,7 @@ final _limeButton = FilledButton.styleFrom(
   backgroundColor: _lime,
   foregroundColor: _ink,
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+  textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
 );
 
 // ── Headline ─────────────────────────────────────────────────────────────────

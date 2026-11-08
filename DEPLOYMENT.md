@@ -10,10 +10,10 @@ $10/month budget alert. Anthropic key is a placeholder.
 **1.3.0 (8 November 2026): no wallet, no Paystack.** Customers pay couriers
 directly — cash, or a bank transfer to the courier's account, which the server
 copies onto the order when their offer is accepted. The Paystack functions and
-the nightly wallet payout were deleted (18 functions remain). Staging runs
-1.3.0. **Production still runs 1.2.x** and its billing account is currently
-unlinked (Cloud Billing → *Link a billing account* on `fast-delivery-d8d5c`),
-which blocks the 1.3.0 deploy:
+the nightly wallet payout were deleted (18 functions remain). Staging and
+production both run 1.3.0 (production redeployed 8 November 2026, after its
+billing was relinked to *Suskii Errands* — that account's 5-project limit was
+full, so `suskii-ops` was unlinked to make room). To redeploy production:
 
 ```bash
 GOOGLE_CLOUD_QUOTA_PROJECT=fast-delivery-d8d5c FUNCTIONS_DISCOVERY_TIMEOUT=120 \

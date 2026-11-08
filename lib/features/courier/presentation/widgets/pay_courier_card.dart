@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -197,7 +198,7 @@ class _PayCourierCardState extends ConsumerState<PayCourierCard> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  textStyle: const TextStyle(
+                  textStyle: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -407,7 +408,7 @@ class _CollectPaymentCardState extends ConsumerState<CollectPaymentCard> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              textStyle: const TextStyle(
+              textStyle: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Reasons a customer can give for cancelling, inDrive-style.
 const customerCancelReasons = [
@@ -138,7 +139,7 @@ class _ReasonSheetState extends State<_ReasonSheet> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  textStyle: const TextStyle(
+                  textStyle: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
