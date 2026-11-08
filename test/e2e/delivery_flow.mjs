@@ -248,7 +248,7 @@ async function main() {
       recipientName: "Ada Recipient", recipientPhone: "+2348000000003",
       estimatedDistanceKm: 8, estimatedDurationMin: 32, baseFare: 500, surgeMultiplier: 1,
       totalFare: 1200, vehicleType: "bike", offeredFare: 1200, recommendedFare: 0,
-      ...ORDER_DEFAULTS, paymentMethod: "transfer",
+      ...ORDER_DEFAULTS,
       trackingCode: `DLVE2E${run % 1000000}`,
       createdAt: Timestamp.now(), updatedAt: Timestamp.now(),
     });
@@ -308,7 +308,8 @@ async function main() {
       `split ${o.platformCommission}/${o.driverEarnings}, expected 280/1120`);
     // The customer will pay this courier by transfer: their account is on
     // the order, copied server-side from the courier's own profile.
-    assert(JSON.stringify(o.courierBank) === JSON.stringify(BANK),
+    // Map field order is not guaranteed, so compare field by field.
+    assert(["bankName", "accountNumber", "accountName"].every((k) => o.courierBank?.[k] === BANK[k]),
       `courierBank ${JSON.stringify(o.courierBank)}`);
     return `assigned; pay ${o.courierBank.bankName} ${o.courierBank.accountNumber}`;
   });
@@ -369,6 +370,24 @@ async function main() {
     const o = (await getDoc(doc(customer.db, "couriers", orderId))).data();
     assert(o.paymentStatus === "paid" && o.paidAt, `paymentStatus ${o.paymentStatus}`);
     return "paid";
+  });
+
+  await step("courier rates the customer 5★ and it reaches their profile", async () => {
+    // What FirebaseCourierRepository.rateCustomer writes.
+    await updateDoc(doc(driver.db, "couriers", orderId), {
+      customerRatingByCourier: 5, updatedAt: serverTimestamp(),
+    });
+    const me = await poll(async () => {
+      const d = (await getDoc(doc(customer.db, "users", customerUid))).data();
+      return d?.customerRatingCount === 1 ? d : null;
+    }, { what: "the customer's rating to update" });
+    assert(me.customerRating === 5, `customerRating ${me.customerRating}`);
+    // Only once.
+    const again = await updateDoc(doc(driver.db, "couriers", orderId), {
+      customerRatingByCourier: 1,
+    }).then(() => "accepted", (e) => e.code);
+    assert(again === "permission-denied", `second rating was ${again}`);
+    return "customer ★5 (1)";
   });
 
   await step("customer rates the courier 5★ with compliments", async () => {
@@ -439,6 +458,9 @@ async function main() {
       const d = (await getDoc(doc(customer.db, "couriers", order2))).data();
       return d?.fareAuthoritative ? d : null;
     }, { what: "pricing of the second request" });
+    // Couriers see the customer's rating on the new request.
+    assert(priced.customerRatingAvg === 5 && priced.customerRatingCount === 1,
+      `customer rating on request ${priced.customerRatingAvg} (${priced.customerRatingCount})`);
 
     // The courier takes the customer's price: no Accept tap needed.
     await setDoc(doc(driver.db, "couriers", order2, "bids", driverUid), {

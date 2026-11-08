@@ -51,6 +51,7 @@ class AppDrawer extends ConsumerWidget {
           children: [
             _ProfileHeader(
               user: user,
+              asCustomer: activeMode == AppMode.customer,
               onTap: () => _push(context, _profileRoute(activeMode)),
             ),
             const Divider(height: 1, color: Color(0xFFE5E7EB)),
@@ -306,18 +307,30 @@ class _Item {
 // ── Header ───────────────────────────────────────────────────────────────────
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.user, required this.onTap});
+  const _ProfileHeader({
+    required this.user,
+    required this.onTap,
+    this.asCustomer = false,
+  });
 
   final UserModel? user;
   final VoidCallback onTap;
+
+  /// In customer mode the header shows how couriers rate this user; in
+  /// courier mode, how customers rate them — as inDrive does.
+  final bool asCustomer;
 
   @override
   Widget build(BuildContext context) {
     final name = user?.fullName.trim() ?? '';
     final firstName = name.isEmpty ? 'Your account' : name.split(' ').first;
     final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
-    final rating = user?.rating ?? 0;
-    final count = user?.totalDeliveries ?? 0;
+    final rating = asCustomer
+        ? (user?.customerRating ?? 0)
+        : (user?.rating ?? 0);
+    final count = asCustomer
+        ? (user?.customerRatingCount ?? 0)
+        : (user?.totalDeliveries ?? 0);
 
     return InkWell(
       onTap: onTap,

@@ -70,6 +70,9 @@ _CourierOrderModel _$CourierOrderModelFromJson(
           ?.map((e) => e as String)
           .toList() ??
       const <String>[],
+  customerRatingAvg: (json['customerRatingAvg'] as num?)?.toDouble(),
+  customerRatingCount: (json['customerRatingCount'] as num?)?.toInt() ?? 0,
+  customerRatingByCourier: (json['customerRatingByCourier'] as num?)?.toInt(),
   driverEarnings: (json['driverEarnings'] as num?)?.toDouble() ?? 0.0,
   platformCommission: (json['platformCommission'] as num?)?.toDouble() ?? 0.0,
   createdAt: const TimestampConverter().fromJson(
@@ -136,6 +139,9 @@ Map<String, dynamic> _$CourierOrderModelToJson(
   'rating': instance.rating,
   'ratingComment': instance.ratingComment,
   'ratingTags': instance.ratingTags,
+  'customerRatingAvg': instance.customerRatingAvg,
+  'customerRatingCount': instance.customerRatingCount,
+  'customerRatingByCourier': instance.customerRatingByCourier,
   'driverEarnings': instance.driverEarnings,
   'platformCommission': instance.platformCommission,
   'createdAt': const TimestampConverter().toJson(instance.createdAt),

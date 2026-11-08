@@ -10,6 +10,7 @@ import 'package:dilivvafast/core/presentation/theme/app_theme.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/features/courier/domain/repositories/i_courier_repository.dart';
+import 'package:dilivvafast/features/courier/presentation/widgets/customer_rating.dart';
 import 'package:dilivvafast/features/courier/presentation/widgets/pay_courier_card.dart';
 
 /// Paying the courier directly — cash, or a bank transfer to the courier's
@@ -68,6 +69,12 @@ class _PayRepo implements ICourierRepository {
   @override
   Future<Either<Failure, Unit>> confirmPaymentReceived(String orderId) async {
     calls.add('paid');
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> rateCustomer(String orderId, int stars) async {
+    calls.add('rated:$stars');
     return const Right(unit);
   }
 
@@ -233,6 +240,42 @@ void main() {
         _wrap(CollectPaymentCard(order: _order(bank: null)), _PayRepo()),
       );
       expect(find.text('Add bank account'), findsOneWidget);
+    });
+  });
+
+  group('Customer rating (inDrive driver → passenger)', () {
+    testWidgets('a request shows the customer rating, or new customer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          CustomerRatingBadge(
+            order: _order().copyWith(
+              customerRatingAvg: 4.5,
+              customerRatingCount: 12,
+            ),
+          ),
+          _PayRepo(),
+        ),
+      );
+      expect(find.text('4.5 (12)'), findsOneWidget);
+
+      await tester.pumpWidget(
+        _wrap(CustomerRatingBadge(order: _order()), _PayRepo()),
+      );
+      expect(find.text('New customer'), findsOneWidget);
+    });
+
+    testWidgets('the courier rates the customer after delivery', (
+      tester,
+    ) async {
+      final repo = _PayRepo();
+      await tester.pumpWidget(_wrap(RateCustomerRow(order: _order()), repo));
+      expect(find.text('Rate the customer'), findsOneWidget);
+      await tester.tap(find.byTooltip('Rate the customer 4 stars'));
+      await tester.pump();
+      expect(repo.calls, ['rated:4']);
+      expect(find.text('You rated the customer'), findsOneWidget);
     });
   });
 }

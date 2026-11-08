@@ -109,6 +109,9 @@ abstract class ICourierRepository {
   /// The courier confirms they received the fare (cash or transfer).
   Future<Either<Failure, Unit>> confirmPaymentReceived(String orderId);
 
+  /// The courier rates the customer (1–5) once the delivery is done.
+  Future<Either<Failure, Unit>> rateCustomer(String orderId, int stars);
+
   /// Get order by tracking code
   Future<Either<Failure, CourierOrderModel?>> getOrderByTrackingCode(
     String trackingCode,

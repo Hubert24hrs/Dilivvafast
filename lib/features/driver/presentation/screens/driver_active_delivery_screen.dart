@@ -10,6 +10,7 @@ import 'package:dilivvafast/core/presentation/widgets/reason_sheet.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
 import 'package:dilivvafast/features/courier/presentation/widgets/pay_courier_card.dart';
+import 'package:dilivvafast/features/courier/presentation/widgets/customer_rating.dart';
 
 const _ink = Color(0xFF111827);
 const _muted = Color(0xFF6B7280);
@@ -255,9 +256,11 @@ class _DriverActiveDeliveryScreenState
                           color: _ink,
                         ),
                       ),
-                      // The customer pays the courier directly.
+                      // The customer pays the courier directly, after delivery.
                       Text(
-                        order.paymentMethod.label,
+                        order.paymentStatus == PaymentStatus.paid
+                            ? 'Paid'
+                            : 'Collect on delivery',
                         style: const TextStyle(color: _muted, fontSize: 13),
                       ),
                     ],
@@ -593,9 +596,11 @@ class _FinishedPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (delivered)
-          CollectPaymentCard(order: order)
-        else
+        if (delivered) ...[
+          CollectPaymentCard(order: order),
+          const SizedBox(height: 10),
+          RateCustomerRow(order: order),
+        ] else
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(

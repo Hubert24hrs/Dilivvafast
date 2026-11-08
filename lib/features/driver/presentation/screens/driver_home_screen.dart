@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dilivvafast/core/presentation/components/app_drawer.dart';
+import 'package:dilivvafast/features/courier/presentation/widgets/customer_rating.dart';
 import 'package:dilivvafast/core/providers/providers.dart';
 import 'package:dilivvafast/features/booking/presentation/widgets/address_search_field.dart';
 import 'package:dilivvafast/features/courier/domain/entities/courier_order_model.dart';
@@ -554,6 +555,8 @@ class DriverHomeScreen extends ConsumerWidget {
                   fontSize: 12,
                 ),
               ),
+              const Spacer(),
+              CustomerRatingBadge(order: order),
             ],
           ),
           const SizedBox(height: 14),
@@ -748,7 +751,9 @@ class DriverHomeScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        CustomerRatingBadge(order: order),
+                        const SizedBox(height: 10),
                         DriverOfferActions(order: order),
                       ],
                     ),

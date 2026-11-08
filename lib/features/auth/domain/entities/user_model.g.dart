@@ -21,6 +21,8 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   fcmToken: json['fcmToken'] as String?,
   rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
   totalDeliveries: (json['totalDeliveries'] as num?)?.toInt() ?? 0,
+  customerRating: (json['customerRating'] as num?)?.toDouble() ?? 0.0,
+  customerRatingCount: (json['customerRatingCount'] as num?)?.toInt() ?? 0,
   createdAt: const TimestampConverter().fromJson(
     json['createdAt'] as Timestamp,
   ),
@@ -61,6 +63,8 @@ Map<String, dynamic> _$UserModelToJson(
   'fcmToken': instance.fcmToken,
   'rating': instance.rating,
   'totalDeliveries': instance.totalDeliveries,
+  'customerRating': instance.customerRating,
+  'customerRatingCount': instance.customerRatingCount,
   'createdAt': const TimestampConverter().toJson(instance.createdAt),
   'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
   'location': const NullableGeoPointConverter().toJson(instance.location),

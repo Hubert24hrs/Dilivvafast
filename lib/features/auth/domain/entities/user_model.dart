@@ -86,6 +86,10 @@ abstract class UserModel with _$UserModel {
     String? fcmToken,
     @Default(0.0) double rating,
     @Default(0) int totalDeliveries,
+
+    /// How couriers have rated this user as a customer. Server-maintained.
+    @Default(0.0) double customerRating,
+    @Default(0) int customerRatingCount,
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
     @NullableGeoPointConverter() GeoPoint? location,

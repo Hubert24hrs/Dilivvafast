@@ -571,6 +571,45 @@ describe("price negotiation", () => {
   });
 });
 
+// ── Couriers rate customers ──────────────────────────────────────────────────
+
+describe("customer ratings", () => {
+  test("a courier's rating counts once into the customer's average, and new requests carry it", async () => {
+    const SHOPPER = "itest_rated_customer";
+    await db.collection("users").doc(SHOPPER).set({ role: "customer" });
+
+    for (const stars of [5, 4]) {
+      const ref = db.collection("couriers").doc();
+      await ref.set(baseOrder({ userId: SHOPPER }));
+      await waitFor(ref, (d) => d.fareAuthoritative === true);
+      await ref.update({ status: "delivered", driverId: "itest_driver_a" });
+      await ref.update({ customerRatingByCourier: stars });
+      await waitFor(ref, (d) => d.customerRatingCounted === true);
+      // A retried trigger must not count it again.
+      await ref.update({ updatedAt: new Date() });
+    }
+    const user = await waitFor(
+      db.collection("users").doc(SHOPPER),
+      (d) => d.customerRatingCount === 2
+    );
+    assert.equal(user.customerRating, 4.5);
+
+    const next = db.collection("couriers").doc();
+    await next.set(baseOrder({ userId: SHOPPER }));
+    const priced = await waitFor(next, (d) => d.fareAuthoritative === true);
+    assert.equal(priced.customerRatingAvg, 4.5);
+    assert.equal(priced.customerRatingCount, 2);
+  });
+
+  test("a customer nobody has rated shows as new", async () => {
+    const ref = db.collection("couriers").doc();
+    await ref.set(baseOrder({ userId: "itest_brand_new_customer" }));
+    const priced = await waitFor(ref, (d) => d.fareAuthoritative === true);
+    assert.equal(priced.customerRatingAvg, null);
+    assert.equal(priced.customerRatingCount, 0);
+  });
+});
+
 // ── Rating compliments ───────────────────────────────────────────────────────
 
 describe("rating compliments", () => {

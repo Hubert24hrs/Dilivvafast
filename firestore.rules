@@ -91,12 +91,17 @@ service cloud.firestore {
         request.resource.data.get('rating', 0) == 0 &&
         request.resource.data.get('totalDeliveries', 0) == 0 &&
         request.resource.data.get('isVerified', false) == false &&
+        request.resource.data.get('customerRatingCount', 0) == 0 &&
+        request.resource.data.get('customerRating', 0) == 0 &&
         !('payoutAccount' in request.resource.data);
 
       allow update: if isAdmin() || (
         isOwner(userId) &&
         !affects(['role', 'walletBalance', 'rating', 'totalDeliveries',
-                  'isVerified', 'createdAt', 'referralCode']) &&
+                  'isVerified', 'createdAt', 'referralCode',
+                  // How couriers rate this user as a customer: server-kept.
+                  'customerRating', 'customerRatingCount',
+                  'customerRatingSum']) &&
         (!affects(['payoutAccount']) ||
          validPayoutAccount(request.resource.data.payoutAccount)) &&
         selfServiceStatus('driverStatus') &&
@@ -178,7 +183,10 @@ service cloud.firestore {
                          'offeredFare', 'recommendedFare', 'agreedFare',
                          'vehicleType',
                          // The courier's bank account, copied on by acceptBid.
-                         'courierBank']);
+                         'courierBank',
+                         // The customer's rating, copied on at creation.
+                         'customerRatingAvg', 'customerRatingCount',
+                         'customerRatingCounted']);
       }
 
       // ── Paying the courier directly ──────────────────────────────────
@@ -243,6 +251,9 @@ service cloud.firestore {
         request.resource.data.get('paymentStatus', 'pending') == 'pending' &&
         request.resource.data.get('paymentMethod', 'cash') in ['cash', 'transfer'] &&
         !('courierBank' in request.resource.data) &&
+        !('customerRatingByCourier' in request.resource.data) &&
+        request.resource.data.get('customerRatingAvg', null) == null &&
+        request.resource.data.get('customerRatingCount', 0) == 0 &&
         request.resource.data.get('paidAt', null) == null &&
         request.resource.data.get('driverEarnings', 0) == 0 &&
         request.resource.data.get('platformCommission', 0) == 0 &&
@@ -264,6 +275,7 @@ service cloud.firestore {
         (resource.data.userId == request.auth.uid &&
          financialsFrozen() &&
          customerPaymentOk() &&
+         !affects(['customerRatingByCourier']) &&
          !affects(['driverId', 'proofOfDeliveryUrl', 'arrivedAt',
                    'pickedUpAt', 'deliveredAt', 'autoAccept',
                    'lastCourierCancel']) &&
@@ -292,6 +304,13 @@ service cloud.firestore {
         (isDriver() &&
          financialsFrozen() &&
          courierPaymentOk() &&
+         // The courier rates the customer once, after delivering.
+         (!affects(['customerRatingByCourier']) ||
+          (resource.data.status == 'delivered' &&
+           resource.data.get('customerRatingByCourier', null) == null &&
+           request.resource.data.customerRatingByCourier is int &&
+           request.resource.data.customerRatingByCourier >= 1 &&
+           request.resource.data.customerRatingByCourier <= 5)) &&
          !affects(['rating', 'ratingComment', 'ratingTags', 'driverId',
                    'autoAccept', 'cancelReason', 'cancelledBy',
                    'lastCourierCancel']) &&

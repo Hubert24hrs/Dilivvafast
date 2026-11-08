@@ -248,6 +248,17 @@ abstract class CourierOrderModel with _$CourierOrderModel {
 
     /// Compliments chosen with the rating ("Fast delivery", …).
     @Default(<String>[]) List<String> ratingTags,
+
+    /// The customer's own rating as couriers have rated them, copied onto the
+    /// request by the server when it is created (onCourierCreated), so a
+    /// courier can see it before making an offer, as in inDrive. Null and 0
+    /// for a customer nobody has rated yet.
+    double? customerRatingAvg,
+    @Default(0) int customerRatingCount,
+
+    /// The courier's rating of the customer for this delivery (1–5), given
+    /// once it is delivered. Counted into the customer's average server-side.
+    int? customerRatingByCourier,
     @Default(0.0) double driverEarnings,
     @Default(0.0) double platformCommission,
     @TimestampConverter() required DateTime createdAt,

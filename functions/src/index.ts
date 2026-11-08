@@ -356,6 +356,13 @@ export const onCourierCreated = onDocumentCreated(
       const split = fareSplit(offeredFare, discountAmount);
       const vehicleType = order.vehicleType === "car" ? "car" : "bike";
 
+      // inDrive shows couriers the customer's rating before they offer. The
+      // customer's own record is private, so the figure is copied here.
+      const customer = (await db.collection("users").doc(String(order.userId)).get()).data();
+      const customerRatingCount = Number(customer?.customerRatingCount) || 0;
+      const customerRatingAvg =
+        customerRatingCount > 0 ? Number(customer?.customerRating) || null : null;
+
       await snapshot.ref.update({
         baseFare: toKoboPrecision(baseFare),
         surgeMultiplier,
@@ -367,6 +374,8 @@ export const onCourierCreated = onDocumentCreated(
         totalFare: split.totalFare,
         platformCommission: split.platformCommission,
         driverEarnings: split.driverEarnings,
+        customerRatingAvg,
+        customerRatingCount,
         fareAuthoritative: true,
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -835,6 +844,11 @@ export const onCourierStatusChanged = onDocumentUpdated(
       await notifyPaymentStep(orderId, after);
     }
 
+    // The courier rated the customer (inDrive's driver → passenger rating).
+    if (before.customerRatingByCourier == null && after.customerRatingByCourier != null) {
+      await recordCustomerRating(orderId);
+    }
+
     if (before.status === after.status) return;
 
     // Keys are the snake_case @JsonValue forms CourierOrderModel serialises
@@ -920,6 +934,36 @@ export const onCourierStatusChanged = onDocumentUpdated(
     }
   }
 );
+
+/**
+ * Fold a courier's 1–5 rating of a customer into that customer's average.
+ * `customerRatingCounted` on the order makes it count exactly once, however
+ * often the trigger is retried.
+ */
+async function recordCustomerRating(orderId: string): Promise<void> {
+  const orderRef = db.collection("couriers").doc(orderId);
+  try {
+    await db.runTransaction(async (tx) => {
+      const order = (await tx.get(orderRef)).data();
+      if (!order || order.customerRatingCounted) return;
+      const stars = Number(order.customerRatingByCourier);
+      if (!Number.isInteger(stars) || stars < 1 || stars > 5) return;
+      const userRef = db.collection("users").doc(String(order.userId));
+      const user = (await tx.get(userRef)).data();
+      if (!user) return;
+      const sum = (Number(user.customerRatingSum) || 0) + stars;
+      const count = (Number(user.customerRatingCount) || 0) + 1;
+      tx.update(userRef, {
+        customerRatingSum: sum,
+        customerRatingCount: count,
+        customerRating: Math.round((sum / count) * 100) / 100,
+      });
+      tx.update(orderRef, { customerRatingCounted: true });
+    });
+  } catch (error) {
+    logger.error("recordCustomerRating failed", { orderId, ...errorInfo(error) });
+  }
+}
 
 /** Tell the other side of a delivery about a payment step. */
 async function notifyPaymentStep(

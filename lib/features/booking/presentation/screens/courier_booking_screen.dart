@@ -194,10 +194,8 @@ class _CourierBookingScreenState extends ConsumerState<CourierBookingScreen> {
                   const SizedBox(height: 14),
                   _PackageDetails(state: state, controller: controller),
                   const SizedBox(height: 12),
-                  _PaymentPicker(
-                    selected: state.paymentMethod,
-                    onChanged: controller.setPaymentMethod,
-                  ),
+                  // No payment choice at booking: the customer settles with
+                  // the courier after delivery ("Pay your courier").
                   _PromoRow(
                     code: state.promoCode,
                     onAdd: () => context.push('/customer/promotions'),
@@ -707,48 +705,6 @@ class _Input extends StatelessWidget {
           borderSide: BorderSide.none,
         ),
       ),
-    );
-  }
-}
-
-class _PaymentPicker extends StatelessWidget {
-  const _PaymentPicker({required this.selected, required this.onChanged});
-
-  final PaymentMethod selected;
-  final ValueChanged<PaymentMethod> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    const icons = {
-      PaymentMethod.cash: Icons.payments_outlined,
-      PaymentMethod.transfer: Icons.account_balance_outlined,
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            for (final method in PaymentMethod.values) ...[
-              Expanded(
-                child: ChoiceChip(
-                  avatar: Icon(icons[method], size: 18),
-                  label: Text(method.label),
-                  selected: selected == method,
-                  onSelected: (_) => onChanged(method),
-                ),
-              ),
-              if (method != PaymentMethod.values.last) const SizedBox(width: 8),
-            ],
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.only(top: 6, left: 4),
-          child: Text(
-            'You pay your courier directly once the package is delivered.',
-            style: TextStyle(color: Color(0xFF6B7280), fontSize: 12.5),
-          ),
-        ),
-      ],
     );
   }
 }

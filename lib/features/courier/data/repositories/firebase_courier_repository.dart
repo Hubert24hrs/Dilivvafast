@@ -465,6 +465,12 @@ class FirebaseCourierRepository implements ICourierRepository {
         'paidAt': FieldValue.serverTimestamp(),
       }, 'Could not confirm the payment. Please try again.');
 
+  @override
+  Future<Either<Failure, Unit>> rateCustomer(String orderId, int stars) =>
+      _paymentUpdate(orderId, {
+        'customerRatingByCourier': stars.clamp(1, 5),
+      }, 'Could not save your rating. Please try again.');
+
   Future<Either<Failure, Unit>> _paymentUpdate(
     String orderId,
     Map<String, Object?> fields,

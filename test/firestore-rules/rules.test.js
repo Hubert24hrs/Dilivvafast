@@ -179,6 +179,16 @@ describe("users", () => {
     );
   });
 
+  test("a user cannot set their own customer rating", async () => {
+    await assertFails(
+      updateDoc(doc(asCustomer(), "users", CUSTOMER), { customerRating: 5, customerRatingCount: 99 })
+    );
+    const db = testEnv.authenticatedContext("new_user2").firestore();
+    await assertFails(
+      setDoc(doc(db, "users", "new_user2"), { role: "customer", customerRating: 5, customerRatingCount: 3 })
+    );
+  });
+
   test("an admin may update any user", async () => {
     await assertSucceeds(
       updateDoc(doc(asAdmin(), "users", CUSTOMER), { walletBalance: 10 })
@@ -513,6 +523,38 @@ describe("orders (couriers)", () => {
       updateDoc(doc(asCarDriver(), "couriers", "order_1"), { paymentStatus: "paid" })
     );
     await assertSucceeds(updateDoc(ref, { paymentStatus: "paid", paidAt: new Date() }));
+  });
+
+  // ── The courier rates the customer (inDrive driver → passenger rating) ──
+
+  test("the courier rates the customer once, after delivering", async () => {
+    await seedOrder({ status: "in_transit", driverId: DRIVER });
+    const ref = doc(asDriver(), "couriers", "order_1");
+    await assertFails(updateDoc(ref, { customerRatingByCourier: 5 }));
+
+    await seedOrder({ status: "delivered", driverId: DRIVER });
+    await assertFails(updateDoc(ref, { customerRatingByCourier: 6 }));
+    await assertFails(updateDoc(ref, { customerRatingByCourier: "5" }));
+    await assertSucceeds(updateDoc(ref, { customerRatingByCourier: 4 }));
+    // Once only.
+    await assertFails(updateDoc(ref, { customerRatingByCourier: 1 }));
+  });
+
+  test("nobody else sets the customer's rating", async () => {
+    await seedOrder({ status: "delivered", driverId: DRIVER });
+    await assertFails(
+      updateDoc(doc(asCustomer(), "couriers", "order_1"), { customerRatingByCourier: 5 })
+    );
+    await assertFails(
+      updateDoc(doc(asCarDriver(), "couriers", "order_1"), { customerRatingByCourier: 5 })
+    );
+    // The copied average is server-only, on create and after.
+    await assertFails(
+      setDoc(doc(asCustomer(), "couriers", "fake_avg"), { ...baseOrder, customerRatingAvg: 5 })
+    );
+    await assertFails(
+      updateDoc(doc(asDriver(), "couriers", "order_1"), { customerRatingAvg: 5 })
+    );
   });
 
   test("compliments only on a delivered order, at most five", async () => {

@@ -701,15 +701,17 @@ class _DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final paid = switch (order.paymentStatus) {
-      PaymentStatus.paid => ' · paid',
-      PaymentStatus.sent => ' · sent',
-      _ => ' · after delivery',
+    // Nothing is chosen at booking; the customer pays the courier directly
+    // once the package is delivered.
+    final payment = switch (order.paymentStatus) {
+      PaymentStatus.paid => 'Paid · ${order.paymentMethod.label.toLowerCase()}',
+      PaymentStatus.sent => 'Transfer sent',
+      _ => 'Pay your courier after delivery',
     };
     final rows = [
       ('Package', order.packageDescription),
       ('Recipient', '${order.recipientName} · ${order.recipientPhone}'),
-      ('Payment', '${order.paymentMethod.label}$paid'),
+      ('Payment', payment),
       ('Fare', '₦${order.totalFare.toStringAsFixed(0)}'),
     ];
     return Container(
