@@ -41,7 +41,8 @@ class DatabaseService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
               .toList(),
         );
   }

@@ -51,6 +51,13 @@ const MINIMUM_FARE = 500;
 
 // ==================== SHARED HELPERS ====================
 
+/** A user's name, from current profiles (`fullName`) or ones written by the
+ *  first version of the app (`displayName`). */
+function displayNameOf(user: FirebaseFirestore.DocumentData | undefined, fallback: string): string {
+  const name = String(user?.fullName ?? user?.displayName ?? "").trim();
+  return name || fallback;
+}
+
 /** Naira is stored as a float for backwards compatibility with existing
  *  documents. Rounding every write to kobo precision keeps repeated
  *  increments from accumulating binary-floating-point drift. */
@@ -581,7 +588,7 @@ export const onBidWritten = onDocumentWritten(
       }
 
       await after.ref.update({
-        driverName: String(driver.fullName ?? "Courier").split(" ")[0],
+        driverName: displayNameOf(driver, "Courier").split(" ")[0],
         driverPhotoUrl: driver.photoUrl ?? null,
         driverRating: Number(driver.rating) || 0,
         driverTrips: Number(driver.totalDeliveries) || 0,
@@ -1268,7 +1275,7 @@ export const onSosTriggered = onDocumentCreated(
       }
 
       const userDoc = await db.collection("users").doc(alert.userId).get();
-      const userName = userDoc.data()?.fullName ?? "Unknown user";
+      const userName = displayNameOf(userDoc.data(), "Unknown user");
 
       await messaging.sendEachForMulticast({
         tokens,
@@ -1636,7 +1643,7 @@ export const onSupportMessageCreated = onDocumentCreated(
       await db.collection("orders").doc(threadId).set(
         {
           userId: ownerId,
-          userName: owner?.fullName ?? "Customer",
+          userName: displayNameOf(owner, "Customer"),
           lastMessage: preview,
           lastSenderId: String(message.senderId ?? ""),
           needsReply: fromCustomer,
@@ -1667,7 +1674,7 @@ export const onSupportMessageCreated = onDocumentCreated(
       await messaging.sendEachForMulticast({
         tokens,
         notification: {
-          title: `Support: ${owner?.fullName ?? "Customer"}`,
+          title: `Support: ${displayNameOf(owner, "Customer")}`,
           body: preview,
         },
         data: { type: "support_message", userId: ownerId },

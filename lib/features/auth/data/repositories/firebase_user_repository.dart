@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fpdart/fpdart.dart';
 import 'dart:io';
@@ -46,8 +47,38 @@ class FirebaseUserRepository implements IUserRepository {
   Stream<UserModel?> watchUser(String userId) {
     return _usersRef.doc(userId).snapshots().map((doc) {
       if (!doc.exists) return null;
-      return UserModel.fromFirestore(doc);
+      final user = UserModel.fromFirestore(doc);
+      _fillMissingNameAndPhone(doc.data() ?? const {}, user);
+      return user;
     });
+  }
+
+  final _filled = <String>{};
+
+  /// Profiles from the first version of the app can lack a name and phone
+  /// (they used displayName / phoneNumber, often empty). Fill them once from
+  /// the signed-in account, so couriers and customers see a real name.
+  /// Only ever for the signed-in user's own profile, which they may edit.
+  void _fillMissingNameAndPhone(Map<String, dynamic> raw, UserModel user) {
+    if ((user.fullName.isNotEmpty && user.phone.isNotEmpty) ||
+        !_filled.add(user.uid)) {
+      return;
+    }
+    try {
+      final account = FirebaseAuth.instance.currentUser;
+      if (account == null || account.uid != user.uid) return;
+      final updates = <String, dynamic>{};
+      final name = (account.displayName ?? '').trim();
+      if (user.fullName.isEmpty && name.isNotEmpty) updates['fullName'] = name;
+      final phone =
+          ((raw['phoneNumber'] as String?) ?? account.phoneNumber ?? '').trim();
+      if (user.phone.isEmpty && phone.isNotEmpty) updates['phone'] = phone;
+      if (updates.isEmpty) return;
+      updates[FirestoreConstants.fieldUpdatedAt] = FieldValue.serverTimestamp();
+      _usersRef.doc(user.uid).update(updates).catchError((_) {});
+    } catch (_) {
+      // No Firebase app (tests) or no account: nothing to fill.
+    }
   }
 
   @override

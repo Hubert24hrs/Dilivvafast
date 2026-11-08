@@ -114,13 +114,81 @@ abstract class UserModel with _$UserModel {
       _$UserModelFromJson(json);
 
   /// Create from Firestore document snapshot
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>? ?? {};
-    // Ensure uid is set from doc.id
-    data['uid'] = doc.id;
-    return UserModel.fromJson(data);
-  }
+  factory UserModel.fromFirestore(DocumentSnapshot doc) => UserModel.fromJson(
+    normalizeUserData(doc.data() as Map<String, dynamic>? ?? const {}, doc.id),
+  );
 }
+
+/// Makes a stored profile safe to decode, whichever app version wrote it.
+///
+/// The production project was first used by an earlier version of the app,
+/// whose profiles store the name as `displayName`, the phone as
+/// `phoneNumber`, `createdAt` as an ISO string, and `role: user`. Decoding
+/// those as-is threw ("type 'Null' is not a subtype of type 'String'"), so
+/// the signed-in user came back as null: the profile screen showed the error
+/// and switching to Driver mode said "You need to be signed in".
+@visibleForTesting
+Map<String, dynamic> normalizeUserData(Map<String, dynamic> raw, String uid) {
+  final data = Map<String, dynamic>.from(raw)..['uid'] = uid;
+  String text(Object? v) => v is String ? v : '';
+  String firstText(List<String> keys) {
+    for (final k in keys) {
+      final v = text(data[k]).trim();
+      if (v.isNotEmpty) return v;
+    }
+    return '';
+  }
+
+  data['fullName'] = firstText(['fullName', 'displayName', 'name']);
+  data['phone'] = firstText(['phone', 'phoneNumber']);
+  data['email'] = text(data['email']);
+  data['referralCode'] = text(data['referralCode']);
+
+  final created =
+      _asTimestamp(data['createdAt']) ??
+      _asTimestamp(data['updatedAt']) ??
+      Timestamp.fromMillisecondsSinceEpoch(0);
+  data['createdAt'] = created;
+  data['updatedAt'] = _asTimestamp(data['updatedAt']) ?? created;
+
+  // Enum fields: map the old app's values, and drop anything unknown so the
+  // field takes its default instead of failing the whole profile.
+  if (data['role'] == 'user') data['role'] = 'customer';
+  void keepIf(String key, Iterable<String> allowed) {
+    if (data[key] != null && !allowed.contains(data[key])) data.remove(key);
+  }
+
+  keepIf('role', _$UserRoleEnumMap.values);
+  keepIf('driverStatus', const [
+    'none',
+    'pending',
+    'approved',
+    'rejected',
+    'suspended',
+  ]);
+  keepIf('investorStatus', const [
+    'none',
+    'pending',
+    'approved',
+    'rejected',
+    'suspended',
+  ]);
+  keepIf('activeMode', const ['customer', 'driver', 'investor', 'admin']);
+  for (final key in ['rating', 'totalDeliveries', 'customerRating']) {
+    if (data[key] != null && data[key] is! num) data.remove(key);
+  }
+  return data;
+}
+
+Timestamp? _asTimestamp(Object? value) => switch (value) {
+  final Timestamp t => t,
+  final DateTime d => Timestamp.fromDate(d),
+  final int ms => Timestamp.fromMillisecondsSinceEpoch(ms),
+  final String s when DateTime.tryParse(s) != null => Timestamp.fromDate(
+    DateTime.parse(s),
+  ),
+  _ => null,
+};
 
 extension UserModelX on UserModel {
   /// How far this user has progressed towards being allowed into [mode].

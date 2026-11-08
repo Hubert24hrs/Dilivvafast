@@ -276,6 +276,18 @@ abstract class CourierOrderModel with _$CourierOrderModel {
   factory CourierOrderModel.fromJson(Map<String, dynamic> json) =>
       _$CourierOrderModelFromJson(json);
 
+  /// [fromFirestore], or null for a document this version cannot read —
+  /// e.g. orders written by the first version of the app, which used a
+  /// different layout (riderId, pickupLocation, price…) and have no
+  /// tracking code or coordinates. Lists skip them instead of failing.
+  static CourierOrderModel? tryFromFirestore(DocumentSnapshot doc) {
+    try {
+      return CourierOrderModel.fromFirestore(doc);
+    } catch (_) {
+      return null;
+    }
+  }
+
   factory CourierOrderModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     data['id'] = doc.id;

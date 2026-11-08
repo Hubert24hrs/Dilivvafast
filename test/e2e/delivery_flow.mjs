@@ -30,6 +30,8 @@ import { initializeApp } from "firebase/app";
 import {
   getAuth,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   deleteUser,
 } from "firebase/auth";
 import {
@@ -119,6 +121,17 @@ async function adminGet(path) {
   if (!res.ok) throw new Error(`admin GET ${path}: ${res.status} ${await res.text()}`);
   return (await res.json()).fields ?? {};
 }
+async function adminReplaceFields(path, set, remove) {
+  const keys = [...Object.keys(set), ...remove];
+  const mask = keys.map((k) => `updateMask.fieldPaths=${k}`).join("&");
+  const body = { fields: Object.fromEntries(Object.entries(set).map(([k, v]) => [k, toValue(v)])) };
+  const res = await fetch(`${REST}/${path}?${mask}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${GCLOUD_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`admin PATCH ${path}: ${res.status} ${await res.text()}`);
+}
 async function adminPatch(path, fields) {
   const mask = Object.keys(fields).map((k) => `updateMask.fieldPaths=${k}`).join("&");
   const body = { fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toValue(v)])) };
@@ -173,6 +186,17 @@ async function main() {
     return customerUid;
   });
 
+  await step("customer signs out and signs back in with their password", async () => {
+    const email = customer.auth.currentUser.email;
+    await signOut(customer.auth);
+    assert(!customer.auth.currentUser, "still signed in after sign-out");
+    const cred = await signInWithEmailAndPassword(customer.auth, email, password);
+    assert(cred.user.uid === customerUid, "signed in as someone else");
+    const me = (await getDoc(doc(customer.db, "users", customerUid))).data();
+    assert(me?.fullName === "E2E Customer", `profile ${JSON.stringify(me?.fullName)}`);
+    return "signed in again, profile readable";
+  });
+
   await step("driver signs up and is approved (admin action)", async () => {
     const cred = await createUserWithEmailAndPassword(
       driver.auth, `e2e.driver.${run}@dilivvafast.test`, password);
@@ -188,6 +212,20 @@ async function main() {
       driverStatus: "approved", vehicleType: "motorcycle", vehiclePlate: "LAG-E2E-01",
     });
     return driverUid;
+  });
+
+  await step("the courier's profile is in the old app's format (like the live accounts)", async () => {
+    // Production profiles written by the first app version have displayName /
+    // phoneNumber / a string createdAt / role "driver", and no fullName.
+    await adminReplaceFields(`users/${driverUid}`, {
+      displayName: "Emeka Driver",
+      phoneNumber: "+2348000000002",
+      createdAt: "2025-12-03T10:15:30.000Z",
+      role: "driver",
+    }, ["fullName", "phone"]);
+    const me = (await getDoc(doc(driver.db, "users", driverUid))).data();
+    assert(!me.fullName && me.displayName === "Emeka Driver", "profile not converted");
+    return "old-format courier";
   });
 
   const BANK = { bankName: "GTBank", accountNumber: "0123456789", accountName: "Emeka Driver" };

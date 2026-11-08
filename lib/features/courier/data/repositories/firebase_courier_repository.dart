@@ -81,12 +81,16 @@ class FirebaseCourierRepository implements ICourierRepository {
             'in_transit',
           ],
         )
-        .limit(1)
+        // Not limit(1): an old-format order the app cannot read must not hide
+        // a real active one behind it.
+        .limit(20)
         .snapshots()
-        .map((snapshot) {
-          if (snapshot.docs.isEmpty) return null;
-          return CourierOrderModel.fromFirestore(snapshot.docs.first);
-        });
+        .map(
+          (snapshot) => snapshot.docs
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
+              .firstOrNull,
+        );
   }
 
   @override
@@ -97,7 +101,8 @@ class FirebaseCourierRepository implements ICourierRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
               .toList(),
         );
   }
@@ -110,7 +115,8 @@ class FirebaseCourierRepository implements ICourierRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
               .toList(),
         );
   }
@@ -123,7 +129,8 @@ class FirebaseCourierRepository implements ICourierRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
               .toList(),
         );
   }
@@ -136,7 +143,8 @@ class FirebaseCourierRepository implements ICourierRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => CourierOrderModel.fromFirestore(doc))
+              .map(CourierOrderModel.tryFromFirestore)
+              .whereType<CourierOrderModel>()
               .toList(),
         );
   }
@@ -540,7 +548,8 @@ class FirebaseCourierRepository implements ICourierRepository {
 
       final snapshot = await query.get();
       final orders = snapshot.docs
-          .map((doc) => CourierOrderModel.fromFirestore(doc))
+          .map(CourierOrderModel.tryFromFirestore)
+          .whereType<CourierOrderModel>()
           .toList();
       return Right(orders);
     } catch (e) {

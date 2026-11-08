@@ -229,7 +229,7 @@ it before pickup (back to pending, no re-offer) → the customer cancels it
 with a reason → both accounts delete themselves, keeping the delivery record
 and stripping the courier's bank details from it.
 
-Last run: **31/31 passed**, 8 November 2026 (1.3.1: adds couriers rating customers), functions on Node.js 22.
+Last run: **33/33 passed**, 8 November 2026 (1.3.2: adds sign-in after sign-up and an old-format courier profile), functions on Node.js 22.
 
 ---
 
